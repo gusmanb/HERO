@@ -1,0 +1,1761 @@
+﻿asm
+
+ld a, ZXBASIC_MEM_HEAP
+
+end asm
+
+
+
+
+
+#include "GSprites.zxbas"
+Dim tlc(8) as uByte => { 60,66,161,161,161,161,161,161 }
+Dim blc(8) as uByte => { 161,161,161,161,161,161,66,60 }
+dim mlor(8) as uByte => { 161,160,160,160,160,160,160,161 }
+dim mlol(8) as uByte => { 161,33,33,33,33,33,33,161}
+dim mlo(8) as uByte => { 255,0,255,0,0,0,0,255 }
+dim dot(8) as uByte => { 0,0,24,36,90,82,36,24 }
+
+dim tlcc(8) as uByte => { 63,64,128,160,160,160,160,161 }
+dim blcc(8) as uByte => { 161,160,160,160,160,128,64,63 }
+dim rec(8) as uByte => { 252,2,249,1,1,1,2,252 }
+
+dim rct(8) as uByte => { 252,2,249,1,1,1,1,129 }
+dim rcbs(8) as uByte => { 129,1,129,1,1,1,2,28 }
+
+dim mlob(8) as uByte => { 255,0,255,0,0,0,0,128 }
+
+dim dgl(8) as uByte => { 96,16,8,4,2,1,0,0 }
+dim dglc(8) as uByte => { 16,8,4,2,1,1,130,124 }
+
+dim mlc(8) as uByte => { 161,161,161,161,161,161,161,161 }
+dim rcb(8) as uByte => { 161,33,193,1,1,1,2,252 }
+
+dim energy(8) as uByte => { 126,213,171,213,171,213,171,126 }
+
+dim vampUp(8) as uByte => { 0,165,219,231,255,126,24,0 }
+dim vampDown(8) as uByte => { 0,36,90,231,255,255,153,0 }
+
+dim lampl(8) as uByte => { 31,24,126,255,66,126,36,24 }
+dim lampr(8) as uByte => { 248,24,126,255,66,126,36,24 }
+dim spider(8) as uByte => { 0,195,60,126,219,60,66,66 }
+
+dim dynamite1(8) as uByte => { 40,16,8,60,60,60,60,60 }
+dim dynamite2(8) as uByte => { 20,8,16,60,60,60,60,60 }
+
+dim skh1(8) as uByte => { 60,122,255,227,192,225,127,62 }
+dim skh2(8) as uByte => { 60,122,255,255,253,127,62,0 }
+dim skb(8) as uByte => { 0,204,255,255,51,0,0,0 }
+
+dim bug1(8) as uByte => { 36,36,60,195,195,60,36,36 }
+dim bug2(8) as uByte => { 0,195,60,195,195,60,195,0 }
+
+dim crock1(8) as uByte => { 0,0,0,0,0,96,208,254 }
+dim crock2(8) as uByte => { 0,0,0,97,214,248,240,127 }
+
+dim walll(8) as uByte => { 253,250,253,249,254,253,250,254 }
+dim wallr(8) as uByte => { 191,95,191,159,127,191,95,127 }
+dim wallb(8) as uByte => { 45,210,181,255,255,255,255,255 }
+dim wallt(8) as uByte => { 255,255,255,255,255,181,210,45 }
+
+dim walltr(8) as uByte => { 181,74,175,250,254,253,250,253 }
+dim walltl(8) as uByte => { 173,82,245,95,127,191,95,191 }
+dim wallbr(8) as uByte => { 253,250,253,254,250,175,74,181 }
+dim wallbl(8) as uByte => { 191,95,191,127,95,245,82,173 }
+
+dim singleWallV(8) as uByte=> { 190,93,189,126,158,189,94,189 }
+dim singleWallH(8) as uByte=> {  181,74,173,255,255,255,89,166 }
+
+dim destructibleWallV(8) as uByte=> { 219,189,219,189,219,189,219,189 }
+dim destructibleWallH(8) as uByte=> {  255,85,170,255,255,170,85,255 }
+
+dim rockT(8) as uByte => { 181,106,189,121,126,189,255,255 }
+dim rockB(8) as uByte => { 255,255,189,126,158,189,86,173 }
+dim rockL(8) as uByte => { 183,75,175,127,191,255,91,167 }
+dim rockR(8) as uByte => { 229,218,255,253,254,245,210,237 }
+
+Dim fly1(8) as uByte => { 0,0,90,189,189,90,0,0 }
+Dim fly2(8) as uByte => { 0,66,189,189,90,24,0,0 }
+
+dim scrp1(8) as uByte => { 0,0,64,163,131,126,28,42 }
+dim scrp2(8) as uByte => { 0,32,64,128,131,127,60,84 }
+
+dim solid(8) as uByte => { 255, 255, 255, 255, 255, 255, 255 ,255 }
+dim empty(8) as uByte => { 0, 0, 0, 0, 0, 0, 0 ,0 }
+
+dim water(8) as uByte => { 51,204,51,204,51,204,51,204 }
+
+
+Dim head1r(8) as ubyte => {255,24,60,114,126,60,152,188}
+
+Dim head2r(8) as ubyte => { 24,24,60,114,126,60,152,188 }
+
+Dim body1r(8) as ubyte => { 252,126,127,60,24,24,24,28 }
+
+Dim body2r(8) as ubyte => { 252,126,127,60,24,120,64,0 }
+
+Dim head1l(8) as ubyte => {255,24,60,78,126,60,25,61}
+
+Dim head2l(8) as ubyte => {24,24,60,78,126,60,25,61}
+
+Dim body1l(8) as ubyte => {63,126,254,60,24,24,24,56}
+
+Dim body2l(8) as ubyte => {63,126,254,60,24,30,2,0}
+
+Dim death1u(8) as uByte => {129,66,36,129,90,60,255,126}
+dim death1d(8) as uByte => { 126,255,60,90,129,36,66,129 }
+
+Dim death2u(8) as uByte => {0,66,36,24,66,36,0,102}
+dim death2d(8) as uByte => {102,0,36,66,24,36,66,0}
+
+dim skull(8) as uByte => {126,255,153,153,231,126,66,60}
+
+dim solidMap(32, 12) as uByte 'cada celda es un byte
+dim currentEnemies as uByte
+dim currentMapIndex as uInteger
+dim currentMap as uByte
+dim currentMapExit as uByte '0=u, 1=d, 2=l, 3=r
+
+dim enemyStates(4,6) as uByte '8 enemigos max, datos de cada enemigo: tipo, x, y, estado, var1, var2
+
+dim lampX as uByte
+dim lampY as uByte
+dim lightOn as uByte
+
+dim keyStates(5) as uByte
+
+
+dim playerXEnter as uByte
+dim playerYEnter as uByte
+dim playerX as uByte
+dim playerY as uByte
+dim prevPlayerX as uByte
+dim prevPlayerY as uByte
+Dim playerDir as byte = 1
+Dim playerEnterDir as uByte = 1
+Dim lastHead as uInteger = 0
+dim lastBody as uInteger = 0
+Dim playerMoved as uByte = 0
+
+Dim dynaCounter as uByte = 255
+Dim lastDyna as uInteger
+Dim dynaX as uByte
+Dim dynaY as uByte
+
+Dim lifes as uByte = 4
+Dim dynamites as uByte = 4
+
+const dynamiteDuration as uByte = 25
+
+'dim screens(70,117) as uByte at 24278
+'dim maps(300) as uByte at 32468
+
+'TEMPORAL PARA TEST
+
+/'
+dim screens(2, 117) as uByte => { _
+                                    { 85, 85, 85, 85, 85, 85, 21, 80, 1, 8, 8, 8, 64, 1, 16, 80, 1, 0, 0, 0, 64, 1, 16, 80, 1, 0, 0, 0, 64, 1, 80, 84, 1, 0, 0, 0, 64, 1, 0, 64, 81, 170, 170, 106, 65, 1, 0, 64, 81, 85, 85, 85, 65, 65, 85, 85, 81, 85, 85, 85, 65, 65, 85, 85, 1, 0, 2, 0, 67, 1, 0, 64, 0, 0, 0, 0, 3, 0, 0, 64, 0, 1, 0, 1, 3, 0, 0, 64, 85, 85, 85, 85, 85, 85, 85, 85,         8,8,9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,17 }, _
+                                    { 85, 85, 85, 85, 85, 85, 85, 85, 1, 128, 42, 0, 0, 170, 0, 64, 1, 0, 0, 0, 0, 0, 0, 64, 1, 0, 0, 80, 1, 0, 0, 64, 1, 0, 0, 80, 1, 0, 0, 64, 1, 64, 149, 90, 169, 85, 0, 64, 1, 64, 149, 90, 169, 85, 0, 64, 1, 64, 149, 90, 169, 85, 0, 64, 1, 64, 149, 90, 169, 85, 0, 64, 0, 64, 149, 90, 169, 85, 0, 0, 0, 64, 149, 90, 169, 85, 0, 0, 85, 85, 85, 85, 85, 85, 85, 85,  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,18} _
+ }
+'/
+'dim maps(2) as ubyte = { 1, 2 }
+
+dim screens(1,1) as uByte
+dim maps(1) as uByte
+
+/'
+
+Pantalla:
+
+12 * 8 bytes de celdas
+-Cada solido son dos bits, mapa de 12*32 celdas
+20 bytes de contenido (objeto/enemigo)
+-Estructura: 5 bytes cada 2 objetos -> byte[4 bits tipo1, 4 bits tipo2], byte x1, bytey1, byte x2, byte y2Enem6][y Enem6]
+1 byte de info de pantalla
+-Estructura: [000] vacio, [00] salida, [000] color de border
+
+70 pantallas diferentes!
+
+Id's de solidos:
+0 = vacio, si está en un borde del mapa se cuenta como entrada
+1 = muro
+2 = lava/agua, El agua se genera cuando está rodeada de sólidos excepto por arriba (los bordes cuentan como solidos)
+3 = barrera
+
+El agua se genera cuando está rodeada de sólidos excepto por arriba (los bordes cuentan como solidos)
+
+Id's de enemigos/objetos
+
+0 = vacio
+1 = murcielago
+2 = araña
+3 = serpiente
+4 = bicho
+5 = coco
+6 = escorpion
+7 = mosca
+8 = lampara
+9 = persona
+10 = dinamita extra
+
+Quedan aún 6 id's libres
+
+Mapa:
+
+Es un stream de pantallas, no hay mapas como tal. Cuando se rescata a una persona se cuenta como "nueva pantalla" y se carga de forma automática un resumen del nivel
+El jugador empieza en la pantalla 0 en y15,x5
+
+'/
+
+
+
+'---------------------------------Intro sequence
+sub intro()
+
+asm
+ei
+halt
+di
+end asm
+
+dim prevX as uByte = 0
+dim prevY as uByte = 0
+dim prevStep as byte = 0
+
+dim x as uinteger = 16
+dim y as uinteger = 0
+
+dim stepX as byte = 1
+dim stepY as byte = 1
+
+dim colorSprite as uByte
+dim colorFondo as uByte
+
+dim spritePar as uByte = 0
+
+dim crocoCounter1 as uByte = 0
+dim crocoCounter2 as uByte = 192
+
+dim crocoStatus1 as uByte = 0
+dim crocoStatus2 as uByte = 0
+
+colorFondo = createAttrib(7, 1, 0, 0)
+colorSprite = createAttrib(7, 1, 0, 0)
+clearScreen(0)
+
+Dim tmpColor as uByte = createAttrib(2, 6, 1, 0)
+
+Dim xt as ubyte = 0
+Dim yt as ubyte = 0
+
+for x = 0 to 31
+    for y = 6 to 17
+        setAttrib(y, x, colorFondo)
+    next y
+next x
+        
+tmpColor = createAttrib(7, 0, 1, 0)
+
+printColorChar(@tlc, 2, 8, tmpColor)
+printColorChar(@mlor, 3, 8, tmpColor)
+printColorChar(@blc, 4, 8, tmpColor)
+
+printColorChar(@mlo, 3, 9, tmpColor)
+
+printColorChar(@tlc, 2, 10, tmpColor)
+printColorChar(@mlol, 3, 10, tmpColor)
+printColorChar(@blc, 4, 10, tmpColor)
+
+printColorChar(@dot, 4, 11, tmpColor)
+
+printColorChar(@tlcc, 2, 12, tmpColor)
+printColorChar(@mlor, 3, 12, tmpColor)
+printColorChar(@blcc, 4, 12, tmpColor)
+    
+printColorChar(@mlo, 2, 13, tmpColor)
+printColorChar(@mlo, 3, 13, tmpColor)
+printColorChar(@mlo, 4, 13, tmpColor)
+
+printColorChar(@rec, 2, 14, tmpColor)
+printColorChar(@rec, 3, 14, tmpColor)
+printColorChar(@rec, 4, 14, tmpColor)
+
+printColorChar(@dot, 4, 15, tmpColor)
+
+
+printColorChar(@tlcc, 2, 16, tmpColor)
+printColorChar(@mlor, 3, 16, tmpColor)
+printColorChar(@blc, 4, 16, tmpColor)
+    
+printColorChar(@mlo, 2, 17, tmpColor)
+printColorChar(@mlob, 3, 17, tmpColor)
+printColorChar(@dgl, 4, 17, tmpColor)
+
+printColorChar(@rct, 2, 18, tmpColor)
+printColorChar(@rcbs, 3, 18, tmpColor)
+printColorChar(@dglc, 4, 18, tmpColor)
+
+printColorChar(@dot, 4, 19, tmpColor)
+
+printColorChar(@tlcc, 2, 20, tmpColor)
+printColorChar(@mlc, 3, 20, tmpColor)
+printColorChar(@blcc, 4, 20, tmpColor)
+
+printColorChar(@mlo, 2, 21, tmpColor)
+printColorChar(@mlo, 4, 21, tmpColor)
+    
+printColorChar(@rct, 2, 22, tmpColor)
+printColorChar(@mlc, 3, 22, tmpColor)
+printColorChar(@rcb, 4, 22, tmpColor)
+
+printColorChar(@dot, 4, 23, tmpColor)
+
+printZXString("POWER", 19, 8, createAttrib(2, 0, 1, 0))
+printRepeatColorChar(@energy, 19, 14, 9, createAttrib(4, 0, 1, 0))
+
+
+printZXString("LIFE", 19, 2, createAttrib(7, 0, 1, 0))
+
+printColorChar(@head1r, 21, 0, createAttrib(5, 0, 1, 0))
+printColorChar(@body1r, 22, 0, createAttrib(5, 0, 1, 0))
+
+printColorChar(@head1r, 21, 2, createAttrib(5, 0, 1, 0))
+printColorChar(@body1r, 22, 2, createAttrib(5, 0, 1, 0))
+
+printColorChar(@head1r, 21, 4, createAttrib(5, 0, 1, 0))
+printColorChar(@body1r, 22, 4, createAttrib(5, 0, 1, 0))
+
+printColorChar(@head1r, 21, 6, createAttrib(5, 0, 1, 0))
+printColorChar(@body1r, 22, 6, createAttrib(5, 0, 1, 0))
+
+printZXString("BOMB", 19, 26, createAttrib(7, 0, 1, 0))
+
+printColorChar(@dynamite1, 21, 25, createAttrib(2, 0, 1, 0))
+printColorChar(@dynamite2, 21, 27, createAttrib(2, 0, 1, 0))
+printColorChar(@dynamite1, 21, 29, createAttrib(2, 0, 1, 0))
+printColorChar(@dynamite2, 21, 31, createAttrib(2, 0, 1, 0))
+
+printZXString("SCORE: 00000", 21, 10, tmpColor)
+
+Dim vals as uinteger = code("~") + 1
+vals = vals * 8
+vals = vals + 15360
+printColorChar(vals, 23, 8, tmpColor)
+
+printColorChar(ZXCharAddress("G"), 23, 9, createAttrib(1, 0, 1, 0))
+printColorChar(ZXCharAddress("u"), 23, 10, createAttrib(2, 0, 1, 0))
+printColorChar(ZXCharAddress("s"), 23, 11, createAttrib(3, 0, 1, 0))
+printColorChar(ZXCharAddress("i"), 23, 12, createAttrib(4, 0, 1, 0))
+printColorChar(ZXCharAddress("v"), 23, 13, createAttrib(5, 0, 1, 0))
+printColorChar(ZXCharAddress("i"), 23, 14, createAttrib(6, 0, 1, 0))
+printColorChar(ZXCharAddress("s"), 23, 15, createAttrib(7, 0, 1, 0))
+printColorChar(ZXCharAddress("i"), 23, 16, createAttrib(1, 0, 1, 0))
+printColorChar(ZXCharAddress("o"), 23, 17, createAttrib(2, 0, 1, 0))
+printColorChar(ZXCharAddress("n"), 23, 18, createAttrib(3, 0, 1, 0))
+    
+printZXString("2020", 23, 20, tmpColor)
+
+printZXString("PRESS TO START", 9, 8, colorFondo)
+
+for x = 0 to 31
+    printColorChar(@water, 17, x, createAttrib(5, 1, 0, 1))
+next x
+
+
+printColorChar(@walltl, 6, 0, createAttrib(2, 6, 1, 0))
+printColorChar(@walltr, 6, 31, createAttrib(2, 6, 1, 0))
+
+for y = 7 to 16
+    printColorChar(@walll, y, 0, createAttrib(2, 6, 1, 0))
+    printColorChar(@wallr, y, 31, createAttrib(2, 6, 1, 0))
+next y
+
+
+
+
+dumpScreen()
+
+do
+
+    asm
+    ei
+    halt
+    di
+    end asm
+
+    if prevStep > 0 then
+            if spritePar then
+            drawColorSprite(@head1r, prevY, prevX, colorFondo)
+        else
+            drawColorSprite(@head2r, prevY, prevX, colorFondo)
+        end if
+
+        drawColorSprite(@body2r, prevY + 8, prevX, colorFondo)
+
+    else
+        if spritePar then
+            drawColorSprite(@head1l, prevY, prevX, colorFondo)
+        else
+            drawColorSprite(@head2l, prevY, prevX, colorFondo)
+        end if
+
+        drawColorSprite(@body2l, prevY + 8, prevX, colorFondo)
+
+    end if
+
+    if stepX > 0 then
+
+        if spritePar then
+            drawColorSprite(@head2r, y, x, colorSprite)
+        else
+            drawColorSprite(@head1r, y, x, colorSprite)
+        end if
+
+        drawColorSprite(@body2r, y + 8, x, colorSprite)
+
+        else
+
+        if spritePar then
+            drawColorSprite(@head2l, y, x, colorSprite)
+        else
+            drawColorSprite(@head1l, y, x, colorSprite)
+        end if
+
+        drawColorSprite(@body2l, y + 8, x, colorSprite)
+
+    end if
+
+    crocoCounter1 = crocoCounter1 + 1
+    crocoCounter2 = crocoCounter2 + 1
+
+    if crocoCounter1 = 255 then
+
+        if crocoStatus1 = 0 then
+
+            crocoCounter1 = 192
+            drawColorSprite(@crock1, 128, 184, createAttrib(4, 1, 0, 0))
+            crocoStatus1 = 1
+
+        else if crocoStatus1 = 1 then
+
+            crocoCounter1 = 240
+            drawSprite(@crock1, 128, 184)
+            drawColorSprite(@crock2, 128, 184, createAttrib(4, 1, 0, 0))
+            crocoStatus1 = 2
+
+        else if crocoStatus1 = 2 then
+
+            crocoCounter1 = 240
+            drawSprite(@crock2, 128, 184)
+            drawColorSprite(@crock1, 128, 184, createAttrib(4, 1, 0, 0))
+            crocoStatus1 = 3
+
+        else
+
+            crocoCounter1 = 0
+            drawColorSprite(@crock1, 128, 184, colorFondo)
+            crocoStatus1 = 0
+
+        end if        
+
+    end if
+ 
+    if crocoCounter2 = 255 then
+
+        if crocoStatus2 = 0 then
+
+            crocoCounter2 = 192
+            drawColorSprite(@crock1, 128, 40, createAttrib(4, 1, 0, 0))
+            crocoStatus2 = 1
+
+        else if crocoStatus2 = 1 then
+
+            crocoCounter2 = 240
+            drawSprite(@crock1, 128, 40)
+            drawColorSprite(@crock2, 128, 40, createAttrib(4, 1, 0, 0))
+            crocoStatus2 = 2
+
+        else if crocoStatus2 = 2 then
+
+            crocoCounter2 = 240
+            drawSprite(@crock2, 128, 40)
+            drawColorSprite(@crock1, 128, 40, createAttrib(4, 1, 0, 0))
+            crocoStatus2 = 3
+
+        else
+
+            crocoCounter2 = 0
+            drawColorSprite(@crock1, 128, 40, colorFondo)
+            crocoStatus2 = 0
+
+        end if        
+
+    end if
+
+    dumpScreenCenter()
+
+    prevX = x
+    prevY = y
+    prevStep = stepX
+    x = x + stepX
+    y = y + stepY
+
+    if x > 239 or x < 8
+
+        x = x - stepX * 2
+        stepX = -stepX
+
+    end if
+
+    if y > 120 or y < 0
+
+        y = y - stepY * 2
+        stepY = -stepY
+
+    end if
+
+       
+    spritePar = not spritePar
+
+    if inkey$ <> "" then return
+
+loop
+
+end sub
+
+
+
+
+'---------------------------------Screen loading
+sub decodeCurrentScreen()
+
+    /'
+    12 * 8 bytes de celdas
+    -Cada solido son dos bits, mapa de 12*32 celdas
+    20 bytes de contenido (objeto/enemigo)
+    -Estructura: 5 bytes cada 2 objetos -> byte[4 bits tipo1, 4 bits tipo2], byte x1, bytey1, byte x2, byte y2Enem6][y Enem6]
+    1 byte de info de pantalla
+    -Estructura: [000] vacio, [00] salida, [000] color de borde
+    '/
+
+    clearScreenCenter(createAttrib(7, 0, 0, 0))
+
+    Dim currentScreen as uInteger = maps(currentMapIndex)
+    
+    Dim currentY as uInteger
+    Dim currentX as uInteger
+    Dim scanIndex as uByte
+    Dim currentType as uByte
+
+    currentType = screens(currentScreen, 117)
+
+    border (currentType & 7)
+
+    currentMapExit = (currentType >> 3) & 3
+
+    for scanIndex = 1 to 96
+
+        currentY = (scanIndex - 1) / 8
+        currentX = ((scanIndex - (currentY * 8)) - 1) * 4
+        currentType = screens(currentScreen, scanIndex)
+
+        solidMap(currentX + 1, currentY + 1) = currentType band 3
+        solidMap(currentX + 2, currentY + 1) = (currentType >> 2) band 3
+        solidMap(currentX + 3, currentY + 1) = (currentType >> 4) band 3
+        solidMap(currentX + 4, currentY + 1) = (currentType >> 6) band 3
+
+    next scanIndex
+
+    Dim solidColor as uByte = createAttrib(2, 5, 0, 0)
+    Dim destructibleWallColor as uByte = createAttrib(7, 0, 1, 0)
+    Dim lavaColor as uByte = createAttrib(2, 6, 0, 0)
+    Dim waterColor as uByte = createAttrib(1, 5, 0, 1)
+
+    dim u as uByte
+    dim d as uByte
+    dim l as uByte
+    dim r as uByte
+
+    dim tmp as uByte
+    dim wasSolid as uByte
+
+    for currentY = 12 to 1 step -1 'vamos de abajo a arriba para facilitar el cálculo del agua
+
+        wasSolid = 1
+
+        for currentX = 1 to 32
+
+            /'
+            Id's de solidos:
+            0 = vacio, si está en un borde del mapa se cuenta como entrada
+            1 = muro
+            2 = lava/agua, El agua se genera cuando está rodeada de sólidos excepto por arriba (los bordes cuentan como solidos)
+            3 = barrera
+            '/
+
+            l = currentX = 1 or solidMap(currentX - 1, currentY) <> 0
+            r = currentX = 32 or solidMap(currentX + 1, currentY) <> 0
+            u = currentY = 1 or solidMap(currentX, currentY - 1) <> 0
+            d = currentY = 12 or solidMap(currentX, currentY + 1) <> 0
+
+            tmp = solidMap(currentX, currentY)
+
+            if tmp then
+
+                if tmp = 1 then
+                    tmp = solidColor
+                    wasSolid = 1
+                else if tmp = 2 then
+                    if l and d and r and wasSolid then
+                        printColorChar(@water, currentY + 5, currentX - 1, waterColor)
+                        continue for
+                    else
+                        tmp = lavaColor
+                    end if
+                else
+                    if u and d then
+                        printColorChar(@destructibleWallV, currentY + 5, currentX - 1, destructibleWallColor)
+                        continue for
+                    else if l and r then
+                        printColorChar(@destructibleWallH, currentY + 5, currentX - 1, destructibleWallColor)
+                        continue for
+                    end if
+                    continue for
+                end if
+
+                if l and r and u and d then
+                    
+                    'solido completo
+                    printColorChar(@solid, currentY + 5, currentX - 1, tmp)
+
+                else if l and r and u then
+
+                    'apertura inferior
+                    printColorChar(@wallt, currentY + 5, currentX - 1, tmp)
+
+                else if l and r and d then
+
+                    'apertura superior
+                    printColorChar(@wallb, currentY + 5, currentX - 1, tmp)
+
+                else if l and u and d then
+
+                    'apertura derecha
+                    printColorChar(@walll, currentY + 5, currentX - 1, tmp)
+
+                 else if r and u and d then
+
+                    'apertura izquierda
+                    printColorChar(@wallr, currentY + 5, currentX - 1, tmp)
+
+                else if l and r then
+
+                    'muro vertical
+                    printColorChar(@singleWallH, currentY + 5, currentX - 1, tmp)
+
+                else if u and d then
+
+                    'muro vertical
+                    printColorChar(@singleWallV, currentY + 5, currentX - 1, tmp)
+
+                else if l and u then
+
+                    'Esquina inferior derecha
+                    printColorChar(@wallbr, currentY + 5, currentX - 1, tmp)
+
+                else if l and d then
+
+                    'Esquina superior derecha
+                    printColorChar(@walltr, currentY + 5, currentX - 1, tmp)
+
+                else if r and u then
+
+                    'Esquina inferior izquierda
+                    printColorChar(@wallbl, currentY + 5, currentX - 1, tmp)
+
+                else if r and d then
+
+                    'Esquina inferior derecha
+                    printColorChar(@walltl, currentY + 5, currentX - 1, tmp)
+
+                else if l then
+
+                    'Esquina inferior derecha
+                    printColorChar(@rockR, currentY + 5, currentX - 1, tmp)
+
+                else if r then
+
+                    'Esquina inferior derecha
+                    printColorChar(@rockL, currentY + 5, currentX - 1, tmp)
+
+                else if u then
+
+                    'Esquina inferior derecha
+                    printColorChar(@rockB, currentY + 5, currentX - 1, tmp)
+
+                else if d then
+
+                    'Esquina inferior derecha
+                    printColorChar(@rockT, currentY + 5, currentX - 1, tmp)
+
+                end if
+
+            else
+                wasSolid = 0
+            end if
+
+        next currentX
+
+    next currentY
+
+    for currentX = 97 to 116 step 5
+
+        currentType = screens(currentScreen, currentX)
+
+        if currentType = 0 then exit for
+
+        loadItem(currentType band 15, screens(currentScreen, currentX + 1), screens(currentScreen, currentX + 2))
+
+        currentType = (currentType >> 4) band 15
+
+        if currentType = 0 then exit for
+
+        loadItem(currentType, screens(currentScreen, currentX + 3), screens(currentScreen, currentX + 4))
+
+    next currentX
+
+end sub
+
+sub loadItem(type as uByte, itemX as uByte, itemY as uByte)
+
+    if type = 8 then
+
+        lampX = itemX
+        lampY = itemY
+
+        if solidMap(itemX + 1, itemY) then
+            printColorChar(@lampl, itemY + 5, itemX - 1, createAttrib(6, 0, 0, 0))
+        else
+            printColorChar(@lampr, itemY + 5, itemX - 1, createAttrib(6, 0, 0, 0))
+        end if
+
+    end if
+
+end sub
+
+
+
+'---------------------------------Player movement
+function movePlayer() as uByte
+
+
+    keybScan()
+
+    dim curX as uByte = playerX / 8 + 1
+    dim curY as uByte = playerY / 8 - 5
+
+    dim moveX as byte = 0
+    dim moveY as byte = 0
+
+    if keyStates(1) then moveX = -2
+    if keyStates(2) then moveX = 2
+
+    if keyStates(3) then moveY = -2 else moveY = 2
+
+    Dim onSquareY as uByte = (playerY band 7) = 0
+    Dim onSquareX as uByte = (playerX band 7) = 0
+    
+    Dim tmp1 as uByte
+    Dim tmp2 as uByte
+    Dim tmp3 as uByte
+    Dim exitMap as uByte
+    Dim die as uByte = 0
+
+    if onSquareY then
+        if onSquareX then
+            if moveY = -2 then
+                if curY = 0 then 
+                    exitMap = 1 
+                else if curY > 1
+                    tmp1 = solidMap(curX, curY - 1)
+                    if tmp1 <> 0 then 
+                        moveY = 0
+                        if tmp1 = 2 then die = 1
+                    end if
+                end if
+            else
+                if curY = 12 then 
+                    exitMap = 1
+                else if curY < 11
+                    tmp1 = solidMap(curX, curY + 2)
+                    if tmp1 <> 0 then 
+                        moveY = 0
+                        if tmp1 = 2 then die = 1
+                    end if
+                end if
+            end if
+        else
+            if moveY = -2 then
+
+                if curY = 0 then 
+                    exitMap = 1 
+                else if curY > 1
+                    tmp1 = solidMap(curX, curY - 1)
+                    tmp2 = solidMap(curX + 1, curY - 1)
+                    if (tmp1 bor tmp2) <> 0  then 
+                        moveY = 0
+                        if tmp1 = 2 or tmp2 = 2 then die = 1
+                    end if
+                end if
+            else
+                if curY = 12 then 
+                    exitMap = 1
+                else if curY < 11
+                    tmp1 = solidMap(curX, curY + 2)
+                    tmp2 = solidMap(curX + 1, curY + 2)
+                    if (tmp1 bor tmp2)  <> 0 then 
+                        moveY = 0
+                        if tmp1 = 2 or tmp2 = 2 then die = 1
+                    end if
+                end if
+            end if
+
+        end if
+    end if
+
+     if moveY then
+        onSquareY = ((playerY + moveY) band 7) = 0
+        curY = (playerY + moveY) / 8 - 5
+    end if
+
+    if onSquareX and moveX then
+        if onSquareY then
+            if moveX = -2 then
+                if curX = 1 then
+                    exitMap = 1
+                else 
+                    if curY > 0 then tmp1 = solidMap(curX - 1, curY) else tmp1 = 0
+                    if curY < 12 then tmp2 = solidMap(curX - 1, curY + 1) else tmp2 = 0
+                    if (tmp1 bor tmp2) <> 0 then
+                        moveX = 0
+                        if tmp1 = 2 or tmp2 = 2 then die = 1
+                    end if
+                end if
+            else
+                if curX = 32 then
+                    exitMap = 1
+                else
+                    if curY > 0 then tmp1 = solidMap(curX + 1, curY) else tmp1 = 0
+                    if curY < 12 then tmp2 = solidMap(curX + 1, curY + 1) else tmp2 = 0
+                    if (tmp1 bor tmp2) <> 0 then
+                        moveX = 0
+                        if tmp1 = 2 or tmp2 = 2 then die = 1
+                    end if
+                end if
+            end if
+        else
+            if moveX = -2 then
+                if curX = 1 then
+                    exitMap = 1
+                else 
+                    if curY > 0 then tmp1 = solidMap(curX - 1, curY) else tmp1 = 0
+                    if curY < 12 then tmp2 = solidMap(curX - 1, curY + 1) else tmp2 = 0
+                    if curY < 11 then tmp3 = solidMap(curX - 1, curY + 2) else tmp3 = 0
+                    if (tmp1 bor tmp2 bor tmp3)  then 
+                        moveX = 0
+                        if tmp1 = 2 or tmp2 = 2 or tmp3 = 2 then die = 1
+                    end if
+                end if
+            else
+                if curX = 32 then
+                    exitMap = 1
+                else
+                    if curY > 0 then tmp1 = solidMap(curX + 1, curY) else tmp1 = 0
+                    if curY < 12 then tmp2 = solidMap(curX + 1, curY + 1) else tmp2 = 0
+                    if curY < 11 then tmp3 = solidMap(curX + 1, curY + 2) else tmp3 = 0
+                    if (tmp1 bor tmp2 bor tmp3)  then 
+                        moveX = 0
+                        if tmp1 = 2 or tmp2 = 2 or tmp3 = 2 then die = 1
+                    end if
+                end if
+            end if
+        end if
+    end if
+
+    playerMoved = 0
+
+    if exitMap then
+
+        return 2
+
+    else if die then
+
+        return 1
+
+    else
+
+        if (moveX bor moveY) then
+
+            prevPlayerX = playerX
+            prevPlayerY = playerY
+
+            playerX = playerX + moveX
+            playerY = playerY + moveY
+
+            if moveX = 2 then
+                playerDir = 1
+            else if moveX = -2 then
+                playerDir = -1
+            end if
+
+            playerMoved = 1
+
+        end if
+
+        return 0
+
+    end if
+
+end function
+
+'---------------------------------Player rendering
+sub drawPlayer()
+
+    if playerMoved then
+
+        drawSprite(lastHead, prevPlayerY, prevPlayerX)
+        drawSprite(lastBody, prevPlayerY + 8, prevPlayerX)
+
+        if playerDir = 1 then
+
+            if lastHead = @head1r then
+                lastHead = @head2r
+            else              
+                lastHead = @head1r
+            end if
+
+            drawSprite(lastHead, playerY, playerX)
+            lastBody = @body2r
+            drawSprite(lastBody, playerY + 8, playerX)
+
+        else
+
+            if lastHead = @head1l then
+                lastHead = @head2l
+            else              
+                lastHead = @head1l
+            end if
+
+            drawSprite(lastHead, playerY, playerX)
+            lastBody = @body2l
+            drawSprite(lastBody, playerY + 8, playerX)
+
+        end if
+
+    else
+
+        drawSprite(lastHead, playerY, playerX)
+        drawSprite(lastBody, playerY + 8, playerX)
+
+        if playerDir = 1 then
+
+            if lastHead = @head1r then
+                lastHead = @head2r
+            else              
+                lastHead = @head1r
+            end if
+
+            drawSprite(lastHead, playerY, playerX)
+            lastBody = @body1r
+            drawSprite(lastBody, playerY + 8, playerX)
+
+        else
+
+            if lastHead = @head1l then
+                lastHead = @head2l
+            else              
+                lastHead = @head1l
+            end if
+
+            drawSprite(lastHead, playerY, playerX)
+            lastBody = @body1l
+            drawSprite(lastBody, playerY + 8, playerX)
+
+        end if
+
+    end if
+
+end sub
+
+
+'---------------------------------Keyboard scan routine
+sub keybScan()
+
+asm
+    
+    push ix
+
+    ld ix, _keyStates.__DATA__
+    ld (ix+0), 0
+    ld (ix+1), 0
+    ld (ix+2), 0
+    ld (ix+3), 0
+    ld (ix+4), 0
+
+    ld bc, 57342
+    in a, (c)
+    rra
+    jp c, key_test_o
+    ld (ix +1), 1
+key_test_o:
+    rra
+    jp c, key_test_q
+    ld (ix+0), 1
+key_test_q:
+    ld bc, 64510
+    in a, (c)
+    rra
+    jp c, key_test_a
+    ld (ix + 2), 1
+key_test_a
+    ld bc, 65022
+    in a, (c)
+    rra
+    jp c, key_test_fire
+    ld (ix + 3), 1
+key_test_fire
+    ld bc, 32766
+    in a, (c)
+    and 31
+    xor 31
+    jp z, end_keyscan
+    ld (ix + 4), 1
+end_keyscan
+    pop ix
+
+end asm
+
+end sub
+
+sub longPause()
+
+    asm
+    di
+    ei
+    halt
+    halt
+    halt
+    halt
+    halt
+    halt
+    halt
+    halt
+    halt
+    halt
+    halt
+    halt
+    halt
+    halt
+    halt
+    halt
+    halt
+    halt
+    halt
+    halt
+    di
+    end asm
+
+end sub
+
+
+function processDeath() as uByte
+
+    'matar jugador
+
+    asm
+    di
+    ei
+    halt
+    di
+    end asm
+
+    dumpAttribCenter(createAttrib(0,2,1,0))
+    
+    asm
+    di
+    ei
+    halt
+    halt
+    halt
+    halt
+    di
+    end asm
+
+    dumpAttribsCenter()
+
+    'playAudio(1)
+
+    drawSprite(lastHead, playerY, playerX)
+    drawSprite(lastBody, playerY + 8, playerX)
+    drawSprite(@death1u, playerY, playerX)
+    drawSprite(@death1d, playerY + 8, playerX)
+
+    dumpScreenCenter()
+
+    longPause()
+
+    drawSprite(@death1u, playerY, playerX)
+    drawSprite(@death1d, playerY + 8, playerX)
+    drawSprite(@death2u, playerY, playerX)
+    drawSprite(@death2d, playerY + 8, playerX)
+    dumpScreenCenter()
+
+    longPause()
+
+    drawSprite(@death2u, playerY, playerX)
+    drawSprite(@death2d, playerY + 8, playerX)
+    
+    lifes = lifes - 1
+
+    if lifes = 3 then
+        setAttr(21, 6, 0)
+        setAttr(22, 6, 0)
+    else if lifes = 2
+        setAttr(21, 4, 0)
+        setAttr(22, 4, 0)
+    else if lifes = 1
+        setAttr(21, 2, 0)
+        setAttr(22, 2, 0)
+    else
+        setAttr(21, 0, 0)
+        setAttr(22, 0, 0)
+    end if
+
+    dumpScreenCenter()
+
+    longPause()
+
+    return lifes > 0
+
+end function
+
+sub render()
+
+    asm
+    di
+    ei
+    halt
+    di
+    end asm
+
+    drawPlayer()
+    'dibujar enemigos: drawEnemies(updateResult band 2)
+     '0 = no dyna, 1 = dyna A, 2 = dynaB, 3 = explosion
+    drawDynamite()
+
+    if lightOn then
+        dumpScreenCenter()
+    else
+        dumpPixelsCenter()
+    end if
+
+end sub
+
+sub gameOver()
+
+    dim xss as uByte
+
+    for xss = 10 to 21
+
+        printColorChar(@skull, 10, xss, createAttrib(7,0,1,0))
+
+        asm
+        di
+        ei
+        halt
+        di
+        end asm
+        dumpScreenCenter()
+
+    next xss
+
+    for xss = 11 to 13
+
+        printColorChar(@skull, xss, 21, createAttrib(7,0,1,0))
+
+        asm
+        di
+        ei
+        halt
+        di
+        end asm
+        dumpScreenCenter()
+    
+    next xss
+
+    for xss = 21 to 10 step -1
+
+        printColorChar(@skull, 14, xss, createAttrib(7,0,1,0))
+
+        asm
+        di
+        ei
+        halt
+        di
+        end asm
+        dumpScreenCenter()
+
+    next xss
+
+
+
+    
+    for xss = 13 to 11 step - 1
+
+        printColorChar(@skull, xss, 10, createAttrib(7,0,1,0))
+
+        asm
+        di
+        ei
+        halt
+        di
+        end asm
+        dumpScreenCenter()
+    
+    next xss
+
+    printZXString("          ", 11, 11, 0)
+    printZXString(" YOU DIED ", 12, 11, createAttrib(2,0,1,0))
+    printZXString("          ", 13, 11, 0)
+
+    asm
+    di
+    ei
+    halt
+    di
+    end asm
+    dumpScreenCenter()
+
+end sub
+
+
+Dim xStart as uByte 
+Dim yStart as uByte
+Dim xEnd as uByte 
+Dim yEnd as uByte
+'-----------------------test dinamita
+function checkDynamite() as uByte
+
+    if dynaCounter < dynamiteDuration then
+
+        dynaCounter = dynaCounter - 1
+        
+        if dynaCounter = 0 then
+
+            if dynaX mod 2 = 0 then
+                xEnd = (dynaX / 8 + 1) + 2
+                if xEnd > 4 then xStart = xEnd - 4 else xStart = 1
+                if xEnd > 32 then xEnd = 32
+            else 
+                xEnd = (dynaX / 8 + 1) + 3
+                if xEnd > 5 then xStart = xEnd - 5 else xStart = 1
+                if xEnd > 32 then xEnd = 32
+            end if
+
+
+            yEnd = (dynaY / 8 - 5) + 2
+            if yEnd > 4 then yStart = yEnd - 4 else yStart = 1
+            if yEnd > 12 then yEnd = 12
+
+            Dim bucX as uByte
+            Dim bucY as uByte
+
+            for bucY = yStart to yEnd
+                for bucX = xStart to xEnd
+                    if solidMap(bucX, bucY) = 3 then
+                        solidMap(bucX, bucY) = 0
+                        printColorChar(@empty, bucY + 5, bucX - 1, 7)
+                    end if
+                next bucX
+            next bucY
+
+            Dim xDiff as integer = playerX 
+            xDiff = xDiff - dynaX 
+            if xDiff < 0 then xDiff = -xDiff
+            dim yDiff as integer = playerY
+            yDiff = yDiff - (dynaY - 4)
+            if yDiff < 0 then yDiff = - yDiff
+
+            if yDiff < 27 and xDiff < 23 then return 1
+
+        end if
+
+    else if keyStates(4) and dynamites > 0 then
+
+        if playerY mod 8 = 0 then
+
+            xStart = playerX / 8 + 1
+            if playerX mod 8 <> 0 and playerX < 248 then xEnd = xStart + 1 else xEnd = xStart
+      
+            yStart = playerY / 8 - 3
+
+            if solidMap(xStart, yStart) or solidMap(xEnd, yStart) then
+
+                dynamites = dynamites - 1
+                setAttr(21, dynamites * 2 + 25, 0)
+                dynaCounter = dynamiteDuration - 1
+                dynaX = playerX
+                dynaY = playerY + 8
+
+                lastDyna = 0
+
+            end if
+
+        end if
+
+    end if
+
+    return 0
+
+end function
+
+sub drawDynamite()
+
+    if dynaCounter < dynamiteDuration
+
+        if dynaCounter = 0 then
+            dynaCounter = 255
+            drawColorSprite(lastDyna, dynaY, dynaX, 7)
+            dumpScreenCenter()
+            asm
+            di
+            ei
+            halt
+            halt
+            halt
+            halt
+            di
+            end asm
+
+            dumpAttribCenter(createAttrib(2,6,1,0))
+    
+            'playAudio(0)
+
+            dumpAttribsCenter()
+        else
+            if dynaCounter mod 8 = 0 then
+                if lastDyna <> 0 then drawSprite(lastDyna, dynaY, dynaX)
+                if lastDyna = @dynamite1 then lastDyna = @dynamite2 else lastDyna = @dynamite1
+                drawColorSprite(lastDyna, dynaY, dynaX, 2)
+            end if
+        end if
+    end if
+
+end sub
+
+/'
+sub fastcall playAudio(audioEffect as uByte)
+
+asm
+
+playBasic:
+    push ix
+play:
+	ld hl,sfxData	;address of sound effects data
+
+	push ix
+	push iy
+
+	ld b,0
+	ld c,a
+	add hl,bc
+	add hl,bc
+	ld e,(hl)
+	inc hl
+	ld d,(hl)
+	push de
+	pop ix			;put it into ix
+
+	ld a,(23624)	;get border color from BASIC vars to keep it unchanged
+	rra
+	rra
+	rra
+	and 7
+	ld (sfxRoutineToneBorder  +1),a
+	ld (sfxRoutineNoiseBorder +1),a
+	ld (sfxRoutineSampleBorder+1),a
+
+
+readData:
+	ld a,(ix+0)		;read block type
+	ld c,(ix+1)		;read duration 1
+	ld b,(ix+2)
+	ld e,(ix+3)		;read duration 2
+	ld d,(ix+4)
+	push de
+	pop iy
+
+	dec a
+	jr z,sfxRoutineTone
+	dec a
+	jr z,sfxRoutineNoise
+	dec a
+	jr z,sfxRoutineSample
+	pop iy
+	pop ix
+	pop ix
+    jp end_audio
+
+	
+
+;play sample
+
+sfxRoutineSample:
+	ex de,hl
+sfxRS0:
+	ld e,8
+	ld d,(hl)
+	inc hl
+sfxRS1:
+	ld a,(ix+5)
+sfxRS2:
+	dec a
+	jr nz,sfxRS2
+	rl d
+	sbc a,a
+	and 16
+sfxRoutineSampleBorder:
+	or 0
+	out (254),a
+	dec e
+	jr nz,sfxRS1
+	dec bc
+	ld a,b
+	or c
+	jr nz,sfxRS0
+
+	ld c,6
+	
+nextData:
+	add ix,bc		;skip to the next block
+	jr readData
+
+
+
+;generate tone with many parameters
+
+sfxRoutineTone:
+	ld e,(ix+5)		;freq
+	ld d,(ix+6)
+	ld a,(ix+9)		;duty
+	ld (sfxRoutineToneDuty+1),a
+	ld hl,0
+
+sfxRT0:
+	push bc
+	push iy
+	pop bc
+sfxRT1:
+	add hl,de
+	ld a,h
+sfxRoutineToneDuty:
+	cp 0
+	sbc a,a
+	and 16
+sfxRoutineToneBorder:
+	or 0
+	out (254),a
+
+	dec bc
+	ld a,b
+	or c
+	jr nz,sfxRT1
+
+	ld a,(sfxRoutineToneDuty+1)	 ;duty change
+	add a,(ix+10)
+	ld (sfxRoutineToneDuty+1),a
+
+	ld c,(ix+7)		;slide
+	ld b,(ix+8)
+	ex de,hl
+	add hl,bc
+	ex de,hl
+
+	pop bc
+	dec bc
+	ld a,b
+	or c
+	jr nz,sfxRT0
+
+	ld c,11
+	jr nextData
+
+;generate noise with two parameters
+
+sfxRoutineNoise:
+	ld e,(ix+5)		;pitch
+
+	ld d,1
+	ld h,d
+	ld l,d
+sfxRN0:
+	push bc
+	push iy
+	pop bc
+sfxRN1:
+	ld a,(hl)
+	and 16
+sfxRoutineNoiseBorder:
+	or 0
+	out (254),a
+	dec d
+	jr nz,sfxRN2
+	ld d,e
+	inc hl
+	ld a,h
+	and 31
+	ld h,a
+sfxRN2:
+	dec bc
+	ld a,b
+	or c
+	jr nz,sfxRN1
+
+	ld a,e
+	add a,(ix+6)	;slide
+	ld e,a
+
+	pop bc
+	dec bc
+	ld a,b
+	or c
+	jr nz,sfxRN0
+
+	ld c,7
+	jr nextData
+
+
+sfxData:
+
+SoundEffectsData:
+	defw SoundEffect0Data
+	defw SoundEffect1Data
+    defw SoundEffect2Data
+
+SoundEffect0Data:
+	defb 2 ;noise
+	defw 20,250,2730
+	defb 0
+SoundEffect1Data:
+	defb 3 ;sample
+	defw 160
+	defw Sample1Data+0
+	defb 25
+	defb 0
+
+SoundEffect2Data:
+	defb 2 ;noise
+	defw 4,500,65285
+	defb 1 ;tone
+	defw 32,150,4096,8,65088
+	defb 0
+
+Sample1Data:
+	defb 203,203,247,227,248,120,223,60,127,143,56,247,15,113,227,159
+	defb 225,238,60,115,248,127,207,252,255,15,225,243,223,195,252,63
+	defb 107,248,127,135,244,63,7,248,63,195,240,31,135,252,63,0
+	defb 252,63,225,241,135,195,255,31,30,126,63,249,241,243,227,247
+	defb 143,191,254,31,239,255,255,247,248,127,249,249,255,5,255,191
+	defb 191,199,223,143,239,240,7,254,3,252,3,255,192,254,1,255
+	defb 128,255,128,255,193,255,128,255,131,255,1,255,63,240,15,248
+	defb 127,224,63,225,255,128,127,227,255,0,255,227,255,0,255,225
+	defb 255,224,63,252,31,252,1,255,228,255,192,31,255,231,255,128
+	defb 127,255,240,127,224,31,255,255,255,255,192,63,255,255,255,255
+
+end_audio:
+
+end asm
+
+end sub
+'/
+sub checkLight()
+
+    if lampX and lightOn then
+
+        xStart = (lampX - 1) * 8
+        yStart = (lampY + 5) * 8
+
+        if playerX < xStart + 8 and playerX + 8 > xStart _
+           and playerY < yStart + 8 and playerY + 16 > yStart then
+
+            setAttr(lampY + 5, lampX - 1, 7)
+        
+           ' playAudio(2)
+
+            for xStart = 1 to 32
+
+                for yStart = 1 to 12
+
+                    if solidMap(xStart, yStart) then 
+                        setAttr(yStart + 5, xStart - 1, 0)
+                    end if
+
+                next yStart
+
+            next xStart
+
+            
+
+            lightOn = 0
+
+        end if
+
+        
+
+    end if
+
+end sub
+
+/'
+----------------------------------
+            MAIN LOOP
+----------------------------------
+'/
+
+'load "" code 24208
+
+initTable()
+
+border 0
+
+Dim state as uByte = 0
+dim updateResult as uByte = 0
+
+do
+
+    if state = 0 then
+
+        intro()
+        state = 1
+        currentMap = 1
+        currentMapIndex = 1
+        lifes = 4
+        dynamites = 4
+        dynaCounter = 255
+        playerX = 29 * 8
+        playerY = 6 * 8
+        lastHead = @head1r
+        lastBody = @body2r
+
+    else if state = 1
+
+        lampX = 0
+        lampY = 0
+        lightOn = 1
+
+        decodeCurrentScreen()
+        
+        updateResult = 0
+        playerXEnter = playerX
+        playerYEnter = playerY
+        drawSprite(lastHead, playerY, playerX)
+        drawSprite(lastBody, playerY + 8, playerX)
+        dumpScreenCenter()
+        
+        state = 2
+
+    else if state = 2 then
+
+        updateResult = movePlayer()
+
+        'updateResult = [00] vacio [00][00][00]
+
+        'procesar enemigos: if not updateResult then updateResult = checkEnemies()
+
+        if not updateResult then updateResult = checkDynamite()
+
+        checkLight()
+
+        render()
+
+        if updateResult = 1 then
+
+            'print at 1,1; "DEATH"
+
+            updateResult = processDeath()
+
+            if updateResult then
+
+                playerX = playerXEnter
+                playerY = playerYEnter
+                playerDir = playerEnterDir
+                
+                if playerDir = 1 then
+
+                    lastHead = @head1r
+                    lastBody = @body2r
+
+                    
+                else
+
+                    lastHead = @head1l
+                    lastBody = @body2l
+
+                end if
+
+                lightOn = 1
+
+                drawSprite(lastHead, playerY, playerX)
+                drawSprite(lastBody, playerY + 8, playerX)
+
+                dumpScreenCenter()
+
+            else
+
+                gameOver()
+
+                pause 0
+
+                state = 0
+
+            end if
+
+        else if updateResult = 2 then
+
+            state = 3
+
+        end if
+
+    else if state = 3 then
+
+        if (currentMapExit = 0 and playerY = 40) then
+                playerY = 136
+                currentMapIndex = currentMapIndex + 1
+        else if (currentMapExit = 1 and playerY = 136) then
+                playerY = 40
+                currentMapIndex = currentMapIndex + 1
+        else if (currentMapExit = 2 and playerX = 0) then
+                playerX = 248
+                currentMapIndex = currentMapIndex + 1
+        else if (currentMapExit = 3 and playerX = 248) then 
+                playerX = 0
+                currentMapIndex = currentMapIndex + 1 
+        else if playerY = 40 then
+                playerY = 136
+                currentMapIndex = currentMapIndex - 1
+        else if playerY = 136 then
+                playerY = 40
+                currentMapIndex = currentMapIndex - 1
+        else if playerX = 0 then
+                playerX = 248
+                currentMapIndex = currentMapIndex - 1
+        else if playerX = 248 then 
+                playerX = 0
+                currentMapIndex = currentMapIndex - 1 
+        end if
+
+        state = 1
+
+    end if
+   
+loop

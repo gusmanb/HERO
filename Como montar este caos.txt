@@ -1,0 +1,40 @@
+Si estás leyendo esto es porque quieres modificar HERO. Si solo quieres crear nuevos niveles no hace falta
+que sigas esta guía, con que arranques el editor de pantallas ya tiene todo integrado para generar tu
+propio juego.
+
+Si por el contrario quieres modificar el código entonces necesitarás saber como montar todo el conjunto.
+
+Una vez tengas todas las modificaciones hechas, deberás de hacer varias cosas para tener los TAP's que se incluyen
+como recursos en el editor de niveles.
+
+Lo primero es crear un cargador BASIC de Spectrum y guardarlo como .tap
+El código para el cargador es el siguiente:
+
+10 BORDER 0: PAPER 0: INK0: CLEAR 32767: LET o = PEEK 23739: POKE 23739, 111: LOAD "" SCREEN$: LOAD "" CODE: POKE 23739, o: RANDOMIZE USR 32768
+20 LOAD ""
+
+No es muy complejo, lo hacemos en cualquier emulador y lo salvamos como TAP con SAVE "HERO" LINE 10 para que autoarranque.
+Seguidamente exportamos la intro, exportamos solo el código sin cargador en la dirección 32768
+Despues exportamos el juego dos veces, ambas con cargador pero una de ellas con la pantalla de carga (está en la solución)
+y otra sin ella.
+
+nos llevamos todos los tap's que hemos generado mas el tap de la pantalla a un directorio de trabajo.
+Debemos de tener:
+
+loader.tap
+intro_code.tap
+hero_scr.tap
+hero_no_scr.tap
+hero.tap
+
+Ahora combinamos el cargador, la pantalla de carga, la intro y el juego sin pantalla en un solo archivo así:
+
+copy /b loader.tap+hero_scr.tap+hero_no_scr.tap hero_with_intro.tap
+
+Bien, ta tenemos todos los archivos preparados. Ahora editamos el archivo de recursos de EditorPantallas y reemplazamos
+HERO y HERO_WITH_INTRO por nuestro hero.tap y hero_with_intro.tap
+
+Ya está todo listo, ahora el editor de pantallas ya tiene los TAP's para generar los archivos finales cuando crees
+las pantallas.
+
+Ale, a pasarlo bien!

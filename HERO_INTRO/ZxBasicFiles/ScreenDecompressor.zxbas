@@ -1,0 +1,57 @@
+﻿#define SCRSTART 16384
+#define SCREND 23296
+
+sub DescomprimirImagen(Direccion as UINTEGER)
+
+    Dim scrPos as uInteger = SCRSTART
+    Dim current as uByte
+    Dim nxt as uByte
+    Dim runLen as uInteger
+    Dim runLenPrev as uInteger
+
+    Dim startPos as uinteger = Direccion
+
+    while scrPos < SCREND
+
+        current = PEEK(Direccion)
+
+        if scrPos + 1 < SCREND then
+
+            nxt = PEEK(Direccion + 1)
+
+            if nxt = current then
+
+                runLen = PEEK(Direccion + 2)
+                runLen = runLen + 2
+
+                runLenPrev = runLen
+
+                while runLen > 0
+
+                    POKE scrPos, current
+                    runLen = runLen - 1
+                    scrPos = scrPos + 1
+
+                end while
+
+                Direccion = Direccion + 3
+
+            else
+
+                POKE scrPos, current
+                scrPos = scrPos + 1
+                Direccion = Direccion + 1
+
+            end if
+
+        else
+
+            POKE scrPos, current
+            scrPos = scrPos + 1
+            Direccion = Direccion + 1
+
+        end if
+
+    end while
+
+end sub

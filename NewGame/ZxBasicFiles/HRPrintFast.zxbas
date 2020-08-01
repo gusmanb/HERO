@@ -1,0 +1,4432 @@
+﻿SUB HRPrintFast (x AS UBYTE, y AS UBYTE, char AS UInteger, attribute AS UBYTE, overprint AS UBYTE)
+'High res Printing, based on code produced, with thanks, by Turkwel over on the WOS boards.
+'Brought to ZX Basic by Britlion, June 2010.
+'Rotate and lookup tables methods added August 2011. (19% speed increase)
+ 
+ASM
+      ld a,(IX+13) ; Get overprint value
+      AND a ; zero?
+      JR Z,HRP_No_Over
+      LD a,182
+      JP HRP_Change_Code
+HRP_No_Over:
+        XOR A ; faster than LD a,0
+HRP_Change_Code:     
+        LD (HRPOver1),a
+        LD (HRPOver2),a
+ 
+        ld b,(IX+7)
+       ld c,(IX+5)
+ 
+      push BC ; SAVE our co-ordinates.
+ 
+;print_char:   
+        ld  d,(IX+09)
+        inc d
+        dec d
+        jr z, HRPrint_From_Charset
+        ld e,(IX+08)
+        jp HR_Print
+HRPrint_From_Charset:       
+        ld  de,(23606)
+      ld  h,0
+      ld  l,(IX+8) ; character
+      add  hl,hl
+      add  hl,hl
+      add  hl,hl
+      add  hl,de
+ 
+HR_Print:
+ 
+    ;call HRPat
+    ;PUSH HL
+    EX DE,HL  ; Save HL out in DE
+    
+    LD H, HRPScreenTables/256
+    LD L,B
+    LD A,(HL)
+    
+    INC H
+    LD L,(HL)
+    LD H,A
+    
+    LD A,C
+    SRL A
+    SRL A
+    SRL A
+
+    ADD A,L
+    LD L,A
+    EX DE,HL ; swap HL and DE Back   
+
+;convert the Y AND X pixel values TO the correct Screen Address  - Address in DE
+      ld a,8
+;set counter TO 8 - Bytes of Character Data TO put down
+HRPrint0:
+       push af
+;save off Counter
+      ;ld a,b
+      ;cp 192
+      ;jr c,HRprint1
+      ;pop af
+      ;jp HRPrintEnd
+;don't print character if  > 191 - off the bottom of the screen - restore AF and exit Print routine
+;[this can be removed IF you are keeping tight control of your Y values]
+HRprint1:
+      push hl
+      push de
+      push de
+;save off Address of Character Data, Screen Address, Screen Address
+      ld a,c
+      AND 7
+      ld d,a
+;get lowest 3 bits of Screen address
+      ;ld e,255
+;set up E with the Mask TO use - 11111111b = All On
+      ld a,(hl)
+      jr nz,HRprint2
+;get a BYTE of Character Data TO put down - but ignore the following Mask shifting
+;if the the X value is on an actual Character boundary i.e. there's no need to shift anything
+
+
+     ; rrca
+     ; srl e
+     ; dec d
+     ; jp nz,HRprint2
+     
+     ld e,0
+     jp HRprint3
+     
+HRprint2:
+;Rotate the Character Data BYTE D times - AND Shift the Mask BYTE AS well, forcing Zeroes into the
+;Left hand side. The Mask will be used TO split the Rotated Character Data OVER a Character boundary
+
+; New version: Grab into DE, the split rotation values.
+     
+     LD E,A ; Put our working byte safe
+     LD A,D ; Grab our number of rotates
+     EX DE,HL ; Save HL
+     DEC A ; decrease so 1->0
+     SLA A ; Multiply by 2 because we have double tables.
+     ADD A, HRP_Rotate/256 ; Add in the base for rotate tables.
+     LD H,A ; put it into our lookup.
+     LD A,(HL) ; get high byte
+     INC H
+     LD L,(HL) ; get low byte
+     LD H,A
+     EX DE,HL ; put result in DE, and restore HL.
+     
+HRprint3:
+       pop hl
+;POP one of the Screen Addresses (formerly in DE) into HL
+      ;ld d,a
+      ;ld a,e
+      ;AND d
+      ld a,d ; get our first byte
+HRPOver1:      XOR (hl)
+      ld (hl),a
+;take the Rotated Character Data, mask it with the Mask BYTE AND the OR it with what's already on the Screen,
+;this takes care of the first part of the BYTE
+;[remove the OR (HL) IF you just want a straight write rather than a merge]
+
+      inc l
+      ld a,l
+      AND 31
+      jr z,HRprint4
+;Increment the Screen Address AND check TO see IF it's at the end of a line,
+;if so THEN there's no need to put down the second part of the Byte
+      ld a,e
+      ;cpl
+      ;AND d
+HRPOver2:      XOR (hl)
+      ld (hl),a
+;Similar TO the first BYTE, we need TO Invert the mask with a CPL so we can put down the second part of the BYTE
+;in the NEXT Character location
+;[again, remove the OR (HL) IF you just want a straight write rather than a merge]
+HRprint4:
+      pop de
+      inc d
+      inc b
+;get the Screen Address back into DE, increment the MSB so it points the the Address immediately below
+;it AND Increment the Y value in B AS well
+      ld a,b
+      AND 7
+      
+      ;call z,HRPat
+      jr nz, HRPatSkip
+      
+      EX DE,HL  ; Save HL out in DE
+    
+      LD H, HRPScreenTables/256
+      LD L,B
+      LD A,(HL)
+    
+      INC H
+      LD L,(HL)
+      LD H,A
+    
+      LD A,C
+      SRL A
+      SRL A
+      SRL A
+
+      ADD A,L
+      LD L,A
+      EX DE,HL ; swap HL and DE Back   
+
+      
+      HRPatSkip:
+;now check IF the Y value has gone OVER a Character Boundary i.e. we will need TO recalculate the Screen
+;Address IF we've jumped from one Character Line to another - messy but necessary especially for lines 7 and 15
+      pop hl
+      inc hl
+;get the Address of the Character Data back AND increment it ready FOR the NEXT BYTE of data
+      pop af
+      dec a
+      jp nz,HRPrint0
+;get the Counter value back, decrement it AND GO back FOR another write IF we haven't reached the end yet
+      ; jp HRPrintAttributes (No need to jump around this now)
+ 
+ 
+HRPrintAttributes:
+      POP BC ; recover our X-Y co-ordinates.
+      ld d,0
+      ld a,(IX+11) ; attribute
+      AND a
+      jp z, HRPrintEnd  ; IF attribute=0, THEN we don't do attributes.
+      ld e,a ; pass TO e
+;transfer Attribute BYTE TO e FOR easier use
+      ld a,b
+      cp 192
+      jp nc, HRPrintEnd
+;check Y position AND EXIT IF off bottom of screen
+      push bc
+
+;save off Y AND X values FOR later
+      AND 248
+      ld h,22
+      ld l,a
+      add hl,hl
+      add hl,hl
+      srl c
+      srl c
+      srl c
+      ld b,d
+      add hl,bc
+
+;calculate the correct Attribute Address FOR the Y\X values
+      ld (hl),e
+;set the Attribute - this is ALWAYS set no matter what the valid Y\X values used
+      pop bc
+;get the Y AND X values back into BC
+      ;call print_attribute2
+;call the subroutine TO see IF an adjacent Horizontal Attribute needs TO be set
+print_attributes1:
+       ld a,c
+      cp 248
+      jr nc,endPrintAttributes1
+;check TO see IF we are AT Horizontal character 31 - IF so THEN no need TO set adjacent Horizontal Attribute
+      AND 7
+      jr z, endPrintAttributes1
+;and don't set the adjacent Horizontal Attribute if there's no need to
+      inc l
+      ld (hl),e
+      dec l
+;increment the Attribute address - set the adjacent horizontal Attribute - THEN set the Attribute Address back
+endPrintAttributes1:                             
+ 
+ 
+;
+      ld a,b
+      cp 184
+      jp nc, HRPrintEnd
+;check TO see IF we are AT Vertical character 23 - IF so THEN no need TO set adjacent Vertical Attribute & EXIT routine
+      AND 7
+      jp z, HRPrintEnd
+;and don't set the adjacent Vertical Attribute if there's no need to & Exit routine
+      ld a,l
+      add a,32
+      ld l,a
+      ld a,d
+      adc a,h
+      ld h,a
+      ld (hl),e
+;set the Attribute address TO the line below  - AND set the adjacent Vertical Attribute
+;
+;drop through now into adjacent Horizontal Attribute subroutine - all RETs will now EXIT the routine completely
+;
+HRPrintAttribute2:   ld a,c
+      cp 248
+      jp nc, HRPrintEnd
+;check TO see IF we are AT Horizontal character 31 - IF so THEN no need TO set adjacent Horizontal Attribute
+      AND 7
+      jp z, HRPrintEnd
+;and don't set the adjacent Horizontal Attribute if there's no need to
+      inc l
+      ld (hl),e
+      dec l
+;increment the Attribute address - set the adjacent horizontal Attribute - THEN set the Attribute Address back
+      ;ret                       
+      jp HRPrintEnd
+
+
+;HRPAT is a subroutine TO convert pixel values into an absolute screen address
+;On Entry - B = Y Value C = X Value   On EXIT - DE = Screen Address
+HRPat:
+
+;    EX DE,HL  ; Save HL out in DE
+;    
+;    LD H, HRPScreenTables/256
+;    LD L,B
+;    LD A,(HL)
+;    
+;    INC H
+;    LD L,(HL)
+;    LD H,A
+;    
+;    LD A,C
+;    SRL A
+;    SRL A
+;    SRL A
+;
+;    ADD A,L
+;    LD L,A
+;    EX DE,HL ; swap HL and DE Back   
+
+;Old version
+;      ld a,b
+;      srl a
+;      srl a
+;      srl a
+;      ld e,a
+;      AND 24
+;      OR 64
+;      ld d,a
+;      ld a,b
+;      AND 7
+;      add a,d
+;      ld d,a
+;      ld a,e
+;      AND  7
+;      rrca
+;      rrca
+;      rrca
+;      ld e,a
+;      ld a,c
+;      srl a
+;      srl a
+;       srl a
+;       add a,e
+;      ld  e,a
+      ret
+
+ALIGN 256 ; Bump up to the next page.
+HRPScreenTables:
+; Screen tables - this is the High Byte value for each row.
+DEFB 64   ; 0 - 0
+DEFB 65   ; 0 - 1
+DEFB 66   ; 0 - 2
+DEFB 67   ; 0 - 3
+DEFB 68   ; 0 - 4
+DEFB 69   ; 0 - 5
+DEFB 70   ; 0 - 6
+DEFB 71   ; 0 - 7
+DEFB 64   ; 1 - 8
+DEFB 65   ; 1 - 9
+DEFB 66   ; 1 - 10
+DEFB 67   ; 1 - 11
+DEFB 68   ; 1 - 12
+DEFB 69   ; 1 - 13
+DEFB 70   ; 1 - 14
+DEFB 71   ; 1 - 15
+DEFB 64   ; 2 - 16
+DEFB 65   ; 2 - 17
+DEFB 66   ; 2 - 18
+DEFB 67   ; 2 - 19
+DEFB 68   ; 2 - 20
+DEFB 69   ; 2 - 21
+DEFB 70   ; 2 - 22
+DEFB 71   ; 2 - 23
+DEFB 64   ; 3 - 24
+DEFB 65   ; 3 - 25
+DEFB 66   ; 3 - 26
+DEFB 67   ; 3 - 27
+DEFB 68   ; 3 - 28
+DEFB 69   ; 3 - 29
+DEFB 70   ; 3 - 30
+DEFB 71   ; 3 - 31
+DEFB 64   ; 4 - 32
+DEFB 65   ; 4 - 33
+DEFB 66   ; 4 - 34
+DEFB 67   ; 4 - 35
+DEFB 68   ; 4 - 36
+DEFB 69   ; 4 - 37
+DEFB 70   ; 4 - 38
+DEFB 71   ; 4 - 39
+DEFB 64   ; 5 - 40
+DEFB 65   ; 5 - 41
+DEFB 66   ; 5 - 42
+DEFB 67   ; 5 - 43
+DEFB 68   ; 5 - 44
+DEFB 69   ; 5 - 45
+DEFB 70   ; 5 - 46
+DEFB 71   ; 5 - 47
+DEFB 64   ; 6 - 48
+DEFB 65   ; 6 - 49
+DEFB 66   ; 6 - 50
+DEFB 67   ; 6 - 51
+DEFB 68   ; 6 - 52
+DEFB 69   ; 6 - 53
+DEFB 70   ; 6 - 54
+DEFB 71   ; 6 - 55
+DEFB 64   ; 7 - 56
+DEFB 65   ; 7 - 57
+DEFB 66   ; 7 - 58
+DEFB 67   ; 7 - 59
+DEFB 68   ; 7 - 60
+DEFB 69   ; 7 - 61
+DEFB 70   ; 7 - 62
+DEFB 71   ; 7 - 63
+DEFB 72   ; 8 - 64
+DEFB 73   ; 8 - 65
+DEFB 74   ; 8 - 66
+DEFB 75   ; 8 - 67
+DEFB 76   ; 8 - 68
+DEFB 77   ; 8 - 69
+DEFB 78   ; 8 - 70
+DEFB 79   ; 8 - 71
+DEFB 72   ; 9 - 72
+DEFB 73   ; 9 - 73
+DEFB 74   ; 9 - 74
+DEFB 75   ; 9 - 75
+DEFB 76   ; 9 - 76
+DEFB 77   ; 9 - 77
+DEFB 78   ; 9 - 78
+DEFB 79   ; 9 - 79
+DEFB 72   ; 10 - 80
+DEFB 73   ; 10 - 81
+DEFB 74   ; 10 - 82
+DEFB 75   ; 10 - 83
+DEFB 76   ; 10 - 84
+DEFB 77   ; 10 - 85
+DEFB 78   ; 10 - 86
+DEFB 79   ; 10 - 87
+DEFB 72   ; 11 - 88
+DEFB 73   ; 11 - 89
+DEFB 74   ; 11 - 90
+DEFB 75   ; 11 - 91
+DEFB 76   ; 11 - 92
+DEFB 77   ; 11 - 93
+DEFB 78   ; 11 - 94
+DEFB 79   ; 11 - 95
+DEFB 72   ; 12 - 96
+DEFB 73   ; 12 - 97
+DEFB 74   ; 12 - 98
+DEFB 75   ; 12 - 99
+DEFB 76   ; 12 - 100
+DEFB 77   ; 12 - 101
+DEFB 78   ; 12 - 102
+DEFB 79   ; 12 - 103
+DEFB 72   ; 13 - 104
+DEFB 73   ; 13 - 105
+DEFB 74   ; 13 - 106
+DEFB 75   ; 13 - 107
+DEFB 76   ; 13 - 108
+DEFB 77   ; 13 - 109
+DEFB 78   ; 13 - 110
+DEFB 79   ; 13 - 111
+DEFB 72   ; 14 - 112
+DEFB 73   ; 14 - 113
+DEFB 74   ; 14 - 114
+DEFB 75   ; 14 - 115
+DEFB 76   ; 14 - 116
+DEFB 77   ; 14 - 117
+DEFB 78   ; 14 - 118
+DEFB 79   ; 14 - 119
+DEFB 72   ; 15 - 120
+DEFB 73   ; 15 - 121
+DEFB 74   ; 15 - 122
+DEFB 75   ; 15 - 123
+DEFB 76   ; 15 - 124
+DEFB 77   ; 15 - 125
+DEFB 78   ; 15 - 126
+DEFB 79   ; 15 - 127
+DEFB 80   ; 16 - 128
+DEFB 81   ; 16 - 129
+DEFB 82   ; 16 - 130
+DEFB 83   ; 16 - 131
+DEFB 84   ; 16 - 132
+DEFB 85   ; 16 - 133
+DEFB 86   ; 16 - 134
+DEFB 87   ; 16 - 135
+DEFB 80   ; 17 - 136
+DEFB 81   ; 17 - 137
+DEFB 82   ; 17 - 138
+DEFB 83   ; 17 - 139
+DEFB 84   ; 17 - 140
+DEFB 85   ; 17 - 141
+DEFB 86   ; 17 - 142
+DEFB 87   ; 17 - 143
+DEFB 80   ; 18 - 144
+DEFB 81   ; 18 - 145
+DEFB 82   ; 18 - 146
+DEFB 83   ; 18 - 147
+DEFB 84   ; 18 - 148
+DEFB 85   ; 18 - 149
+DEFB 86   ; 18 - 150
+DEFB 87   ; 18 - 151
+DEFB 80   ; 19 - 152
+DEFB 81   ; 19 - 153
+DEFB 82   ; 19 - 154
+DEFB 83   ; 19 - 155
+DEFB 84   ; 19 - 156
+DEFB 85   ; 19 - 157
+DEFB 86   ; 19 - 158
+DEFB 87   ; 19 - 159
+DEFB 80   ; 20 - 160
+DEFB 81   ; 20 - 161
+DEFB 82   ; 20 - 162
+DEFB 83   ; 20 - 163
+DEFB 84   ; 20 - 164
+DEFB 85   ; 20 - 165
+DEFB 86   ; 20 - 166
+DEFB 87   ; 20 - 167
+DEFB 80   ; 21 - 168
+DEFB 81   ; 21 - 169
+DEFB 82   ; 21 - 170
+DEFB 83   ; 21 - 171
+DEFB 84   ; 21 - 172
+DEFB 85   ; 21 - 173
+DEFB 86   ; 21 - 174
+DEFB 87   ; 21 - 175
+DEFB 80   ; 22 - 176
+DEFB 81   ; 22 - 177
+DEFB 82   ; 22 - 178
+DEFB 83   ; 22 - 179
+DEFB 84   ; 22 - 180
+DEFB 85   ; 22 - 181
+DEFB 86   ; 22 - 182
+DEFB 87   ; 22 - 183
+DEFB 80   ; 23 - 184
+DEFB 81   ; 23 - 185
+DEFB 82   ; 23 - 186
+DEFB 83   ; 23 - 187
+DEFB 84   ; 23 - 188
+DEFB 85   ; 23 - 189
+DEFB 86   ; 23 - 190
+DEFB 87   ; 23 - 191
+
+; Table 2: Top row High byte for character at Y values (add 192 to kick into this table):
+DEFB 64   ; 0 - 0
+DEFB 64   ; 1 - 8
+DEFB 64   ; 2 - 16
+DEFB 64   ; 3 - 24
+DEFB 64   ; 4 - 32
+DEFB 64   ; 5 - 40
+DEFB 64   ; 6 - 48
+DEFB 64   ; 7 - 56
+DEFB 72   ; 8 - 64
+DEFB 72   ; 9 - 72
+DEFB 72   ; 10 - 80
+DEFB 72   ; 11 - 88
+DEFB 72   ; 12 - 96
+DEFB 72   ; 13 - 104
+DEFB 72   ; 14 - 112
+DEFB 72   ; 15 - 120
+DEFB 80   ; 16 - 128
+DEFB 80   ; 17 - 136
+DEFB 80   ; 18 - 144
+DEFB 80   ; 19 - 152
+DEFB 80   ; 20 - 160
+DEFB 80   ; 21 - 168
+DEFB 80   ; 22 - 176
+DEFB 80   ; 23 - 184
+
+; Table 3: Attributes row by Y value (Add 216 to kick into this table): 
+
+DEFB 88   ;0
+DEFB 88   ;1
+DEFB 88   ;2
+DEFB 88   ;3
+DEFB 88   ;4
+DEFB 88   ;5
+DEFB 88   ;6
+DEFB 88   ;7
+DEFB 89   ;8
+DEFB 89   ;9
+DEFB 89   ;10
+DEFB 89   ;11
+DEFB 89   ;12
+DEFB 89   ;13
+DEFB 89   ;14
+DEFB 89   ;15
+DEFB 90   ;16
+DEFB 90   ;17
+DEFB 90   ;18
+DEFB 90   ;19
+DEFB 90   ;20
+DEFB 90   ;21
+DEFB 90   ;22
+DEFB 90   ;23
+
+; This leaves 16 bytes unused here.
+
+ALIGN 256 ; Kick up to the next page.
+
+; Table 1 Low byte (Part 2 of Table 1. Inc H to get here from first part)
+
+DEFB 0   ; 0 - 0	
+DEFB 0   ; 0 - 1	
+DEFB 0   ; 0 - 2	
+DEFB 0   ; 0 - 3	
+DEFB 0   ; 0 - 4	
+DEFB 0   ; 0 - 5	
+DEFB 0   ; 0 - 6	
+DEFB 0   ; 0 - 7	
+DEFB 32   ; 1 - 8	
+DEFB 32   ; 1 - 9	
+DEFB 32   ; 1 - 10	
+DEFB 32   ; 1 - 11	
+DEFB 32   ; 1 - 12	
+DEFB 32   ; 1 - 13	
+DEFB 32   ; 1 - 14	
+DEFB 32   ; 1 - 15	
+DEFB 64   ; 2 - 16	
+DEFB 64   ; 2 - 17	
+DEFB 64   ; 2 - 18	
+DEFB 64   ; 2 - 19	
+DEFB 64   ; 2 - 20	
+DEFB 64   ; 2 - 21	
+DEFB 64   ; 2 - 22	
+DEFB 64   ; 2 - 23	
+DEFB 96   ; 3 - 24	
+DEFB 96   ; 3 - 25	
+DEFB 96   ; 3 - 26	
+DEFB 96   ; 3 - 27	
+DEFB 96   ; 3 - 28	
+DEFB 96   ; 3 - 29	
+DEFB 96   ; 3 - 30	
+DEFB 96   ; 3 - 31
+DEFB 128   ; 4 - 32
+DEFB 128   ; 4 - 33
+DEFB 128   ; 4 - 34
+DEFB 128   ; 4 - 35
+DEFB 128   ; 4 - 36
+DEFB 128   ; 4 - 37
+DEFB 128   ; 4 - 38
+DEFB 128   ; 4 - 39
+DEFB 160   ; 5 - 40
+DEFB 160   ; 5 - 41
+DEFB 160   ; 5 - 42
+DEFB 160   ; 5 - 43
+DEFB 160   ; 5 - 44
+DEFB 160   ; 5 - 45
+DEFB 160   ; 5 - 46
+DEFB 160   ; 5 - 47
+DEFB 192   ; 6 - 48
+DEFB 192   ; 6 - 49
+DEFB 192   ; 6 - 50
+DEFB 192   ; 6 - 51
+DEFB 192   ; 6 - 52
+DEFB 192   ; 6 - 53
+DEFB 192   ; 6 - 54
+DEFB 192   ; 6 - 55
+DEFB 224   ; 7 - 56
+DEFB 224   ; 7 - 57
+DEFB 224   ; 7 - 58
+DEFB 224   ; 7 - 59
+DEFB 224   ; 7 - 60
+DEFB 224   ; 7 - 61
+DEFB 224   ; 7 - 62
+DEFB 224   ; 7 - 63
+DEFB 0   ; 8 - 64
+DEFB 0   ; 8 - 65
+DEFB 0   ; 8 - 66
+DEFB 0   ; 8 - 67
+DEFB 0   ; 8 - 68
+DEFB 0   ; 8 - 69
+DEFB 0   ; 8 - 70
+DEFB 0   ; 8 - 71
+DEFB 32   ; 9 - 72
+DEFB 32   ; 9 - 73
+DEFB 32   ; 9 - 74
+DEFB 32   ; 9 - 75
+DEFB 32   ; 9 - 76
+DEFB 32   ; 9 - 77
+DEFB 32   ; 9 - 78
+DEFB 32   ; 9 - 79
+DEFB 64   ; 10 - 80
+DEFB 64   ; 10 - 81
+DEFB 64   ; 10 - 82
+DEFB 64   ; 10 - 83
+DEFB 64   ; 10 - 84
+DEFB 64   ; 10 - 85
+DEFB 64   ; 10 - 86
+DEFB 64   ; 10 - 87
+DEFB 96   ; 11 - 88
+DEFB 96   ; 11 - 89
+DEFB 96   ; 11 - 90
+DEFB 96   ; 11 - 91
+DEFB 96   ; 11 - 92
+DEFB 96   ; 11 - 93
+DEFB 96   ; 11 - 94
+DEFB 96   ; 11 - 95
+DEFB 128   ; 12 - 96
+DEFB 128   ; 12 - 97
+DEFB 128   ; 12 - 98
+DEFB 128   ; 12 - 99
+DEFB 128   ; 12 - 100
+DEFB 128   ; 12 - 101
+DEFB 128   ; 12 - 102
+DEFB 128   ; 12 - 103
+DEFB 160   ; 13 - 104
+DEFB 160   ; 13 - 105
+DEFB 160   ; 13 - 106
+DEFB 160   ; 13 - 107
+DEFB 160   ; 13 - 108
+DEFB 160   ; 13 - 109
+DEFB 160   ; 13 - 110
+DEFB 160   ; 13 - 111
+DEFB 192   ; 14 - 112
+DEFB 192   ; 14 - 113
+DEFB 192   ; 14 - 114
+DEFB 192   ; 14 - 115
+DEFB 192   ; 14 - 116
+DEFB 192   ; 14 - 117
+DEFB 192   ; 14 - 118
+DEFB 192   ; 14 - 119
+DEFB 224   ; 15 - 120
+DEFB 224   ; 15 - 121
+DEFB 224   ; 15 - 122
+DEFB 224   ; 15 - 123
+DEFB 224   ; 15 - 124
+DEFB 224   ; 15 - 125
+DEFB 224   ; 15 - 126
+DEFB 224   ; 15 - 127
+DEFB 0   ; 16 - 128
+DEFB 0   ; 16 - 129
+DEFB 0   ; 16 - 130
+DEFB 0   ; 16 - 131
+DEFB 0   ; 16 - 132
+DEFB 0   ; 16 - 133
+DEFB 0   ; 16 - 134
+DEFB 0   ; 16 - 135
+DEFB 32   ; 17 - 136
+DEFB 32   ; 17 - 137
+DEFB 32   ; 17 - 138
+DEFB 32   ; 17 - 139
+DEFB 32   ; 17 - 140
+DEFB 32   ; 17 - 141
+DEFB 32   ; 17 - 142
+DEFB 32   ; 17 - 143
+DEFB 64   ; 18 - 144
+DEFB 64   ; 18 - 145
+DEFB 64   ; 18 - 146
+DEFB 64   ; 18 - 147
+DEFB 64   ; 18 - 148
+DEFB 64   ; 18 - 149
+DEFB 64   ; 18 - 150
+DEFB 64   ; 18 - 151
+DEFB 96   ; 19 - 152
+DEFB 96   ; 19 - 153
+DEFB 96   ; 19 - 154
+DEFB 96   ; 19 - 155
+DEFB 96   ; 19 - 156
+DEFB 96   ; 19 - 157
+DEFB 96   ; 19 - 158
+DEFB 96   ; 19 - 159
+DEFB 128   ; 20 - 160
+DEFB 128   ; 20 - 161
+DEFB 128   ; 20 - 162
+DEFB 128   ; 20 - 163
+DEFB 128   ; 20 - 164
+DEFB 128   ; 20 - 165
+DEFB 128   ; 20 - 166
+DEFB 128   ; 20 - 167
+DEFB 160   ; 21 - 168
+DEFB 160   ; 21 - 169
+DEFB 160   ; 21 - 170
+DEFB 160   ; 21 - 171
+DEFB 160   ; 21 - 172
+DEFB 160   ; 21 - 173
+DEFB 160   ; 21 - 174
+DEFB 160   ; 21 - 175
+DEFB 192   ; 22 - 176
+DEFB 192   ; 22 - 177
+DEFB 192   ; 22 - 178
+DEFB 192   ; 22 - 179
+DEFB 192   ; 22 - 180
+DEFB 192   ; 22 - 181
+DEFB 192   ; 22 - 182
+DEFB 192   ; 22 - 183
+DEFB 224   ; 23 - 184
+DEFB 224   ; 23 - 185
+DEFB 224   ; 23 - 186
+DEFB 224   ; 23 - 187
+DEFB 224   ; 23 - 188
+DEFB 224   ; 23 - 189
+DEFB 224   ; 23 - 190
+DEFB 224   ; 23 - 191
+
+; Table 2 part 2
+
+DEFB 0   ; 0 - 0
+DEFB 32   ; 1 - 8
+DEFB 64   ; 2 - 16
+DEFB 96   ; 3 - 24
+DEFB 128   ; 4 - 32
+DEFB 160   ; 5 - 40
+DEFB 192   ; 6 - 48
+DEFB 224   ; 7 - 56
+DEFB 0   ; 8 - 64
+DEFB 32   ; 9 - 72
+DEFB 64   ; 10 - 80
+DEFB 96   ; 11 - 88
+DEFB 128   ; 12 - 96
+DEFB 160   ; 13 - 104
+DEFB 192   ; 14 - 112
+DEFB 224   ; 15 - 120
+DEFB 0   ; 16 - 128
+DEFB 32   ; 17 - 136
+DEFB 64   ; 18 - 144
+DEFB 96   ; 19 - 152
+DEFB 128   ; 20 - 160
+DEFB 160   ; 21 - 168
+DEFB 192   ; 22 - 176
+DEFB 224   ; 23 - 184
+
+; Table 3 Part 2
+
+DEFB 0   ;0
+DEFB 32   ;1
+DEFB 64   ;2
+DEFB 96   ;3
+DEFB 128   ;4
+DEFB 160   ;5
+DEFB 192   ;6
+DEFB 224   ;7
+DEFB 0   ;8
+DEFB 32   ;9
+DEFB 64   ;10
+DEFB 96   ;11
+DEFB 128   ;12
+DEFB 160   ;13
+DEFB 192   ;14
+DEFB 224   ;15
+DEFB 0   ;16
+DEFB 32   ;17
+DEFB 64   ;18
+DEFB 96   ;19
+DEFB 128   ;20
+DEFB 160   ;21
+DEFB 192   ;22
+DEFB 224   ;23
+
+; Rotate Tables
+ALIGN 256
+HRP_Rotate:
+
+DEFB 0  ;0 >> 1 High Byte
+DEFB 0  ;1 >> 1 High Byte
+DEFB 1  ;2 >> 1 High Byte
+DEFB 1  ;3 >> 1 High Byte
+DEFB 2  ;4 >> 1 High Byte
+DEFB 2  ;5 >> 1 High Byte
+DEFB 3  ;6 >> 1 High Byte
+DEFB 3  ;7 >> 1 High Byte
+DEFB 4  ;8 >> 1 High Byte
+DEFB 4  ;9 >> 1 High Byte
+DEFB 5  ;10 >> 1 High Byte
+DEFB 5  ;11 >> 1 High Byte
+DEFB 6  ;12 >> 1 High Byte
+DEFB 6  ;13 >> 1 High Byte
+DEFB 7  ;14 >> 1 High Byte
+DEFB 7  ;15 >> 1 High Byte
+DEFB 8  ;16 >> 1 High Byte
+DEFB 8  ;17 >> 1 High Byte
+DEFB 9  ;18 >> 1 High Byte
+DEFB 9  ;19 >> 1 High Byte
+DEFB 10  ;20 >> 1 High Byte
+DEFB 10  ;21 >> 1 High Byte
+DEFB 11  ;22 >> 1 High Byte
+DEFB 11  ;23 >> 1 High Byte
+DEFB 12  ;24 >> 1 High Byte
+DEFB 12  ;25 >> 1 High Byte
+DEFB 13  ;26 >> 1 High Byte
+DEFB 13  ;27 >> 1 High Byte
+DEFB 14  ;28 >> 1 High Byte
+DEFB 14  ;29 >> 1 High Byte
+DEFB 15  ;30 >> 1 High Byte
+DEFB 15  ;31 >> 1 High Byte
+DEFB 16  ;32 >> 1 High Byte
+DEFB 16  ;33 >> 1 High Byte
+DEFB 17  ;34 >> 1 High Byte
+DEFB 17  ;35 >> 1 High Byte
+DEFB 18  ;36 >> 1 High Byte
+DEFB 18  ;37 >> 1 High Byte
+DEFB 19  ;38 >> 1 High Byte
+DEFB 19  ;39 >> 1 High Byte
+DEFB 20  ;40 >> 1 High Byte
+DEFB 20  ;41 >> 1 High Byte
+DEFB 21  ;42 >> 1 High Byte
+DEFB 21  ;43 >> 1 High Byte
+DEFB 22  ;44 >> 1 High Byte
+DEFB 22  ;45 >> 1 High Byte
+DEFB 23  ;46 >> 1 High Byte
+DEFB 23  ;47 >> 1 High Byte
+DEFB 24  ;48 >> 1 High Byte
+DEFB 24  ;49 >> 1 High Byte
+DEFB 25  ;50 >> 1 High Byte
+DEFB 25  ;51 >> 1 High Byte
+DEFB 26  ;52 >> 1 High Byte
+DEFB 26  ;53 >> 1 High Byte
+DEFB 27  ;54 >> 1 High Byte
+DEFB 27  ;55 >> 1 High Byte
+DEFB 28  ;56 >> 1 High Byte
+DEFB 28  ;57 >> 1 High Byte
+DEFB 29  ;58 >> 1 High Byte
+DEFB 29  ;59 >> 1 High Byte
+DEFB 30  ;60 >> 1 High Byte
+DEFB 30  ;61 >> 1 High Byte
+DEFB 31  ;62 >> 1 High Byte
+DEFB 31  ;63 >> 1 High Byte
+DEFB 32  ;64 >> 1 High Byte
+DEFB 32  ;65 >> 1 High Byte
+DEFB 33  ;66 >> 1 High Byte
+DEFB 33  ;67 >> 1 High Byte
+DEFB 34  ;68 >> 1 High Byte
+DEFB 34  ;69 >> 1 High Byte
+DEFB 35  ;70 >> 1 High Byte
+DEFB 35  ;71 >> 1 High Byte
+DEFB 36  ;72 >> 1 High Byte
+DEFB 36  ;73 >> 1 High Byte
+DEFB 37  ;74 >> 1 High Byte
+DEFB 37  ;75 >> 1 High Byte
+DEFB 38  ;76 >> 1 High Byte
+DEFB 38  ;77 >> 1 High Byte
+DEFB 39  ;78 >> 1 High Byte
+DEFB 39  ;79 >> 1 High Byte
+DEFB 40  ;80 >> 1 High Byte
+DEFB 40  ;81 >> 1 High Byte
+DEFB 41  ;82 >> 1 High Byte
+DEFB 41  ;83 >> 1 High Byte
+DEFB 42  ;84 >> 1 High Byte
+DEFB 42  ;85 >> 1 High Byte
+DEFB 43  ;86 >> 1 High Byte
+DEFB 43  ;87 >> 1 High Byte
+DEFB 44  ;88 >> 1 High Byte
+DEFB 44  ;89 >> 1 High Byte
+DEFB 45  ;90 >> 1 High Byte
+DEFB 45  ;91 >> 1 High Byte
+DEFB 46  ;92 >> 1 High Byte
+DEFB 46  ;93 >> 1 High Byte
+DEFB 47  ;94 >> 1 High Byte
+DEFB 47  ;95 >> 1 High Byte
+DEFB 48  ;96 >> 1 High Byte
+DEFB 48  ;97 >> 1 High Byte
+DEFB 49  ;98 >> 1 High Byte
+DEFB 49  ;99 >> 1 High Byte
+DEFB 50  ;100 >> 1 High Byte
+DEFB 50  ;101 >> 1 High Byte
+DEFB 51  ;102 >> 1 High Byte
+DEFB 51  ;103 >> 1 High Byte
+DEFB 52  ;104 >> 1 High Byte
+DEFB 52  ;105 >> 1 High Byte
+DEFB 53  ;106 >> 1 High Byte
+DEFB 53  ;107 >> 1 High Byte
+DEFB 54  ;108 >> 1 High Byte
+DEFB 54  ;109 >> 1 High Byte
+DEFB 55  ;110 >> 1 High Byte
+DEFB 55  ;111 >> 1 High Byte
+DEFB 56  ;112 >> 1 High Byte
+DEFB 56  ;113 >> 1 High Byte
+DEFB 57  ;114 >> 1 High Byte
+DEFB 57  ;115 >> 1 High Byte
+DEFB 58  ;116 >> 1 High Byte
+DEFB 58  ;117 >> 1 High Byte
+DEFB 59  ;118 >> 1 High Byte
+DEFB 59  ;119 >> 1 High Byte
+DEFB 60  ;120 >> 1 High Byte
+DEFB 60  ;121 >> 1 High Byte
+DEFB 61  ;122 >> 1 High Byte
+DEFB 61  ;123 >> 1 High Byte
+DEFB 62  ;124 >> 1 High Byte
+DEFB 62  ;125 >> 1 High Byte
+DEFB 63  ;126 >> 1 High Byte
+DEFB 63  ;127 >> 1 High Byte
+DEFB 64  ;128 >> 1 High Byte
+DEFB 64  ;129 >> 1 High Byte
+DEFB 65  ;130 >> 1 High Byte
+DEFB 65  ;131 >> 1 High Byte
+DEFB 66  ;132 >> 1 High Byte
+DEFB 66  ;133 >> 1 High Byte
+DEFB 67  ;134 >> 1 High Byte
+DEFB 67  ;135 >> 1 High Byte
+DEFB 68  ;136 >> 1 High Byte
+DEFB 68  ;137 >> 1 High Byte
+DEFB 69  ;138 >> 1 High Byte
+DEFB 69  ;139 >> 1 High Byte
+DEFB 70  ;140 >> 1 High Byte
+DEFB 70  ;141 >> 1 High Byte
+DEFB 71  ;142 >> 1 High Byte
+DEFB 71  ;143 >> 1 High Byte
+DEFB 72  ;144 >> 1 High Byte
+DEFB 72  ;145 >> 1 High Byte
+DEFB 73  ;146 >> 1 High Byte
+DEFB 73  ;147 >> 1 High Byte
+DEFB 74  ;148 >> 1 High Byte
+DEFB 74  ;149 >> 1 High Byte
+DEFB 75  ;150 >> 1 High Byte
+DEFB 75  ;151 >> 1 High Byte
+DEFB 76  ;152 >> 1 High Byte
+DEFB 76  ;153 >> 1 High Byte
+DEFB 77  ;154 >> 1 High Byte
+DEFB 77  ;155 >> 1 High Byte
+DEFB 78  ;156 >> 1 High Byte
+DEFB 78  ;157 >> 1 High Byte
+DEFB 79  ;158 >> 1 High Byte
+DEFB 79  ;159 >> 1 High Byte
+DEFB 80  ;160 >> 1 High Byte
+DEFB 80  ;161 >> 1 High Byte
+DEFB 81  ;162 >> 1 High Byte
+DEFB 81  ;163 >> 1 High Byte
+DEFB 82  ;164 >> 1 High Byte
+DEFB 82  ;165 >> 1 High Byte
+DEFB 83  ;166 >> 1 High Byte
+DEFB 83  ;167 >> 1 High Byte
+DEFB 84  ;168 >> 1 High Byte
+DEFB 84  ;169 >> 1 High Byte
+DEFB 85  ;170 >> 1 High Byte
+DEFB 85  ;171 >> 1 High Byte
+DEFB 86  ;172 >> 1 High Byte
+DEFB 86  ;173 >> 1 High Byte
+DEFB 87  ;174 >> 1 High Byte
+DEFB 87  ;175 >> 1 High Byte
+DEFB 88  ;176 >> 1 High Byte
+DEFB 88  ;177 >> 1 High Byte
+DEFB 89  ;178 >> 1 High Byte
+DEFB 89  ;179 >> 1 High Byte
+DEFB 90  ;180 >> 1 High Byte
+DEFB 90  ;181 >> 1 High Byte
+DEFB 91  ;182 >> 1 High Byte
+DEFB 91  ;183 >> 1 High Byte
+DEFB 92  ;184 >> 1 High Byte
+DEFB 92  ;185 >> 1 High Byte
+DEFB 93  ;186 >> 1 High Byte
+DEFB 93  ;187 >> 1 High Byte
+DEFB 94  ;188 >> 1 High Byte
+DEFB 94  ;189 >> 1 High Byte
+DEFB 95  ;190 >> 1 High Byte
+DEFB 95  ;191 >> 1 High Byte
+DEFB 96  ;192 >> 1 High Byte
+DEFB 96  ;193 >> 1 High Byte
+DEFB 97  ;194 >> 1 High Byte
+DEFB 97  ;195 >> 1 High Byte
+DEFB 98  ;196 >> 1 High Byte
+DEFB 98  ;197 >> 1 High Byte
+DEFB 99  ;198 >> 1 High Byte
+DEFB 99  ;199 >> 1 High Byte
+DEFB 100  ;200 >> 1 High Byte
+DEFB 100  ;201 >> 1 High Byte
+DEFB 101  ;202 >> 1 High Byte
+DEFB 101  ;203 >> 1 High Byte
+DEFB 102  ;204 >> 1 High Byte
+DEFB 102  ;205 >> 1 High Byte
+DEFB 103  ;206 >> 1 High Byte
+DEFB 103  ;207 >> 1 High Byte
+DEFB 104  ;208 >> 1 High Byte
+DEFB 104  ;209 >> 1 High Byte
+DEFB 105  ;210 >> 1 High Byte
+DEFB 105  ;211 >> 1 High Byte
+DEFB 106  ;212 >> 1 High Byte
+DEFB 106  ;213 >> 1 High Byte
+DEFB 107  ;214 >> 1 High Byte
+DEFB 107  ;215 >> 1 High Byte
+DEFB 108  ;216 >> 1 High Byte
+DEFB 108  ;217 >> 1 High Byte
+DEFB 109  ;218 >> 1 High Byte
+DEFB 109  ;219 >> 1 High Byte
+DEFB 110  ;220 >> 1 High Byte
+DEFB 110  ;221 >> 1 High Byte
+DEFB 111  ;222 >> 1 High Byte
+DEFB 111  ;223 >> 1 High Byte
+DEFB 112  ;224 >> 1 High Byte
+DEFB 112  ;225 >> 1 High Byte
+DEFB 113  ;226 >> 1 High Byte
+DEFB 113  ;227 >> 1 High Byte
+DEFB 114  ;228 >> 1 High Byte
+DEFB 114  ;229 >> 1 High Byte
+DEFB 115  ;230 >> 1 High Byte
+DEFB 115  ;231 >> 1 High Byte
+DEFB 116  ;232 >> 1 High Byte
+DEFB 116  ;233 >> 1 High Byte
+DEFB 117  ;234 >> 1 High Byte
+DEFB 117  ;235 >> 1 High Byte
+DEFB 118  ;236 >> 1 High Byte
+DEFB 118  ;237 >> 1 High Byte
+DEFB 119  ;238 >> 1 High Byte
+DEFB 119  ;239 >> 1 High Byte
+DEFB 120  ;240 >> 1 High Byte
+DEFB 120  ;241 >> 1 High Byte
+DEFB 121  ;242 >> 1 High Byte
+DEFB 121  ;243 >> 1 High Byte
+DEFB 122  ;244 >> 1 High Byte
+DEFB 122  ;245 >> 1 High Byte
+DEFB 123  ;246 >> 1 High Byte
+DEFB 123  ;247 >> 1 High Byte
+DEFB 124  ;248 >> 1 High Byte
+DEFB 124  ;249 >> 1 High Byte
+DEFB 125  ;250 >> 1 High Byte
+DEFB 125  ;251 >> 1 High Byte
+DEFB 126  ;252 >> 1 High Byte
+DEFB 126  ;253 >> 1 High Byte
+DEFB 127  ;254 >> 1 High Byte
+DEFB 127  ;255 >> 1 High Byte
+
+DEFB 0  ;0 >> 1 Low Byte
+DEFB 128  ;1 >> 1 Low Byte
+DEFB 0  ;2 >> 1 Low Byte
+DEFB 128  ;3 >> 1 Low Byte
+DEFB 0  ;4 >> 1 Low Byte
+DEFB 128  ;5 >> 1 Low Byte
+DEFB 0  ;6 >> 1 Low Byte
+DEFB 128  ;7 >> 1 Low Byte
+DEFB 0  ;8 >> 1 Low Byte
+DEFB 128  ;9 >> 1 Low Byte
+DEFB 0  ;10 >> 1 Low Byte
+DEFB 128  ;11 >> 1 Low Byte
+DEFB 0  ;12 >> 1 Low Byte
+DEFB 128  ;13 >> 1 Low Byte
+DEFB 0  ;14 >> 1 Low Byte
+DEFB 128  ;15 >> 1 Low Byte
+DEFB 0  ;16 >> 1 Low Byte
+DEFB 128  ;17 >> 1 Low Byte
+DEFB 0  ;18 >> 1 Low Byte
+DEFB 128  ;19 >> 1 Low Byte
+DEFB 0  ;20 >> 1 Low Byte
+DEFB 128  ;21 >> 1 Low Byte
+DEFB 0  ;22 >> 1 Low Byte
+DEFB 128  ;23 >> 1 Low Byte
+DEFB 0  ;24 >> 1 Low Byte
+DEFB 128  ;25 >> 1 Low Byte
+DEFB 0  ;26 >> 1 Low Byte
+DEFB 128  ;27 >> 1 Low Byte
+DEFB 0  ;28 >> 1 Low Byte
+DEFB 128  ;29 >> 1 Low Byte
+DEFB 0  ;30 >> 1 Low Byte
+DEFB 128  ;31 >> 1 Low Byte
+DEFB 0  ;32 >> 1 Low Byte
+DEFB 128  ;33 >> 1 Low Byte
+DEFB 0  ;34 >> 1 Low Byte
+DEFB 128  ;35 >> 1 Low Byte
+DEFB 0  ;36 >> 1 Low Byte
+DEFB 128  ;37 >> 1 Low Byte
+DEFB 0  ;38 >> 1 Low Byte
+DEFB 128  ;39 >> 1 Low Byte
+DEFB 0  ;40 >> 1 Low Byte
+DEFB 128  ;41 >> 1 Low Byte
+DEFB 0  ;42 >> 1 Low Byte
+DEFB 128  ;43 >> 1 Low Byte
+DEFB 0  ;44 >> 1 Low Byte
+DEFB 128  ;45 >> 1 Low Byte
+DEFB 0  ;46 >> 1 Low Byte
+DEFB 128  ;47 >> 1 Low Byte
+DEFB 0  ;48 >> 1 Low Byte
+DEFB 128  ;49 >> 1 Low Byte
+DEFB 0  ;50 >> 1 Low Byte
+DEFB 128  ;51 >> 1 Low Byte
+DEFB 0  ;52 >> 1 Low Byte
+DEFB 128  ;53 >> 1 Low Byte
+DEFB 0  ;54 >> 1 Low Byte
+DEFB 128  ;55 >> 1 Low Byte
+DEFB 0  ;56 >> 1 Low Byte
+DEFB 128  ;57 >> 1 Low Byte
+DEFB 0  ;58 >> 1 Low Byte
+DEFB 128  ;59 >> 1 Low Byte
+DEFB 0  ;60 >> 1 Low Byte
+DEFB 128  ;61 >> 1 Low Byte
+DEFB 0  ;62 >> 1 Low Byte
+DEFB 128  ;63 >> 1 Low Byte
+DEFB 0  ;64 >> 1 Low Byte
+DEFB 128  ;65 >> 1 Low Byte
+DEFB 0  ;66 >> 1 Low Byte
+DEFB 128  ;67 >> 1 Low Byte
+DEFB 0  ;68 >> 1 Low Byte
+DEFB 128  ;69 >> 1 Low Byte
+DEFB 0  ;70 >> 1 Low Byte
+DEFB 128  ;71 >> 1 Low Byte
+DEFB 0  ;72 >> 1 Low Byte
+DEFB 128  ;73 >> 1 Low Byte
+DEFB 0  ;74 >> 1 Low Byte
+DEFB 128  ;75 >> 1 Low Byte
+DEFB 0  ;76 >> 1 Low Byte
+DEFB 128  ;77 >> 1 Low Byte
+DEFB 0  ;78 >> 1 Low Byte
+DEFB 128  ;79 >> 1 Low Byte
+DEFB 0  ;80 >> 1 Low Byte
+DEFB 128  ;81 >> 1 Low Byte
+DEFB 0  ;82 >> 1 Low Byte
+DEFB 128  ;83 >> 1 Low Byte
+DEFB 0  ;84 >> 1 Low Byte
+DEFB 128  ;85 >> 1 Low Byte
+DEFB 0  ;86 >> 1 Low Byte
+DEFB 128  ;87 >> 1 Low Byte
+DEFB 0  ;88 >> 1 Low Byte
+DEFB 128  ;89 >> 1 Low Byte
+DEFB 0  ;90 >> 1 Low Byte
+DEFB 128  ;91 >> 1 Low Byte
+DEFB 0  ;92 >> 1 Low Byte
+DEFB 128  ;93 >> 1 Low Byte
+DEFB 0  ;94 >> 1 Low Byte
+DEFB 128  ;95 >> 1 Low Byte
+DEFB 0  ;96 >> 1 Low Byte
+DEFB 128  ;97 >> 1 Low Byte
+DEFB 0  ;98 >> 1 Low Byte
+DEFB 128  ;99 >> 1 Low Byte
+DEFB 0  ;100 >> 1 Low Byte
+DEFB 128  ;101 >> 1 Low Byte
+DEFB 0  ;102 >> 1 Low Byte
+DEFB 128  ;103 >> 1 Low Byte
+DEFB 0  ;104 >> 1 Low Byte
+DEFB 128  ;105 >> 1 Low Byte
+DEFB 0  ;106 >> 1 Low Byte
+DEFB 128  ;107 >> 1 Low Byte
+DEFB 0  ;108 >> 1 Low Byte
+DEFB 128  ;109 >> 1 Low Byte
+DEFB 0  ;110 >> 1 Low Byte
+DEFB 128  ;111 >> 1 Low Byte
+DEFB 0  ;112 >> 1 Low Byte
+DEFB 128  ;113 >> 1 Low Byte
+DEFB 0  ;114 >> 1 Low Byte
+DEFB 128  ;115 >> 1 Low Byte
+DEFB 0  ;116 >> 1 Low Byte
+DEFB 128  ;117 >> 1 Low Byte
+DEFB 0  ;118 >> 1 Low Byte
+DEFB 128  ;119 >> 1 Low Byte
+DEFB 0  ;120 >> 1 Low Byte
+DEFB 128  ;121 >> 1 Low Byte
+DEFB 0  ;122 >> 1 Low Byte
+DEFB 128  ;123 >> 1 Low Byte
+DEFB 0  ;124 >> 1 Low Byte
+DEFB 128  ;125 >> 1 Low Byte
+DEFB 0  ;126 >> 1 Low Byte
+DEFB 128  ;127 >> 1 Low Byte
+DEFB 0  ;128 >> 1 Low Byte
+DEFB 128  ;129 >> 1 Low Byte
+DEFB 0  ;130 >> 1 Low Byte
+DEFB 128  ;131 >> 1 Low Byte
+DEFB 0  ;132 >> 1 Low Byte
+DEFB 128  ;133 >> 1 Low Byte
+DEFB 0  ;134 >> 1 Low Byte
+DEFB 128  ;135 >> 1 Low Byte
+DEFB 0  ;136 >> 1 Low Byte
+DEFB 128  ;137 >> 1 Low Byte
+DEFB 0  ;138 >> 1 Low Byte
+DEFB 128  ;139 >> 1 Low Byte
+DEFB 0  ;140 >> 1 Low Byte
+DEFB 128  ;141 >> 1 Low Byte
+DEFB 0  ;142 >> 1 Low Byte
+DEFB 128  ;143 >> 1 Low Byte
+DEFB 0  ;144 >> 1 Low Byte
+DEFB 128  ;145 >> 1 Low Byte
+DEFB 0  ;146 >> 1 Low Byte
+DEFB 128  ;147 >> 1 Low Byte
+DEFB 0  ;148 >> 1 Low Byte
+DEFB 128  ;149 >> 1 Low Byte
+DEFB 0  ;150 >> 1 Low Byte
+DEFB 128  ;151 >> 1 Low Byte
+DEFB 0  ;152 >> 1 Low Byte
+DEFB 128  ;153 >> 1 Low Byte
+DEFB 0  ;154 >> 1 Low Byte
+DEFB 128  ;155 >> 1 Low Byte
+DEFB 0  ;156 >> 1 Low Byte
+DEFB 128  ;157 >> 1 Low Byte
+DEFB 0  ;158 >> 1 Low Byte
+DEFB 128  ;159 >> 1 Low Byte
+DEFB 0  ;160 >> 1 Low Byte
+DEFB 128  ;161 >> 1 Low Byte
+DEFB 0  ;162 >> 1 Low Byte
+DEFB 128  ;163 >> 1 Low Byte
+DEFB 0  ;164 >> 1 Low Byte
+DEFB 128  ;165 >> 1 Low Byte
+DEFB 0  ;166 >> 1 Low Byte
+DEFB 128  ;167 >> 1 Low Byte
+DEFB 0  ;168 >> 1 Low Byte
+DEFB 128  ;169 >> 1 Low Byte
+DEFB 0  ;170 >> 1 Low Byte
+DEFB 128  ;171 >> 1 Low Byte
+DEFB 0  ;172 >> 1 Low Byte
+DEFB 128  ;173 >> 1 Low Byte
+DEFB 0  ;174 >> 1 Low Byte
+DEFB 128  ;175 >> 1 Low Byte
+DEFB 0  ;176 >> 1 Low Byte
+DEFB 128  ;177 >> 1 Low Byte
+DEFB 0  ;178 >> 1 Low Byte
+DEFB 128  ;179 >> 1 Low Byte
+DEFB 0  ;180 >> 1 Low Byte
+DEFB 128  ;181 >> 1 Low Byte
+DEFB 0  ;182 >> 1 Low Byte
+DEFB 128  ;183 >> 1 Low Byte
+DEFB 0  ;184 >> 1 Low Byte
+DEFB 128  ;185 >> 1 Low Byte
+DEFB 0  ;186 >> 1 Low Byte
+DEFB 128  ;187 >> 1 Low Byte
+DEFB 0  ;188 >> 1 Low Byte
+DEFB 128  ;189 >> 1 Low Byte
+DEFB 0  ;190 >> 1 Low Byte
+DEFB 128  ;191 >> 1 Low Byte
+DEFB 0  ;192 >> 1 Low Byte
+DEFB 128  ;193 >> 1 Low Byte
+DEFB 0  ;194 >> 1 Low Byte
+DEFB 128  ;195 >> 1 Low Byte
+DEFB 0  ;196 >> 1 Low Byte
+DEFB 128  ;197 >> 1 Low Byte
+DEFB 0  ;198 >> 1 Low Byte
+DEFB 128  ;199 >> 1 Low Byte
+DEFB 0  ;200 >> 1 Low Byte
+DEFB 128  ;201 >> 1 Low Byte
+DEFB 0  ;202 >> 1 Low Byte
+DEFB 128  ;203 >> 1 Low Byte
+DEFB 0  ;204 >> 1 Low Byte
+DEFB 128  ;205 >> 1 Low Byte
+DEFB 0  ;206 >> 1 Low Byte
+DEFB 128  ;207 >> 1 Low Byte
+DEFB 0  ;208 >> 1 Low Byte
+DEFB 128  ;209 >> 1 Low Byte
+DEFB 0  ;210 >> 1 Low Byte
+DEFB 128  ;211 >> 1 Low Byte
+DEFB 0  ;212 >> 1 Low Byte
+DEFB 128  ;213 >> 1 Low Byte
+DEFB 0  ;214 >> 1 Low Byte
+DEFB 128  ;215 >> 1 Low Byte
+DEFB 0  ;216 >> 1 Low Byte
+DEFB 128  ;217 >> 1 Low Byte
+DEFB 0  ;218 >> 1 Low Byte
+DEFB 128  ;219 >> 1 Low Byte
+DEFB 0  ;220 >> 1 Low Byte
+DEFB 128  ;221 >> 1 Low Byte
+DEFB 0  ;222 >> 1 Low Byte
+DEFB 128  ;223 >> 1 Low Byte
+DEFB 0  ;224 >> 1 Low Byte
+DEFB 128  ;225 >> 1 Low Byte
+DEFB 0  ;226 >> 1 Low Byte
+DEFB 128  ;227 >> 1 Low Byte
+DEFB 0  ;228 >> 1 Low Byte
+DEFB 128  ;229 >> 1 Low Byte
+DEFB 0  ;230 >> 1 Low Byte
+DEFB 128  ;231 >> 1 Low Byte
+DEFB 0  ;232 >> 1 Low Byte
+DEFB 128  ;233 >> 1 Low Byte
+DEFB 0  ;234 >> 1 Low Byte
+DEFB 128  ;235 >> 1 Low Byte
+DEFB 0  ;236 >> 1 Low Byte
+DEFB 128  ;237 >> 1 Low Byte
+DEFB 0  ;238 >> 1 Low Byte
+DEFB 128  ;239 >> 1 Low Byte
+DEFB 0  ;240 >> 1 Low Byte
+DEFB 128  ;241 >> 1 Low Byte
+DEFB 0  ;242 >> 1 Low Byte
+DEFB 128  ;243 >> 1 Low Byte
+DEFB 0  ;244 >> 1 Low Byte
+DEFB 128  ;245 >> 1 Low Byte
+DEFB 0  ;246 >> 1 Low Byte
+DEFB 128  ;247 >> 1 Low Byte
+DEFB 0  ;248 >> 1 Low Byte
+DEFB 128  ;249 >> 1 Low Byte
+DEFB 0  ;250 >> 1 Low Byte
+DEFB 128  ;251 >> 1 Low Byte
+DEFB 0  ;252 >> 1 Low Byte
+DEFB 128  ;253 >> 1 Low Byte
+DEFB 0  ;254 >> 1 Low Byte
+DEFB 128  ;255 >> 1 Low Byte
+
+DEFB 0  ;0 >> 2 High Byte
+DEFB 0  ;1 >> 2 High Byte
+DEFB 0  ;2 >> 2 High Byte
+DEFB 0  ;3 >> 2 High Byte
+DEFB 1  ;4 >> 2 High Byte
+DEFB 1  ;5 >> 2 High Byte
+DEFB 1  ;6 >> 2 High Byte
+DEFB 1  ;7 >> 2 High Byte
+DEFB 2  ;8 >> 2 High Byte
+DEFB 2  ;9 >> 2 High Byte
+DEFB 2  ;10 >> 2 High Byte
+DEFB 2  ;11 >> 2 High Byte
+DEFB 3  ;12 >> 2 High Byte
+DEFB 3  ;13 >> 2 High Byte
+DEFB 3  ;14 >> 2 High Byte
+DEFB 3  ;15 >> 2 High Byte
+DEFB 4  ;16 >> 2 High Byte
+DEFB 4  ;17 >> 2 High Byte
+DEFB 4  ;18 >> 2 High Byte
+DEFB 4  ;19 >> 2 High Byte
+DEFB 5  ;20 >> 2 High Byte
+DEFB 5  ;21 >> 2 High Byte
+DEFB 5  ;22 >> 2 High Byte
+DEFB 5  ;23 >> 2 High Byte
+DEFB 6  ;24 >> 2 High Byte
+DEFB 6  ;25 >> 2 High Byte
+DEFB 6  ;26 >> 2 High Byte
+DEFB 6  ;27 >> 2 High Byte
+DEFB 7  ;28 >> 2 High Byte
+DEFB 7  ;29 >> 2 High Byte
+DEFB 7  ;30 >> 2 High Byte
+DEFB 7  ;31 >> 2 High Byte
+DEFB 8  ;32 >> 2 High Byte
+DEFB 8  ;33 >> 2 High Byte
+DEFB 8  ;34 >> 2 High Byte
+DEFB 8  ;35 >> 2 High Byte
+DEFB 9  ;36 >> 2 High Byte
+DEFB 9  ;37 >> 2 High Byte
+DEFB 9  ;38 >> 2 High Byte
+DEFB 9  ;39 >> 2 High Byte
+DEFB 10  ;40 >> 2 High Byte
+DEFB 10  ;41 >> 2 High Byte
+DEFB 10  ;42 >> 2 High Byte
+DEFB 10  ;43 >> 2 High Byte
+DEFB 11  ;44 >> 2 High Byte
+DEFB 11  ;45 >> 2 High Byte
+DEFB 11  ;46 >> 2 High Byte
+DEFB 11  ;47 >> 2 High Byte
+DEFB 12  ;48 >> 2 High Byte
+DEFB 12  ;49 >> 2 High Byte
+DEFB 12  ;50 >> 2 High Byte
+DEFB 12  ;51 >> 2 High Byte
+DEFB 13  ;52 >> 2 High Byte
+DEFB 13  ;53 >> 2 High Byte
+DEFB 13  ;54 >> 2 High Byte
+DEFB 13  ;55 >> 2 High Byte
+DEFB 14  ;56 >> 2 High Byte
+DEFB 14  ;57 >> 2 High Byte
+DEFB 14  ;58 >> 2 High Byte
+DEFB 14  ;59 >> 2 High Byte
+DEFB 15  ;60 >> 2 High Byte
+DEFB 15  ;61 >> 2 High Byte
+DEFB 15  ;62 >> 2 High Byte
+DEFB 15  ;63 >> 2 High Byte
+DEFB 16  ;64 >> 2 High Byte
+DEFB 16  ;65 >> 2 High Byte
+DEFB 16  ;66 >> 2 High Byte
+DEFB 16  ;67 >> 2 High Byte
+DEFB 17  ;68 >> 2 High Byte
+DEFB 17  ;69 >> 2 High Byte
+DEFB 17  ;70 >> 2 High Byte
+DEFB 17  ;71 >> 2 High Byte
+DEFB 18  ;72 >> 2 High Byte
+DEFB 18  ;73 >> 2 High Byte
+DEFB 18  ;74 >> 2 High Byte
+DEFB 18  ;75 >> 2 High Byte
+DEFB 19  ;76 >> 2 High Byte
+DEFB 19  ;77 >> 2 High Byte
+DEFB 19  ;78 >> 2 High Byte
+DEFB 19  ;79 >> 2 High Byte
+DEFB 20  ;80 >> 2 High Byte
+DEFB 20  ;81 >> 2 High Byte
+DEFB 20  ;82 >> 2 High Byte
+DEFB 20  ;83 >> 2 High Byte
+DEFB 21  ;84 >> 2 High Byte
+DEFB 21  ;85 >> 2 High Byte
+DEFB 21  ;86 >> 2 High Byte
+DEFB 21  ;87 >> 2 High Byte
+DEFB 22  ;88 >> 2 High Byte
+DEFB 22  ;89 >> 2 High Byte
+DEFB 22  ;90 >> 2 High Byte
+DEFB 22  ;91 >> 2 High Byte
+DEFB 23  ;92 >> 2 High Byte
+DEFB 23  ;93 >> 2 High Byte
+DEFB 23  ;94 >> 2 High Byte
+DEFB 23  ;95 >> 2 High Byte
+DEFB 24  ;96 >> 2 High Byte
+DEFB 24  ;97 >> 2 High Byte
+DEFB 24  ;98 >> 2 High Byte
+DEFB 24  ;99 >> 2 High Byte
+DEFB 25  ;100 >> 2 High Byte
+DEFB 25  ;101 >> 2 High Byte
+DEFB 25  ;102 >> 2 High Byte
+DEFB 25  ;103 >> 2 High Byte
+DEFB 26  ;104 >> 2 High Byte
+DEFB 26  ;105 >> 2 High Byte
+DEFB 26  ;106 >> 2 High Byte
+DEFB 26  ;107 >> 2 High Byte
+DEFB 27  ;108 >> 2 High Byte
+DEFB 27  ;109 >> 2 High Byte
+DEFB 27  ;110 >> 2 High Byte
+DEFB 27  ;111 >> 2 High Byte
+DEFB 28  ;112 >> 2 High Byte
+DEFB 28  ;113 >> 2 High Byte
+DEFB 28  ;114 >> 2 High Byte
+DEFB 28  ;115 >> 2 High Byte
+DEFB 29  ;116 >> 2 High Byte
+DEFB 29  ;117 >> 2 High Byte
+DEFB 29  ;118 >> 2 High Byte
+DEFB 29  ;119 >> 2 High Byte
+DEFB 30  ;120 >> 2 High Byte
+DEFB 30  ;121 >> 2 High Byte
+DEFB 30  ;122 >> 2 High Byte
+DEFB 30  ;123 >> 2 High Byte
+DEFB 31  ;124 >> 2 High Byte
+DEFB 31  ;125 >> 2 High Byte
+DEFB 31  ;126 >> 2 High Byte
+DEFB 31  ;127 >> 2 High Byte
+DEFB 32  ;128 >> 2 High Byte
+DEFB 32  ;129 >> 2 High Byte
+DEFB 32  ;130 >> 2 High Byte
+DEFB 32  ;131 >> 2 High Byte
+DEFB 33  ;132 >> 2 High Byte
+DEFB 33  ;133 >> 2 High Byte
+DEFB 33  ;134 >> 2 High Byte
+DEFB 33  ;135 >> 2 High Byte
+DEFB 34  ;136 >> 2 High Byte
+DEFB 34  ;137 >> 2 High Byte
+DEFB 34  ;138 >> 2 High Byte
+DEFB 34  ;139 >> 2 High Byte
+DEFB 35  ;140 >> 2 High Byte
+DEFB 35  ;141 >> 2 High Byte
+DEFB 35  ;142 >> 2 High Byte
+DEFB 35  ;143 >> 2 High Byte
+DEFB 36  ;144 >> 2 High Byte
+DEFB 36  ;145 >> 2 High Byte
+DEFB 36  ;146 >> 2 High Byte
+DEFB 36  ;147 >> 2 High Byte
+DEFB 37  ;148 >> 2 High Byte
+DEFB 37  ;149 >> 2 High Byte
+DEFB 37  ;150 >> 2 High Byte
+DEFB 37  ;151 >> 2 High Byte
+DEFB 38  ;152 >> 2 High Byte
+DEFB 38  ;153 >> 2 High Byte
+DEFB 38  ;154 >> 2 High Byte
+DEFB 38  ;155 >> 2 High Byte
+DEFB 39  ;156 >> 2 High Byte
+DEFB 39  ;157 >> 2 High Byte
+DEFB 39  ;158 >> 2 High Byte
+DEFB 39  ;159 >> 2 High Byte
+DEFB 40  ;160 >> 2 High Byte
+DEFB 40  ;161 >> 2 High Byte
+DEFB 40  ;162 >> 2 High Byte
+DEFB 40  ;163 >> 2 High Byte
+DEFB 41  ;164 >> 2 High Byte
+DEFB 41  ;165 >> 2 High Byte
+DEFB 41  ;166 >> 2 High Byte
+DEFB 41  ;167 >> 2 High Byte
+DEFB 42  ;168 >> 2 High Byte
+DEFB 42  ;169 >> 2 High Byte
+DEFB 42  ;170 >> 2 High Byte
+DEFB 42  ;171 >> 2 High Byte
+DEFB 43  ;172 >> 2 High Byte
+DEFB 43  ;173 >> 2 High Byte
+DEFB 43  ;174 >> 2 High Byte
+DEFB 43  ;175 >> 2 High Byte
+DEFB 44  ;176 >> 2 High Byte
+DEFB 44  ;177 >> 2 High Byte
+DEFB 44  ;178 >> 2 High Byte
+DEFB 44  ;179 >> 2 High Byte
+DEFB 45  ;180 >> 2 High Byte
+DEFB 45  ;181 >> 2 High Byte
+DEFB 45  ;182 >> 2 High Byte
+DEFB 45  ;183 >> 2 High Byte
+DEFB 46  ;184 >> 2 High Byte
+DEFB 46  ;185 >> 2 High Byte
+DEFB 46  ;186 >> 2 High Byte
+DEFB 46  ;187 >> 2 High Byte
+DEFB 47  ;188 >> 2 High Byte
+DEFB 47  ;189 >> 2 High Byte
+DEFB 47  ;190 >> 2 High Byte
+DEFB 47  ;191 >> 2 High Byte
+DEFB 48  ;192 >> 2 High Byte
+DEFB 48  ;193 >> 2 High Byte
+DEFB 48  ;194 >> 2 High Byte
+DEFB 48  ;195 >> 2 High Byte
+DEFB 49  ;196 >> 2 High Byte
+DEFB 49  ;197 >> 2 High Byte
+DEFB 49  ;198 >> 2 High Byte
+DEFB 49  ;199 >> 2 High Byte
+DEFB 50  ;200 >> 2 High Byte
+DEFB 50  ;201 >> 2 High Byte
+DEFB 50  ;202 >> 2 High Byte
+DEFB 50  ;203 >> 2 High Byte
+DEFB 51  ;204 >> 2 High Byte
+DEFB 51  ;205 >> 2 High Byte
+DEFB 51  ;206 >> 2 High Byte
+DEFB 51  ;207 >> 2 High Byte
+DEFB 52  ;208 >> 2 High Byte
+DEFB 52  ;209 >> 2 High Byte
+DEFB 52  ;210 >> 2 High Byte
+DEFB 52  ;211 >> 2 High Byte
+DEFB 53  ;212 >> 2 High Byte
+DEFB 53  ;213 >> 2 High Byte
+DEFB 53  ;214 >> 2 High Byte
+DEFB 53  ;215 >> 2 High Byte
+DEFB 54  ;216 >> 2 High Byte
+DEFB 54  ;217 >> 2 High Byte
+DEFB 54  ;218 >> 2 High Byte
+DEFB 54  ;219 >> 2 High Byte
+DEFB 55  ;220 >> 2 High Byte
+DEFB 55  ;221 >> 2 High Byte
+DEFB 55  ;222 >> 2 High Byte
+DEFB 55  ;223 >> 2 High Byte
+DEFB 56  ;224 >> 2 High Byte
+DEFB 56  ;225 >> 2 High Byte
+DEFB 56  ;226 >> 2 High Byte
+DEFB 56  ;227 >> 2 High Byte
+DEFB 57  ;228 >> 2 High Byte
+DEFB 57  ;229 >> 2 High Byte
+DEFB 57  ;230 >> 2 High Byte
+DEFB 57  ;231 >> 2 High Byte
+DEFB 58  ;232 >> 2 High Byte
+DEFB 58  ;233 >> 2 High Byte
+DEFB 58  ;234 >> 2 High Byte
+DEFB 58  ;235 >> 2 High Byte
+DEFB 59  ;236 >> 2 High Byte
+DEFB 59  ;237 >> 2 High Byte
+DEFB 59  ;238 >> 2 High Byte
+DEFB 59  ;239 >> 2 High Byte
+DEFB 60  ;240 >> 2 High Byte
+DEFB 60  ;241 >> 2 High Byte
+DEFB 60  ;242 >> 2 High Byte
+DEFB 60  ;243 >> 2 High Byte
+DEFB 61  ;244 >> 2 High Byte
+DEFB 61  ;245 >> 2 High Byte
+DEFB 61  ;246 >> 2 High Byte
+DEFB 61  ;247 >> 2 High Byte
+DEFB 62  ;248 >> 2 High Byte
+DEFB 62  ;249 >> 2 High Byte
+DEFB 62  ;250 >> 2 High Byte
+DEFB 62  ;251 >> 2 High Byte
+DEFB 63  ;252 >> 2 High Byte
+DEFB 63  ;253 >> 2 High Byte
+DEFB 63  ;254 >> 2 High Byte
+DEFB 63  ;255 >> 2 High Byte
+
+DEFB 0  ;0 >> 2 Low Byte
+DEFB 64  ;1 >> 2 Low Byte
+DEFB 128  ;2 >> 2 Low Byte
+DEFB 192  ;3 >> 2 Low Byte
+DEFB 0  ;4 >> 2 Low Byte
+DEFB 64  ;5 >> 2 Low Byte
+DEFB 128  ;6 >> 2 Low Byte
+DEFB 192  ;7 >> 2 Low Byte
+DEFB 0  ;8 >> 2 Low Byte
+DEFB 64  ;9 >> 2 Low Byte
+DEFB 128  ;10 >> 2 Low Byte
+DEFB 192  ;11 >> 2 Low Byte
+DEFB 0  ;12 >> 2 Low Byte
+DEFB 64  ;13 >> 2 Low Byte
+DEFB 128  ;14 >> 2 Low Byte
+DEFB 192  ;15 >> 2 Low Byte
+DEFB 0  ;16 >> 2 Low Byte
+DEFB 64  ;17 >> 2 Low Byte
+DEFB 128  ;18 >> 2 Low Byte
+DEFB 192  ;19 >> 2 Low Byte
+DEFB 0  ;20 >> 2 Low Byte
+DEFB 64  ;21 >> 2 Low Byte
+DEFB 128  ;22 >> 2 Low Byte
+DEFB 192  ;23 >> 2 Low Byte
+DEFB 0  ;24 >> 2 Low Byte
+DEFB 64  ;25 >> 2 Low Byte
+DEFB 128  ;26 >> 2 Low Byte
+DEFB 192  ;27 >> 2 Low Byte
+DEFB 0  ;28 >> 2 Low Byte
+DEFB 64  ;29 >> 2 Low Byte
+DEFB 128  ;30 >> 2 Low Byte
+DEFB 192  ;31 >> 2 Low Byte
+DEFB 0  ;32 >> 2 Low Byte
+DEFB 64  ;33 >> 2 Low Byte
+DEFB 128  ;34 >> 2 Low Byte
+DEFB 192  ;35 >> 2 Low Byte
+DEFB 0  ;36 >> 2 Low Byte
+DEFB 64  ;37 >> 2 Low Byte
+DEFB 128  ;38 >> 2 Low Byte
+DEFB 192  ;39 >> 2 Low Byte
+DEFB 0  ;40 >> 2 Low Byte
+DEFB 64  ;41 >> 2 Low Byte
+DEFB 128  ;42 >> 2 Low Byte
+DEFB 192  ;43 >> 2 Low Byte
+DEFB 0  ;44 >> 2 Low Byte
+DEFB 64  ;45 >> 2 Low Byte
+DEFB 128  ;46 >> 2 Low Byte
+DEFB 192  ;47 >> 2 Low Byte
+DEFB 0  ;48 >> 2 Low Byte
+DEFB 64  ;49 >> 2 Low Byte
+DEFB 128  ;50 >> 2 Low Byte
+DEFB 192  ;51 >> 2 Low Byte
+DEFB 0  ;52 >> 2 Low Byte
+DEFB 64  ;53 >> 2 Low Byte
+DEFB 128  ;54 >> 2 Low Byte
+DEFB 192  ;55 >> 2 Low Byte
+DEFB 0  ;56 >> 2 Low Byte
+DEFB 64  ;57 >> 2 Low Byte
+DEFB 128  ;58 >> 2 Low Byte
+DEFB 192  ;59 >> 2 Low Byte
+DEFB 0  ;60 >> 2 Low Byte
+DEFB 64  ;61 >> 2 Low Byte
+DEFB 128  ;62 >> 2 Low Byte
+DEFB 192  ;63 >> 2 Low Byte
+DEFB 0  ;64 >> 2 Low Byte
+DEFB 64  ;65 >> 2 Low Byte
+DEFB 128  ;66 >> 2 Low Byte
+DEFB 192  ;67 >> 2 Low Byte
+DEFB 0  ;68 >> 2 Low Byte
+DEFB 64  ;69 >> 2 Low Byte
+DEFB 128  ;70 >> 2 Low Byte
+DEFB 192  ;71 >> 2 Low Byte
+DEFB 0  ;72 >> 2 Low Byte
+DEFB 64  ;73 >> 2 Low Byte
+DEFB 128  ;74 >> 2 Low Byte
+DEFB 192  ;75 >> 2 Low Byte
+DEFB 0  ;76 >> 2 Low Byte
+DEFB 64  ;77 >> 2 Low Byte
+DEFB 128  ;78 >> 2 Low Byte
+DEFB 192  ;79 >> 2 Low Byte
+DEFB 0  ;80 >> 2 Low Byte
+DEFB 64  ;81 >> 2 Low Byte
+DEFB 128  ;82 >> 2 Low Byte
+DEFB 192  ;83 >> 2 Low Byte
+DEFB 0  ;84 >> 2 Low Byte
+DEFB 64  ;85 >> 2 Low Byte
+DEFB 128  ;86 >> 2 Low Byte
+DEFB 192  ;87 >> 2 Low Byte
+DEFB 0  ;88 >> 2 Low Byte
+DEFB 64  ;89 >> 2 Low Byte
+DEFB 128  ;90 >> 2 Low Byte
+DEFB 192  ;91 >> 2 Low Byte
+DEFB 0  ;92 >> 2 Low Byte
+DEFB 64  ;93 >> 2 Low Byte
+DEFB 128  ;94 >> 2 Low Byte
+DEFB 192  ;95 >> 2 Low Byte
+DEFB 0  ;96 >> 2 Low Byte
+DEFB 64  ;97 >> 2 Low Byte
+DEFB 128  ;98 >> 2 Low Byte
+DEFB 192  ;99 >> 2 Low Byte
+DEFB 0  ;100 >> 2 Low Byte
+DEFB 64  ;101 >> 2 Low Byte
+DEFB 128  ;102 >> 2 Low Byte
+DEFB 192  ;103 >> 2 Low Byte
+DEFB 0  ;104 >> 2 Low Byte
+DEFB 64  ;105 >> 2 Low Byte
+DEFB 128  ;106 >> 2 Low Byte
+DEFB 192  ;107 >> 2 Low Byte
+DEFB 0  ;108 >> 2 Low Byte
+DEFB 64  ;109 >> 2 Low Byte
+DEFB 128  ;110 >> 2 Low Byte
+DEFB 192  ;111 >> 2 Low Byte
+DEFB 0  ;112 >> 2 Low Byte
+DEFB 64  ;113 >> 2 Low Byte
+DEFB 128  ;114 >> 2 Low Byte
+DEFB 192  ;115 >> 2 Low Byte
+DEFB 0  ;116 >> 2 Low Byte
+DEFB 64  ;117 >> 2 Low Byte
+DEFB 128  ;118 >> 2 Low Byte
+DEFB 192  ;119 >> 2 Low Byte
+DEFB 0  ;120 >> 2 Low Byte
+DEFB 64  ;121 >> 2 Low Byte
+DEFB 128  ;122 >> 2 Low Byte
+DEFB 192  ;123 >> 2 Low Byte
+DEFB 0  ;124 >> 2 Low Byte
+DEFB 64  ;125 >> 2 Low Byte
+DEFB 128  ;126 >> 2 Low Byte
+DEFB 192  ;127 >> 2 Low Byte
+DEFB 0  ;128 >> 2 Low Byte
+DEFB 64  ;129 >> 2 Low Byte
+DEFB 128  ;130 >> 2 Low Byte
+DEFB 192  ;131 >> 2 Low Byte
+DEFB 0  ;132 >> 2 Low Byte
+DEFB 64  ;133 >> 2 Low Byte
+DEFB 128  ;134 >> 2 Low Byte
+DEFB 192  ;135 >> 2 Low Byte
+DEFB 0  ;136 >> 2 Low Byte
+DEFB 64  ;137 >> 2 Low Byte
+DEFB 128  ;138 >> 2 Low Byte
+DEFB 192  ;139 >> 2 Low Byte
+DEFB 0  ;140 >> 2 Low Byte
+DEFB 64  ;141 >> 2 Low Byte
+DEFB 128  ;142 >> 2 Low Byte
+DEFB 192  ;143 >> 2 Low Byte
+DEFB 0  ;144 >> 2 Low Byte
+DEFB 64  ;145 >> 2 Low Byte
+DEFB 128  ;146 >> 2 Low Byte
+DEFB 192  ;147 >> 2 Low Byte
+DEFB 0  ;148 >> 2 Low Byte
+DEFB 64  ;149 >> 2 Low Byte
+DEFB 128  ;150 >> 2 Low Byte
+DEFB 192  ;151 >> 2 Low Byte
+DEFB 0  ;152 >> 2 Low Byte
+DEFB 64  ;153 >> 2 Low Byte
+DEFB 128  ;154 >> 2 Low Byte
+DEFB 192  ;155 >> 2 Low Byte
+DEFB 0  ;156 >> 2 Low Byte
+DEFB 64  ;157 >> 2 Low Byte
+DEFB 128  ;158 >> 2 Low Byte
+DEFB 192  ;159 >> 2 Low Byte
+DEFB 0  ;160 >> 2 Low Byte
+DEFB 64  ;161 >> 2 Low Byte
+DEFB 128  ;162 >> 2 Low Byte
+DEFB 192  ;163 >> 2 Low Byte
+DEFB 0  ;164 >> 2 Low Byte
+DEFB 64  ;165 >> 2 Low Byte
+DEFB 128  ;166 >> 2 Low Byte
+DEFB 192  ;167 >> 2 Low Byte
+DEFB 0  ;168 >> 2 Low Byte
+DEFB 64  ;169 >> 2 Low Byte
+DEFB 128  ;170 >> 2 Low Byte
+DEFB 192  ;171 >> 2 Low Byte
+DEFB 0  ;172 >> 2 Low Byte
+DEFB 64  ;173 >> 2 Low Byte
+DEFB 128  ;174 >> 2 Low Byte
+DEFB 192  ;175 >> 2 Low Byte
+DEFB 0  ;176 >> 2 Low Byte
+DEFB 64  ;177 >> 2 Low Byte
+DEFB 128  ;178 >> 2 Low Byte
+DEFB 192  ;179 >> 2 Low Byte
+DEFB 0  ;180 >> 2 Low Byte
+DEFB 64  ;181 >> 2 Low Byte
+DEFB 128  ;182 >> 2 Low Byte
+DEFB 192  ;183 >> 2 Low Byte
+DEFB 0  ;184 >> 2 Low Byte
+DEFB 64  ;185 >> 2 Low Byte
+DEFB 128  ;186 >> 2 Low Byte
+DEFB 192  ;187 >> 2 Low Byte
+DEFB 0  ;188 >> 2 Low Byte
+DEFB 64  ;189 >> 2 Low Byte
+DEFB 128  ;190 >> 2 Low Byte
+DEFB 192  ;191 >> 2 Low Byte
+DEFB 0  ;192 >> 2 Low Byte
+DEFB 64  ;193 >> 2 Low Byte
+DEFB 128  ;194 >> 2 Low Byte
+DEFB 192  ;195 >> 2 Low Byte
+DEFB 0  ;196 >> 2 Low Byte
+DEFB 64  ;197 >> 2 Low Byte
+DEFB 128  ;198 >> 2 Low Byte
+DEFB 192  ;199 >> 2 Low Byte
+DEFB 0  ;200 >> 2 Low Byte
+DEFB 64  ;201 >> 2 Low Byte
+DEFB 128  ;202 >> 2 Low Byte
+DEFB 192  ;203 >> 2 Low Byte
+DEFB 0  ;204 >> 2 Low Byte
+DEFB 64  ;205 >> 2 Low Byte
+DEFB 128  ;206 >> 2 Low Byte
+DEFB 192  ;207 >> 2 Low Byte
+DEFB 0  ;208 >> 2 Low Byte
+DEFB 64  ;209 >> 2 Low Byte
+DEFB 128  ;210 >> 2 Low Byte
+DEFB 192  ;211 >> 2 Low Byte
+DEFB 0  ;212 >> 2 Low Byte
+DEFB 64  ;213 >> 2 Low Byte
+DEFB 128  ;214 >> 2 Low Byte
+DEFB 192  ;215 >> 2 Low Byte
+DEFB 0  ;216 >> 2 Low Byte
+DEFB 64  ;217 >> 2 Low Byte
+DEFB 128  ;218 >> 2 Low Byte
+DEFB 192  ;219 >> 2 Low Byte
+DEFB 0  ;220 >> 2 Low Byte
+DEFB 64  ;221 >> 2 Low Byte
+DEFB 128  ;222 >> 2 Low Byte
+DEFB 192  ;223 >> 2 Low Byte
+DEFB 0  ;224 >> 2 Low Byte
+DEFB 64  ;225 >> 2 Low Byte
+DEFB 128  ;226 >> 2 Low Byte
+DEFB 192  ;227 >> 2 Low Byte
+DEFB 0  ;228 >> 2 Low Byte
+DEFB 64  ;229 >> 2 Low Byte
+DEFB 128  ;230 >> 2 Low Byte
+DEFB 192  ;231 >> 2 Low Byte
+DEFB 0  ;232 >> 2 Low Byte
+DEFB 64  ;233 >> 2 Low Byte
+DEFB 128  ;234 >> 2 Low Byte
+DEFB 192  ;235 >> 2 Low Byte
+DEFB 0  ;236 >> 2 Low Byte
+DEFB 64  ;237 >> 2 Low Byte
+DEFB 128  ;238 >> 2 Low Byte
+DEFB 192  ;239 >> 2 Low Byte
+DEFB 0  ;240 >> 2 Low Byte
+DEFB 64  ;241 >> 2 Low Byte
+DEFB 128  ;242 >> 2 Low Byte
+DEFB 192  ;243 >> 2 Low Byte
+DEFB 0  ;244 >> 2 Low Byte
+DEFB 64  ;245 >> 2 Low Byte
+DEFB 128  ;246 >> 2 Low Byte
+DEFB 192  ;247 >> 2 Low Byte
+DEFB 0  ;248 >> 2 Low Byte
+DEFB 64  ;249 >> 2 Low Byte
+DEFB 128  ;250 >> 2 Low Byte
+DEFB 192  ;251 >> 2 Low Byte
+DEFB 0  ;252 >> 2 Low Byte
+DEFB 64  ;253 >> 2 Low Byte
+DEFB 128  ;254 >> 2 Low Byte
+DEFB 192  ;255 >> 2 Low Byte
+
+DEFB 0  ;0 >> 3 High Byte
+DEFB 0  ;1 >> 3 High Byte
+DEFB 0  ;2 >> 3 High Byte
+DEFB 0  ;3 >> 3 High Byte
+DEFB 0  ;4 >> 3 High Byte
+DEFB 0  ;5 >> 3 High Byte
+DEFB 0  ;6 >> 3 High Byte
+DEFB 0  ;7 >> 3 High Byte
+DEFB 1  ;8 >> 3 High Byte
+DEFB 1  ;9 >> 3 High Byte
+DEFB 1  ;10 >> 3 High Byte
+DEFB 1  ;11 >> 3 High Byte
+DEFB 1  ;12 >> 3 High Byte
+DEFB 1  ;13 >> 3 High Byte
+DEFB 1  ;14 >> 3 High Byte
+DEFB 1  ;15 >> 3 High Byte
+DEFB 2  ;16 >> 3 High Byte
+DEFB 2  ;17 >> 3 High Byte
+DEFB 2  ;18 >> 3 High Byte
+DEFB 2  ;19 >> 3 High Byte
+DEFB 2  ;20 >> 3 High Byte
+DEFB 2  ;21 >> 3 High Byte
+DEFB 2  ;22 >> 3 High Byte
+DEFB 2  ;23 >> 3 High Byte
+DEFB 3  ;24 >> 3 High Byte
+DEFB 3  ;25 >> 3 High Byte
+DEFB 3  ;26 >> 3 High Byte
+DEFB 3  ;27 >> 3 High Byte
+DEFB 3  ;28 >> 3 High Byte
+DEFB 3  ;29 >> 3 High Byte
+DEFB 3  ;30 >> 3 High Byte
+DEFB 3  ;31 >> 3 High Byte
+DEFB 4  ;32 >> 3 High Byte
+DEFB 4  ;33 >> 3 High Byte
+DEFB 4  ;34 >> 3 High Byte
+DEFB 4  ;35 >> 3 High Byte
+DEFB 4  ;36 >> 3 High Byte
+DEFB 4  ;37 >> 3 High Byte
+DEFB 4  ;38 >> 3 High Byte
+DEFB 4  ;39 >> 3 High Byte
+DEFB 5  ;40 >> 3 High Byte
+DEFB 5  ;41 >> 3 High Byte
+DEFB 5  ;42 >> 3 High Byte
+DEFB 5  ;43 >> 3 High Byte
+DEFB 5  ;44 >> 3 High Byte
+DEFB 5  ;45 >> 3 High Byte
+DEFB 5  ;46 >> 3 High Byte
+DEFB 5  ;47 >> 3 High Byte
+DEFB 6  ;48 >> 3 High Byte
+DEFB 6  ;49 >> 3 High Byte
+DEFB 6  ;50 >> 3 High Byte
+DEFB 6  ;51 >> 3 High Byte
+DEFB 6  ;52 >> 3 High Byte
+DEFB 6  ;53 >> 3 High Byte
+DEFB 6  ;54 >> 3 High Byte
+DEFB 6  ;55 >> 3 High Byte
+DEFB 7  ;56 >> 3 High Byte
+DEFB 7  ;57 >> 3 High Byte
+DEFB 7  ;58 >> 3 High Byte
+DEFB 7  ;59 >> 3 High Byte
+DEFB 7  ;60 >> 3 High Byte
+DEFB 7  ;61 >> 3 High Byte
+DEFB 7  ;62 >> 3 High Byte
+DEFB 7  ;63 >> 3 High Byte
+DEFB 8  ;64 >> 3 High Byte
+DEFB 8  ;65 >> 3 High Byte
+DEFB 8  ;66 >> 3 High Byte
+DEFB 8  ;67 >> 3 High Byte
+DEFB 8  ;68 >> 3 High Byte
+DEFB 8  ;69 >> 3 High Byte
+DEFB 8  ;70 >> 3 High Byte
+DEFB 8  ;71 >> 3 High Byte
+DEFB 9  ;72 >> 3 High Byte
+DEFB 9  ;73 >> 3 High Byte
+DEFB 9  ;74 >> 3 High Byte
+DEFB 9  ;75 >> 3 High Byte
+DEFB 9  ;76 >> 3 High Byte
+DEFB 9  ;77 >> 3 High Byte
+DEFB 9  ;78 >> 3 High Byte
+DEFB 9  ;79 >> 3 High Byte
+DEFB 10  ;80 >> 3 High Byte
+DEFB 10  ;81 >> 3 High Byte
+DEFB 10  ;82 >> 3 High Byte
+DEFB 10  ;83 >> 3 High Byte
+DEFB 10  ;84 >> 3 High Byte
+DEFB 10  ;85 >> 3 High Byte
+DEFB 10  ;86 >> 3 High Byte
+DEFB 10  ;87 >> 3 High Byte
+DEFB 11  ;88 >> 3 High Byte
+DEFB 11  ;89 >> 3 High Byte
+DEFB 11  ;90 >> 3 High Byte
+DEFB 11  ;91 >> 3 High Byte
+DEFB 11  ;92 >> 3 High Byte
+DEFB 11  ;93 >> 3 High Byte
+DEFB 11  ;94 >> 3 High Byte
+DEFB 11  ;95 >> 3 High Byte
+DEFB 12  ;96 >> 3 High Byte
+DEFB 12  ;97 >> 3 High Byte
+DEFB 12  ;98 >> 3 High Byte
+DEFB 12  ;99 >> 3 High Byte
+DEFB 12  ;100 >> 3 High Byte
+DEFB 12  ;101 >> 3 High Byte
+DEFB 12  ;102 >> 3 High Byte
+DEFB 12  ;103 >> 3 High Byte
+DEFB 13  ;104 >> 3 High Byte
+DEFB 13  ;105 >> 3 High Byte
+DEFB 13  ;106 >> 3 High Byte
+DEFB 13  ;107 >> 3 High Byte
+DEFB 13  ;108 >> 3 High Byte
+DEFB 13  ;109 >> 3 High Byte
+DEFB 13  ;110 >> 3 High Byte
+DEFB 13  ;111 >> 3 High Byte
+DEFB 14  ;112 >> 3 High Byte
+DEFB 14  ;113 >> 3 High Byte
+DEFB 14  ;114 >> 3 High Byte
+DEFB 14  ;115 >> 3 High Byte
+DEFB 14  ;116 >> 3 High Byte
+DEFB 14  ;117 >> 3 High Byte
+DEFB 14  ;118 >> 3 High Byte
+DEFB 14  ;119 >> 3 High Byte
+DEFB 15  ;120 >> 3 High Byte
+DEFB 15  ;121 >> 3 High Byte
+DEFB 15  ;122 >> 3 High Byte
+DEFB 15  ;123 >> 3 High Byte
+DEFB 15  ;124 >> 3 High Byte
+DEFB 15  ;125 >> 3 High Byte
+DEFB 15  ;126 >> 3 High Byte
+DEFB 15  ;127 >> 3 High Byte
+DEFB 16  ;128 >> 3 High Byte
+DEFB 16  ;129 >> 3 High Byte
+DEFB 16  ;130 >> 3 High Byte
+DEFB 16  ;131 >> 3 High Byte
+DEFB 16  ;132 >> 3 High Byte
+DEFB 16  ;133 >> 3 High Byte
+DEFB 16  ;134 >> 3 High Byte
+DEFB 16  ;135 >> 3 High Byte
+DEFB 17  ;136 >> 3 High Byte
+DEFB 17  ;137 >> 3 High Byte
+DEFB 17  ;138 >> 3 High Byte
+DEFB 17  ;139 >> 3 High Byte
+DEFB 17  ;140 >> 3 High Byte
+DEFB 17  ;141 >> 3 High Byte
+DEFB 17  ;142 >> 3 High Byte
+DEFB 17  ;143 >> 3 High Byte
+DEFB 18  ;144 >> 3 High Byte
+DEFB 18  ;145 >> 3 High Byte
+DEFB 18  ;146 >> 3 High Byte
+DEFB 18  ;147 >> 3 High Byte
+DEFB 18  ;148 >> 3 High Byte
+DEFB 18  ;149 >> 3 High Byte
+DEFB 18  ;150 >> 3 High Byte
+DEFB 18  ;151 >> 3 High Byte
+DEFB 19  ;152 >> 3 High Byte
+DEFB 19  ;153 >> 3 High Byte
+DEFB 19  ;154 >> 3 High Byte
+DEFB 19  ;155 >> 3 High Byte
+DEFB 19  ;156 >> 3 High Byte
+DEFB 19  ;157 >> 3 High Byte
+DEFB 19  ;158 >> 3 High Byte
+DEFB 19  ;159 >> 3 High Byte
+DEFB 20  ;160 >> 3 High Byte
+DEFB 20  ;161 >> 3 High Byte
+DEFB 20  ;162 >> 3 High Byte
+DEFB 20  ;163 >> 3 High Byte
+DEFB 20  ;164 >> 3 High Byte
+DEFB 20  ;165 >> 3 High Byte
+DEFB 20  ;166 >> 3 High Byte
+DEFB 20  ;167 >> 3 High Byte
+DEFB 21  ;168 >> 3 High Byte
+DEFB 21  ;169 >> 3 High Byte
+DEFB 21  ;170 >> 3 High Byte
+DEFB 21  ;171 >> 3 High Byte
+DEFB 21  ;172 >> 3 High Byte
+DEFB 21  ;173 >> 3 High Byte
+DEFB 21  ;174 >> 3 High Byte
+DEFB 21  ;175 >> 3 High Byte
+DEFB 22  ;176 >> 3 High Byte
+DEFB 22  ;177 >> 3 High Byte
+DEFB 22  ;178 >> 3 High Byte
+DEFB 22  ;179 >> 3 High Byte
+DEFB 22  ;180 >> 3 High Byte
+DEFB 22  ;181 >> 3 High Byte
+DEFB 22  ;182 >> 3 High Byte
+DEFB 22  ;183 >> 3 High Byte
+DEFB 23  ;184 >> 3 High Byte
+DEFB 23  ;185 >> 3 High Byte
+DEFB 23  ;186 >> 3 High Byte
+DEFB 23  ;187 >> 3 High Byte
+DEFB 23  ;188 >> 3 High Byte
+DEFB 23  ;189 >> 3 High Byte
+DEFB 23  ;190 >> 3 High Byte
+DEFB 23  ;191 >> 3 High Byte
+DEFB 24  ;192 >> 3 High Byte
+DEFB 24  ;193 >> 3 High Byte
+DEFB 24  ;194 >> 3 High Byte
+DEFB 24  ;195 >> 3 High Byte
+DEFB 24  ;196 >> 3 High Byte
+DEFB 24  ;197 >> 3 High Byte
+DEFB 24  ;198 >> 3 High Byte
+DEFB 24  ;199 >> 3 High Byte
+DEFB 25  ;200 >> 3 High Byte
+DEFB 25  ;201 >> 3 High Byte
+DEFB 25  ;202 >> 3 High Byte
+DEFB 25  ;203 >> 3 High Byte
+DEFB 25  ;204 >> 3 High Byte
+DEFB 25  ;205 >> 3 High Byte
+DEFB 25  ;206 >> 3 High Byte
+DEFB 25  ;207 >> 3 High Byte
+DEFB 26  ;208 >> 3 High Byte
+DEFB 26  ;209 >> 3 High Byte
+DEFB 26  ;210 >> 3 High Byte
+DEFB 26  ;211 >> 3 High Byte
+DEFB 26  ;212 >> 3 High Byte
+DEFB 26  ;213 >> 3 High Byte
+DEFB 26  ;214 >> 3 High Byte
+DEFB 26  ;215 >> 3 High Byte
+DEFB 27  ;216 >> 3 High Byte
+DEFB 27  ;217 >> 3 High Byte
+DEFB 27  ;218 >> 3 High Byte
+DEFB 27  ;219 >> 3 High Byte
+DEFB 27  ;220 >> 3 High Byte
+DEFB 27  ;221 >> 3 High Byte
+DEFB 27  ;222 >> 3 High Byte
+DEFB 27  ;223 >> 3 High Byte
+DEFB 28  ;224 >> 3 High Byte
+DEFB 28  ;225 >> 3 High Byte
+DEFB 28  ;226 >> 3 High Byte
+DEFB 28  ;227 >> 3 High Byte
+DEFB 28  ;228 >> 3 High Byte
+DEFB 28  ;229 >> 3 High Byte
+DEFB 28  ;230 >> 3 High Byte
+DEFB 28  ;231 >> 3 High Byte
+DEFB 29  ;232 >> 3 High Byte
+DEFB 29  ;233 >> 3 High Byte
+DEFB 29  ;234 >> 3 High Byte
+DEFB 29  ;235 >> 3 High Byte
+DEFB 29  ;236 >> 3 High Byte
+DEFB 29  ;237 >> 3 High Byte
+DEFB 29  ;238 >> 3 High Byte
+DEFB 29  ;239 >> 3 High Byte
+DEFB 30  ;240 >> 3 High Byte
+DEFB 30  ;241 >> 3 High Byte
+DEFB 30  ;242 >> 3 High Byte
+DEFB 30  ;243 >> 3 High Byte
+DEFB 30  ;244 >> 3 High Byte
+DEFB 30  ;245 >> 3 High Byte
+DEFB 30  ;246 >> 3 High Byte
+DEFB 30  ;247 >> 3 High Byte
+DEFB 31  ;248 >> 3 High Byte
+DEFB 31  ;249 >> 3 High Byte
+DEFB 31  ;250 >> 3 High Byte
+DEFB 31  ;251 >> 3 High Byte
+DEFB 31  ;252 >> 3 High Byte
+DEFB 31  ;253 >> 3 High Byte
+DEFB 31  ;254 >> 3 High Byte
+DEFB 31  ;255 >> 3 High Byte
+
+DEFB 0  ;0 >> 3 Low Byte
+DEFB 32  ;1 >> 3 Low Byte
+DEFB 64  ;2 >> 3 Low Byte
+DEFB 96  ;3 >> 3 Low Byte
+DEFB 128  ;4 >> 3 Low Byte
+DEFB 160  ;5 >> 3 Low Byte
+DEFB 192  ;6 >> 3 Low Byte
+DEFB 224  ;7 >> 3 Low Byte
+DEFB 0  ;8 >> 3 Low Byte
+DEFB 32  ;9 >> 3 Low Byte
+DEFB 64  ;10 >> 3 Low Byte
+DEFB 96  ;11 >> 3 Low Byte
+DEFB 128  ;12 >> 3 Low Byte
+DEFB 160  ;13 >> 3 Low Byte
+DEFB 192  ;14 >> 3 Low Byte
+DEFB 224  ;15 >> 3 Low Byte
+DEFB 0  ;16 >> 3 Low Byte
+DEFB 32  ;17 >> 3 Low Byte
+DEFB 64  ;18 >> 3 Low Byte
+DEFB 96  ;19 >> 3 Low Byte
+DEFB 128  ;20 >> 3 Low Byte
+DEFB 160  ;21 >> 3 Low Byte
+DEFB 192  ;22 >> 3 Low Byte
+DEFB 224  ;23 >> 3 Low Byte
+DEFB 0  ;24 >> 3 Low Byte
+DEFB 32  ;25 >> 3 Low Byte
+DEFB 64  ;26 >> 3 Low Byte
+DEFB 96  ;27 >> 3 Low Byte
+DEFB 128  ;28 >> 3 Low Byte
+DEFB 160  ;29 >> 3 Low Byte
+DEFB 192  ;30 >> 3 Low Byte
+DEFB 224  ;31 >> 3 Low Byte
+DEFB 0  ;32 >> 3 Low Byte
+DEFB 32  ;33 >> 3 Low Byte
+DEFB 64  ;34 >> 3 Low Byte
+DEFB 96  ;35 >> 3 Low Byte
+DEFB 128  ;36 >> 3 Low Byte
+DEFB 160  ;37 >> 3 Low Byte
+DEFB 192  ;38 >> 3 Low Byte
+DEFB 224  ;39 >> 3 Low Byte
+DEFB 0  ;40 >> 3 Low Byte
+DEFB 32  ;41 >> 3 Low Byte
+DEFB 64  ;42 >> 3 Low Byte
+DEFB 96  ;43 >> 3 Low Byte
+DEFB 128  ;44 >> 3 Low Byte
+DEFB 160  ;45 >> 3 Low Byte
+DEFB 192  ;46 >> 3 Low Byte
+DEFB 224  ;47 >> 3 Low Byte
+DEFB 0  ;48 >> 3 Low Byte
+DEFB 32  ;49 >> 3 Low Byte
+DEFB 64  ;50 >> 3 Low Byte
+DEFB 96  ;51 >> 3 Low Byte
+DEFB 128  ;52 >> 3 Low Byte
+DEFB 160  ;53 >> 3 Low Byte
+DEFB 192  ;54 >> 3 Low Byte
+DEFB 224  ;55 >> 3 Low Byte
+DEFB 0  ;56 >> 3 Low Byte
+DEFB 32  ;57 >> 3 Low Byte
+DEFB 64  ;58 >> 3 Low Byte
+DEFB 96  ;59 >> 3 Low Byte
+DEFB 128  ;60 >> 3 Low Byte
+DEFB 160  ;61 >> 3 Low Byte
+DEFB 192  ;62 >> 3 Low Byte
+DEFB 224  ;63 >> 3 Low Byte
+DEFB 0  ;64 >> 3 Low Byte
+DEFB 32  ;65 >> 3 Low Byte
+DEFB 64  ;66 >> 3 Low Byte
+DEFB 96  ;67 >> 3 Low Byte
+DEFB 128  ;68 >> 3 Low Byte
+DEFB 160  ;69 >> 3 Low Byte
+DEFB 192  ;70 >> 3 Low Byte
+DEFB 224  ;71 >> 3 Low Byte
+DEFB 0  ;72 >> 3 Low Byte
+DEFB 32  ;73 >> 3 Low Byte
+DEFB 64  ;74 >> 3 Low Byte
+DEFB 96  ;75 >> 3 Low Byte
+DEFB 128  ;76 >> 3 Low Byte
+DEFB 160  ;77 >> 3 Low Byte
+DEFB 192  ;78 >> 3 Low Byte
+DEFB 224  ;79 >> 3 Low Byte
+DEFB 0  ;80 >> 3 Low Byte
+DEFB 32  ;81 >> 3 Low Byte
+DEFB 64  ;82 >> 3 Low Byte
+DEFB 96  ;83 >> 3 Low Byte
+DEFB 128  ;84 >> 3 Low Byte
+DEFB 160  ;85 >> 3 Low Byte
+DEFB 192  ;86 >> 3 Low Byte
+DEFB 224  ;87 >> 3 Low Byte
+DEFB 0  ;88 >> 3 Low Byte
+DEFB 32  ;89 >> 3 Low Byte
+DEFB 64  ;90 >> 3 Low Byte
+DEFB 96  ;91 >> 3 Low Byte
+DEFB 128  ;92 >> 3 Low Byte
+DEFB 160  ;93 >> 3 Low Byte
+DEFB 192  ;94 >> 3 Low Byte
+DEFB 224  ;95 >> 3 Low Byte
+DEFB 0  ;96 >> 3 Low Byte
+DEFB 32  ;97 >> 3 Low Byte
+DEFB 64  ;98 >> 3 Low Byte
+DEFB 96  ;99 >> 3 Low Byte
+DEFB 128  ;100 >> 3 Low Byte
+DEFB 160  ;101 >> 3 Low Byte
+DEFB 192  ;102 >> 3 Low Byte
+DEFB 224  ;103 >> 3 Low Byte
+DEFB 0  ;104 >> 3 Low Byte
+DEFB 32  ;105 >> 3 Low Byte
+DEFB 64  ;106 >> 3 Low Byte
+DEFB 96  ;107 >> 3 Low Byte
+DEFB 128  ;108 >> 3 Low Byte
+DEFB 160  ;109 >> 3 Low Byte
+DEFB 192  ;110 >> 3 Low Byte
+DEFB 224  ;111 >> 3 Low Byte
+DEFB 0  ;112 >> 3 Low Byte
+DEFB 32  ;113 >> 3 Low Byte
+DEFB 64  ;114 >> 3 Low Byte
+DEFB 96  ;115 >> 3 Low Byte
+DEFB 128  ;116 >> 3 Low Byte
+DEFB 160  ;117 >> 3 Low Byte
+DEFB 192  ;118 >> 3 Low Byte
+DEFB 224  ;119 >> 3 Low Byte
+DEFB 0  ;120 >> 3 Low Byte
+DEFB 32  ;121 >> 3 Low Byte
+DEFB 64  ;122 >> 3 Low Byte
+DEFB 96  ;123 >> 3 Low Byte
+DEFB 128  ;124 >> 3 Low Byte
+DEFB 160  ;125 >> 3 Low Byte
+DEFB 192  ;126 >> 3 Low Byte
+DEFB 224  ;127 >> 3 Low Byte
+DEFB 0  ;128 >> 3 Low Byte
+DEFB 32  ;129 >> 3 Low Byte
+DEFB 64  ;130 >> 3 Low Byte
+DEFB 96  ;131 >> 3 Low Byte
+DEFB 128  ;132 >> 3 Low Byte
+DEFB 160  ;133 >> 3 Low Byte
+DEFB 192  ;134 >> 3 Low Byte
+DEFB 224  ;135 >> 3 Low Byte
+DEFB 0  ;136 >> 3 Low Byte
+DEFB 32  ;137 >> 3 Low Byte
+DEFB 64  ;138 >> 3 Low Byte
+DEFB 96  ;139 >> 3 Low Byte
+DEFB 128  ;140 >> 3 Low Byte
+DEFB 160  ;141 >> 3 Low Byte
+DEFB 192  ;142 >> 3 Low Byte
+DEFB 224  ;143 >> 3 Low Byte
+DEFB 0  ;144 >> 3 Low Byte
+DEFB 32  ;145 >> 3 Low Byte
+DEFB 64  ;146 >> 3 Low Byte
+DEFB 96  ;147 >> 3 Low Byte
+DEFB 128  ;148 >> 3 Low Byte
+DEFB 160  ;149 >> 3 Low Byte
+DEFB 192  ;150 >> 3 Low Byte
+DEFB 224  ;151 >> 3 Low Byte
+DEFB 0  ;152 >> 3 Low Byte
+DEFB 32  ;153 >> 3 Low Byte
+DEFB 64  ;154 >> 3 Low Byte
+DEFB 96  ;155 >> 3 Low Byte
+DEFB 128  ;156 >> 3 Low Byte
+DEFB 160  ;157 >> 3 Low Byte
+DEFB 192  ;158 >> 3 Low Byte
+DEFB 224  ;159 >> 3 Low Byte
+DEFB 0  ;160 >> 3 Low Byte
+DEFB 32  ;161 >> 3 Low Byte
+DEFB 64  ;162 >> 3 Low Byte
+DEFB 96  ;163 >> 3 Low Byte
+DEFB 128  ;164 >> 3 Low Byte
+DEFB 160  ;165 >> 3 Low Byte
+DEFB 192  ;166 >> 3 Low Byte
+DEFB 224  ;167 >> 3 Low Byte
+DEFB 0  ;168 >> 3 Low Byte
+DEFB 32  ;169 >> 3 Low Byte
+DEFB 64  ;170 >> 3 Low Byte
+DEFB 96  ;171 >> 3 Low Byte
+DEFB 128  ;172 >> 3 Low Byte
+DEFB 160  ;173 >> 3 Low Byte
+DEFB 192  ;174 >> 3 Low Byte
+DEFB 224  ;175 >> 3 Low Byte
+DEFB 0  ;176 >> 3 Low Byte
+DEFB 32  ;177 >> 3 Low Byte
+DEFB 64  ;178 >> 3 Low Byte
+DEFB 96  ;179 >> 3 Low Byte
+DEFB 128  ;180 >> 3 Low Byte
+DEFB 160  ;181 >> 3 Low Byte
+DEFB 192  ;182 >> 3 Low Byte
+DEFB 224  ;183 >> 3 Low Byte
+DEFB 0  ;184 >> 3 Low Byte
+DEFB 32  ;185 >> 3 Low Byte
+DEFB 64  ;186 >> 3 Low Byte
+DEFB 96  ;187 >> 3 Low Byte
+DEFB 128  ;188 >> 3 Low Byte
+DEFB 160  ;189 >> 3 Low Byte
+DEFB 192  ;190 >> 3 Low Byte
+DEFB 224  ;191 >> 3 Low Byte
+DEFB 0  ;192 >> 3 Low Byte
+DEFB 32  ;193 >> 3 Low Byte
+DEFB 64  ;194 >> 3 Low Byte
+DEFB 96  ;195 >> 3 Low Byte
+DEFB 128  ;196 >> 3 Low Byte
+DEFB 160  ;197 >> 3 Low Byte
+DEFB 192  ;198 >> 3 Low Byte
+DEFB 224  ;199 >> 3 Low Byte
+DEFB 0  ;200 >> 3 Low Byte
+DEFB 32  ;201 >> 3 Low Byte
+DEFB 64  ;202 >> 3 Low Byte
+DEFB 96  ;203 >> 3 Low Byte
+DEFB 128  ;204 >> 3 Low Byte
+DEFB 160  ;205 >> 3 Low Byte
+DEFB 192  ;206 >> 3 Low Byte
+DEFB 224  ;207 >> 3 Low Byte
+DEFB 0  ;208 >> 3 Low Byte
+DEFB 32  ;209 >> 3 Low Byte
+DEFB 64  ;210 >> 3 Low Byte
+DEFB 96  ;211 >> 3 Low Byte
+DEFB 128  ;212 >> 3 Low Byte
+DEFB 160  ;213 >> 3 Low Byte
+DEFB 192  ;214 >> 3 Low Byte
+DEFB 224  ;215 >> 3 Low Byte
+DEFB 0  ;216 >> 3 Low Byte
+DEFB 32  ;217 >> 3 Low Byte
+DEFB 64  ;218 >> 3 Low Byte
+DEFB 96  ;219 >> 3 Low Byte
+DEFB 128  ;220 >> 3 Low Byte
+DEFB 160  ;221 >> 3 Low Byte
+DEFB 192  ;222 >> 3 Low Byte
+DEFB 224  ;223 >> 3 Low Byte
+DEFB 0  ;224 >> 3 Low Byte
+DEFB 32  ;225 >> 3 Low Byte
+DEFB 64  ;226 >> 3 Low Byte
+DEFB 96  ;227 >> 3 Low Byte
+DEFB 128  ;228 >> 3 Low Byte
+DEFB 160  ;229 >> 3 Low Byte
+DEFB 192  ;230 >> 3 Low Byte
+DEFB 224  ;231 >> 3 Low Byte
+DEFB 0  ;232 >> 3 Low Byte
+DEFB 32  ;233 >> 3 Low Byte
+DEFB 64  ;234 >> 3 Low Byte
+DEFB 96  ;235 >> 3 Low Byte
+DEFB 128  ;236 >> 3 Low Byte
+DEFB 160  ;237 >> 3 Low Byte
+DEFB 192  ;238 >> 3 Low Byte
+DEFB 224  ;239 >> 3 Low Byte
+DEFB 0  ;240 >> 3 Low Byte
+DEFB 32  ;241 >> 3 Low Byte
+DEFB 64  ;242 >> 3 Low Byte
+DEFB 96  ;243 >> 3 Low Byte
+DEFB 128  ;244 >> 3 Low Byte
+DEFB 160  ;245 >> 3 Low Byte
+DEFB 192  ;246 >> 3 Low Byte
+DEFB 224  ;247 >> 3 Low Byte
+DEFB 0  ;248 >> 3 Low Byte
+DEFB 32  ;249 >> 3 Low Byte
+DEFB 64  ;250 >> 3 Low Byte
+DEFB 96  ;251 >> 3 Low Byte
+DEFB 128  ;252 >> 3 Low Byte
+DEFB 160  ;253 >> 3 Low Byte
+DEFB 192  ;254 >> 3 Low Byte
+DEFB 224  ;255 >> 3 Low Byte
+
+DEFB 0  ;0 >> 4 High Byte
+DEFB 0  ;1 >> 4 High Byte
+DEFB 0  ;2 >> 4 High Byte
+DEFB 0  ;3 >> 4 High Byte
+DEFB 0  ;4 >> 4 High Byte
+DEFB 0  ;5 >> 4 High Byte
+DEFB 0  ;6 >> 4 High Byte
+DEFB 0  ;7 >> 4 High Byte
+DEFB 0  ;8 >> 4 High Byte
+DEFB 0  ;9 >> 4 High Byte
+DEFB 0  ;10 >> 4 High Byte
+DEFB 0  ;11 >> 4 High Byte
+DEFB 0  ;12 >> 4 High Byte
+DEFB 0  ;13 >> 4 High Byte
+DEFB 0  ;14 >> 4 High Byte
+DEFB 0  ;15 >> 4 High Byte
+DEFB 1  ;16 >> 4 High Byte
+DEFB 1  ;17 >> 4 High Byte
+DEFB 1  ;18 >> 4 High Byte
+DEFB 1  ;19 >> 4 High Byte
+DEFB 1  ;20 >> 4 High Byte
+DEFB 1  ;21 >> 4 High Byte
+DEFB 1  ;22 >> 4 High Byte
+DEFB 1  ;23 >> 4 High Byte
+DEFB 1  ;24 >> 4 High Byte
+DEFB 1  ;25 >> 4 High Byte
+DEFB 1  ;26 >> 4 High Byte
+DEFB 1  ;27 >> 4 High Byte
+DEFB 1  ;28 >> 4 High Byte
+DEFB 1  ;29 >> 4 High Byte
+DEFB 1  ;30 >> 4 High Byte
+DEFB 1  ;31 >> 4 High Byte
+DEFB 2  ;32 >> 4 High Byte
+DEFB 2  ;33 >> 4 High Byte
+DEFB 2  ;34 >> 4 High Byte
+DEFB 2  ;35 >> 4 High Byte
+DEFB 2  ;36 >> 4 High Byte
+DEFB 2  ;37 >> 4 High Byte
+DEFB 2  ;38 >> 4 High Byte
+DEFB 2  ;39 >> 4 High Byte
+DEFB 2  ;40 >> 4 High Byte
+DEFB 2  ;41 >> 4 High Byte
+DEFB 2  ;42 >> 4 High Byte
+DEFB 2  ;43 >> 4 High Byte
+DEFB 2  ;44 >> 4 High Byte
+DEFB 2  ;45 >> 4 High Byte
+DEFB 2  ;46 >> 4 High Byte
+DEFB 2  ;47 >> 4 High Byte
+DEFB 3  ;48 >> 4 High Byte
+DEFB 3  ;49 >> 4 High Byte
+DEFB 3  ;50 >> 4 High Byte
+DEFB 3  ;51 >> 4 High Byte
+DEFB 3  ;52 >> 4 High Byte
+DEFB 3  ;53 >> 4 High Byte
+DEFB 3  ;54 >> 4 High Byte
+DEFB 3  ;55 >> 4 High Byte
+DEFB 3  ;56 >> 4 High Byte
+DEFB 3  ;57 >> 4 High Byte
+DEFB 3  ;58 >> 4 High Byte
+DEFB 3  ;59 >> 4 High Byte
+DEFB 3  ;60 >> 4 High Byte
+DEFB 3  ;61 >> 4 High Byte
+DEFB 3  ;62 >> 4 High Byte
+DEFB 3  ;63 >> 4 High Byte
+DEFB 4  ;64 >> 4 High Byte
+DEFB 4  ;65 >> 4 High Byte
+DEFB 4  ;66 >> 4 High Byte
+DEFB 4  ;67 >> 4 High Byte
+DEFB 4  ;68 >> 4 High Byte
+DEFB 4  ;69 >> 4 High Byte
+DEFB 4  ;70 >> 4 High Byte
+DEFB 4  ;71 >> 4 High Byte
+DEFB 4  ;72 >> 4 High Byte
+DEFB 4  ;73 >> 4 High Byte
+DEFB 4  ;74 >> 4 High Byte
+DEFB 4  ;75 >> 4 High Byte
+DEFB 4  ;76 >> 4 High Byte
+DEFB 4  ;77 >> 4 High Byte
+DEFB 4  ;78 >> 4 High Byte
+DEFB 4  ;79 >> 4 High Byte
+DEFB 5  ;80 >> 4 High Byte
+DEFB 5  ;81 >> 4 High Byte
+DEFB 5  ;82 >> 4 High Byte
+DEFB 5  ;83 >> 4 High Byte
+DEFB 5  ;84 >> 4 High Byte
+DEFB 5  ;85 >> 4 High Byte
+DEFB 5  ;86 >> 4 High Byte
+DEFB 5  ;87 >> 4 High Byte
+DEFB 5  ;88 >> 4 High Byte
+DEFB 5  ;89 >> 4 High Byte
+DEFB 5  ;90 >> 4 High Byte
+DEFB 5  ;91 >> 4 High Byte
+DEFB 5  ;92 >> 4 High Byte
+DEFB 5  ;93 >> 4 High Byte
+DEFB 5  ;94 >> 4 High Byte
+DEFB 5  ;95 >> 4 High Byte
+DEFB 6  ;96 >> 4 High Byte
+DEFB 6  ;97 >> 4 High Byte
+DEFB 6  ;98 >> 4 High Byte
+DEFB 6  ;99 >> 4 High Byte
+DEFB 6  ;100 >> 4 High Byte
+DEFB 6  ;101 >> 4 High Byte
+DEFB 6  ;102 >> 4 High Byte
+DEFB 6  ;103 >> 4 High Byte
+DEFB 6  ;104 >> 4 High Byte
+DEFB 6  ;105 >> 4 High Byte
+DEFB 6  ;106 >> 4 High Byte
+DEFB 6  ;107 >> 4 High Byte
+DEFB 6  ;108 >> 4 High Byte
+DEFB 6  ;109 >> 4 High Byte
+DEFB 6  ;110 >> 4 High Byte
+DEFB 6  ;111 >> 4 High Byte
+DEFB 7  ;112 >> 4 High Byte
+DEFB 7  ;113 >> 4 High Byte
+DEFB 7  ;114 >> 4 High Byte
+DEFB 7  ;115 >> 4 High Byte
+DEFB 7  ;116 >> 4 High Byte
+DEFB 7  ;117 >> 4 High Byte
+DEFB 7  ;118 >> 4 High Byte
+DEFB 7  ;119 >> 4 High Byte
+DEFB 7  ;120 >> 4 High Byte
+DEFB 7  ;121 >> 4 High Byte
+DEFB 7  ;122 >> 4 High Byte
+DEFB 7  ;123 >> 4 High Byte
+DEFB 7  ;124 >> 4 High Byte
+DEFB 7  ;125 >> 4 High Byte
+DEFB 7  ;126 >> 4 High Byte
+DEFB 7  ;127 >> 4 High Byte
+DEFB 8  ;128 >> 4 High Byte
+DEFB 8  ;129 >> 4 High Byte
+DEFB 8  ;130 >> 4 High Byte
+DEFB 8  ;131 >> 4 High Byte
+DEFB 8  ;132 >> 4 High Byte
+DEFB 8  ;133 >> 4 High Byte
+DEFB 8  ;134 >> 4 High Byte
+DEFB 8  ;135 >> 4 High Byte
+DEFB 8  ;136 >> 4 High Byte
+DEFB 8  ;137 >> 4 High Byte
+DEFB 8  ;138 >> 4 High Byte
+DEFB 8  ;139 >> 4 High Byte
+DEFB 8  ;140 >> 4 High Byte
+DEFB 8  ;141 >> 4 High Byte
+DEFB 8  ;142 >> 4 High Byte
+DEFB 8  ;143 >> 4 High Byte
+DEFB 9  ;144 >> 4 High Byte
+DEFB 9  ;145 >> 4 High Byte
+DEFB 9  ;146 >> 4 High Byte
+DEFB 9  ;147 >> 4 High Byte
+DEFB 9  ;148 >> 4 High Byte
+DEFB 9  ;149 >> 4 High Byte
+DEFB 9  ;150 >> 4 High Byte
+DEFB 9  ;151 >> 4 High Byte
+DEFB 9  ;152 >> 4 High Byte
+DEFB 9  ;153 >> 4 High Byte
+DEFB 9  ;154 >> 4 High Byte
+DEFB 9  ;155 >> 4 High Byte
+DEFB 9  ;156 >> 4 High Byte
+DEFB 9  ;157 >> 4 High Byte
+DEFB 9  ;158 >> 4 High Byte
+DEFB 9  ;159 >> 4 High Byte
+DEFB 10  ;160 >> 4 High Byte
+DEFB 10  ;161 >> 4 High Byte
+DEFB 10  ;162 >> 4 High Byte
+DEFB 10  ;163 >> 4 High Byte
+DEFB 10  ;164 >> 4 High Byte
+DEFB 10  ;165 >> 4 High Byte
+DEFB 10  ;166 >> 4 High Byte
+DEFB 10  ;167 >> 4 High Byte
+DEFB 10  ;168 >> 4 High Byte
+DEFB 10  ;169 >> 4 High Byte
+DEFB 10  ;170 >> 4 High Byte
+DEFB 10  ;171 >> 4 High Byte
+DEFB 10  ;172 >> 4 High Byte
+DEFB 10  ;173 >> 4 High Byte
+DEFB 10  ;174 >> 4 High Byte
+DEFB 10  ;175 >> 4 High Byte
+DEFB 11  ;176 >> 4 High Byte
+DEFB 11  ;177 >> 4 High Byte
+DEFB 11  ;178 >> 4 High Byte
+DEFB 11  ;179 >> 4 High Byte
+DEFB 11  ;180 >> 4 High Byte
+DEFB 11  ;181 >> 4 High Byte
+DEFB 11  ;182 >> 4 High Byte
+DEFB 11  ;183 >> 4 High Byte
+DEFB 11  ;184 >> 4 High Byte
+DEFB 11  ;185 >> 4 High Byte
+DEFB 11  ;186 >> 4 High Byte
+DEFB 11  ;187 >> 4 High Byte
+DEFB 11  ;188 >> 4 High Byte
+DEFB 11  ;189 >> 4 High Byte
+DEFB 11  ;190 >> 4 High Byte
+DEFB 11  ;191 >> 4 High Byte
+DEFB 12  ;192 >> 4 High Byte
+DEFB 12  ;193 >> 4 High Byte
+DEFB 12  ;194 >> 4 High Byte
+DEFB 12  ;195 >> 4 High Byte
+DEFB 12  ;196 >> 4 High Byte
+DEFB 12  ;197 >> 4 High Byte
+DEFB 12  ;198 >> 4 High Byte
+DEFB 12  ;199 >> 4 High Byte
+DEFB 12  ;200 >> 4 High Byte
+DEFB 12  ;201 >> 4 High Byte
+DEFB 12  ;202 >> 4 High Byte
+DEFB 12  ;203 >> 4 High Byte
+DEFB 12  ;204 >> 4 High Byte
+DEFB 12  ;205 >> 4 High Byte
+DEFB 12  ;206 >> 4 High Byte
+DEFB 12  ;207 >> 4 High Byte
+DEFB 13  ;208 >> 4 High Byte
+DEFB 13  ;209 >> 4 High Byte
+DEFB 13  ;210 >> 4 High Byte
+DEFB 13  ;211 >> 4 High Byte
+DEFB 13  ;212 >> 4 High Byte
+DEFB 13  ;213 >> 4 High Byte
+DEFB 13  ;214 >> 4 High Byte
+DEFB 13  ;215 >> 4 High Byte
+DEFB 13  ;216 >> 4 High Byte
+DEFB 13  ;217 >> 4 High Byte
+DEFB 13  ;218 >> 4 High Byte
+DEFB 13  ;219 >> 4 High Byte
+DEFB 13  ;220 >> 4 High Byte
+DEFB 13  ;221 >> 4 High Byte
+DEFB 13  ;222 >> 4 High Byte
+DEFB 13  ;223 >> 4 High Byte
+DEFB 14  ;224 >> 4 High Byte
+DEFB 14  ;225 >> 4 High Byte
+DEFB 14  ;226 >> 4 High Byte
+DEFB 14  ;227 >> 4 High Byte
+DEFB 14  ;228 >> 4 High Byte
+DEFB 14  ;229 >> 4 High Byte
+DEFB 14  ;230 >> 4 High Byte
+DEFB 14  ;231 >> 4 High Byte
+DEFB 14  ;232 >> 4 High Byte
+DEFB 14  ;233 >> 4 High Byte
+DEFB 14  ;234 >> 4 High Byte
+DEFB 14  ;235 >> 4 High Byte
+DEFB 14  ;236 >> 4 High Byte
+DEFB 14  ;237 >> 4 High Byte
+DEFB 14  ;238 >> 4 High Byte
+DEFB 14  ;239 >> 4 High Byte
+DEFB 15  ;240 >> 4 High Byte
+DEFB 15  ;241 >> 4 High Byte
+DEFB 15  ;242 >> 4 High Byte
+DEFB 15  ;243 >> 4 High Byte
+DEFB 15  ;244 >> 4 High Byte
+DEFB 15  ;245 >> 4 High Byte
+DEFB 15  ;246 >> 4 High Byte
+DEFB 15  ;247 >> 4 High Byte
+DEFB 15  ;248 >> 4 High Byte
+DEFB 15  ;249 >> 4 High Byte
+DEFB 15  ;250 >> 4 High Byte
+DEFB 15  ;251 >> 4 High Byte
+DEFB 15  ;252 >> 4 High Byte
+DEFB 15  ;253 >> 4 High Byte
+DEFB 15  ;254 >> 4 High Byte
+DEFB 15  ;255 >> 4 High Byte
+
+DEFB 0  ;0 >> 4 Low Byte
+DEFB 16  ;1 >> 4 Low Byte
+DEFB 32  ;2 >> 4 Low Byte
+DEFB 48  ;3 >> 4 Low Byte
+DEFB 64  ;4 >> 4 Low Byte
+DEFB 80  ;5 >> 4 Low Byte
+DEFB 96  ;6 >> 4 Low Byte
+DEFB 112  ;7 >> 4 Low Byte
+DEFB 128  ;8 >> 4 Low Byte
+DEFB 144  ;9 >> 4 Low Byte
+DEFB 160  ;10 >> 4 Low Byte
+DEFB 176  ;11 >> 4 Low Byte
+DEFB 192  ;12 >> 4 Low Byte
+DEFB 208  ;13 >> 4 Low Byte
+DEFB 224  ;14 >> 4 Low Byte
+DEFB 240  ;15 >> 4 Low Byte
+DEFB 0  ;16 >> 4 Low Byte
+DEFB 16  ;17 >> 4 Low Byte
+DEFB 32  ;18 >> 4 Low Byte
+DEFB 48  ;19 >> 4 Low Byte
+DEFB 64  ;20 >> 4 Low Byte
+DEFB 80  ;21 >> 4 Low Byte
+DEFB 96  ;22 >> 4 Low Byte
+DEFB 112  ;23 >> 4 Low Byte
+DEFB 128  ;24 >> 4 Low Byte
+DEFB 144  ;25 >> 4 Low Byte
+DEFB 160  ;26 >> 4 Low Byte
+DEFB 176  ;27 >> 4 Low Byte
+DEFB 192  ;28 >> 4 Low Byte
+DEFB 208  ;29 >> 4 Low Byte
+DEFB 224  ;30 >> 4 Low Byte
+DEFB 240  ;31 >> 4 Low Byte
+DEFB 0  ;32 >> 4 Low Byte
+DEFB 16  ;33 >> 4 Low Byte
+DEFB 32  ;34 >> 4 Low Byte
+DEFB 48  ;35 >> 4 Low Byte
+DEFB 64  ;36 >> 4 Low Byte
+DEFB 80  ;37 >> 4 Low Byte
+DEFB 96  ;38 >> 4 Low Byte
+DEFB 112  ;39 >> 4 Low Byte
+DEFB 128  ;40 >> 4 Low Byte
+DEFB 144  ;41 >> 4 Low Byte
+DEFB 160  ;42 >> 4 Low Byte
+DEFB 176  ;43 >> 4 Low Byte
+DEFB 192  ;44 >> 4 Low Byte
+DEFB 208  ;45 >> 4 Low Byte
+DEFB 224  ;46 >> 4 Low Byte
+DEFB 240  ;47 >> 4 Low Byte
+DEFB 0  ;48 >> 4 Low Byte
+DEFB 16  ;49 >> 4 Low Byte
+DEFB 32  ;50 >> 4 Low Byte
+DEFB 48  ;51 >> 4 Low Byte
+DEFB 64  ;52 >> 4 Low Byte
+DEFB 80  ;53 >> 4 Low Byte
+DEFB 96  ;54 >> 4 Low Byte
+DEFB 112  ;55 >> 4 Low Byte
+DEFB 128  ;56 >> 4 Low Byte
+DEFB 144  ;57 >> 4 Low Byte
+DEFB 160  ;58 >> 4 Low Byte
+DEFB 176  ;59 >> 4 Low Byte
+DEFB 192  ;60 >> 4 Low Byte
+DEFB 208  ;61 >> 4 Low Byte
+DEFB 224  ;62 >> 4 Low Byte
+DEFB 240  ;63 >> 4 Low Byte
+DEFB 0  ;64 >> 4 Low Byte
+DEFB 16  ;65 >> 4 Low Byte
+DEFB 32  ;66 >> 4 Low Byte
+DEFB 48  ;67 >> 4 Low Byte
+DEFB 64  ;68 >> 4 Low Byte
+DEFB 80  ;69 >> 4 Low Byte
+DEFB 96  ;70 >> 4 Low Byte
+DEFB 112  ;71 >> 4 Low Byte
+DEFB 128  ;72 >> 4 Low Byte
+DEFB 144  ;73 >> 4 Low Byte
+DEFB 160  ;74 >> 4 Low Byte
+DEFB 176  ;75 >> 4 Low Byte
+DEFB 192  ;76 >> 4 Low Byte
+DEFB 208  ;77 >> 4 Low Byte
+DEFB 224  ;78 >> 4 Low Byte
+DEFB 240  ;79 >> 4 Low Byte
+DEFB 0  ;80 >> 4 Low Byte
+DEFB 16  ;81 >> 4 Low Byte
+DEFB 32  ;82 >> 4 Low Byte
+DEFB 48  ;83 >> 4 Low Byte
+DEFB 64  ;84 >> 4 Low Byte
+DEFB 80  ;85 >> 4 Low Byte
+DEFB 96  ;86 >> 4 Low Byte
+DEFB 112  ;87 >> 4 Low Byte
+DEFB 128  ;88 >> 4 Low Byte
+DEFB 144  ;89 >> 4 Low Byte
+DEFB 160  ;90 >> 4 Low Byte
+DEFB 176  ;91 >> 4 Low Byte
+DEFB 192  ;92 >> 4 Low Byte
+DEFB 208  ;93 >> 4 Low Byte
+DEFB 224  ;94 >> 4 Low Byte
+DEFB 240  ;95 >> 4 Low Byte
+DEFB 0  ;96 >> 4 Low Byte
+DEFB 16  ;97 >> 4 Low Byte
+DEFB 32  ;98 >> 4 Low Byte
+DEFB 48  ;99 >> 4 Low Byte
+DEFB 64  ;100 >> 4 Low Byte
+DEFB 80  ;101 >> 4 Low Byte
+DEFB 96  ;102 >> 4 Low Byte
+DEFB 112  ;103 >> 4 Low Byte
+DEFB 128  ;104 >> 4 Low Byte
+DEFB 144  ;105 >> 4 Low Byte
+DEFB 160  ;106 >> 4 Low Byte
+DEFB 176  ;107 >> 4 Low Byte
+DEFB 192  ;108 >> 4 Low Byte
+DEFB 208  ;109 >> 4 Low Byte
+DEFB 224  ;110 >> 4 Low Byte
+DEFB 240  ;111 >> 4 Low Byte
+DEFB 0  ;112 >> 4 Low Byte
+DEFB 16  ;113 >> 4 Low Byte
+DEFB 32  ;114 >> 4 Low Byte
+DEFB 48  ;115 >> 4 Low Byte
+DEFB 64  ;116 >> 4 Low Byte
+DEFB 80  ;117 >> 4 Low Byte
+DEFB 96  ;118 >> 4 Low Byte
+DEFB 112  ;119 >> 4 Low Byte
+DEFB 128  ;120 >> 4 Low Byte
+DEFB 144  ;121 >> 4 Low Byte
+DEFB 160  ;122 >> 4 Low Byte
+DEFB 176  ;123 >> 4 Low Byte
+DEFB 192  ;124 >> 4 Low Byte
+DEFB 208  ;125 >> 4 Low Byte
+DEFB 224  ;126 >> 4 Low Byte
+DEFB 240  ;127 >> 4 Low Byte
+DEFB 0  ;128 >> 4 Low Byte
+DEFB 16  ;129 >> 4 Low Byte
+DEFB 32  ;130 >> 4 Low Byte
+DEFB 48  ;131 >> 4 Low Byte
+DEFB 64  ;132 >> 4 Low Byte
+DEFB 80  ;133 >> 4 Low Byte
+DEFB 96  ;134 >> 4 Low Byte
+DEFB 112  ;135 >> 4 Low Byte
+DEFB 128  ;136 >> 4 Low Byte
+DEFB 144  ;137 >> 4 Low Byte
+DEFB 160  ;138 >> 4 Low Byte
+DEFB 176  ;139 >> 4 Low Byte
+DEFB 192  ;140 >> 4 Low Byte
+DEFB 208  ;141 >> 4 Low Byte
+DEFB 224  ;142 >> 4 Low Byte
+DEFB 240  ;143 >> 4 Low Byte
+DEFB 0  ;144 >> 4 Low Byte
+DEFB 16  ;145 >> 4 Low Byte
+DEFB 32  ;146 >> 4 Low Byte
+DEFB 48  ;147 >> 4 Low Byte
+DEFB 64  ;148 >> 4 Low Byte
+DEFB 80  ;149 >> 4 Low Byte
+DEFB 96  ;150 >> 4 Low Byte
+DEFB 112  ;151 >> 4 Low Byte
+DEFB 128  ;152 >> 4 Low Byte
+DEFB 144  ;153 >> 4 Low Byte
+DEFB 160  ;154 >> 4 Low Byte
+DEFB 176  ;155 >> 4 Low Byte
+DEFB 192  ;156 >> 4 Low Byte
+DEFB 208  ;157 >> 4 Low Byte
+DEFB 224  ;158 >> 4 Low Byte
+DEFB 240  ;159 >> 4 Low Byte
+DEFB 0  ;160 >> 4 Low Byte
+DEFB 16  ;161 >> 4 Low Byte
+DEFB 32  ;162 >> 4 Low Byte
+DEFB 48  ;163 >> 4 Low Byte
+DEFB 64  ;164 >> 4 Low Byte
+DEFB 80  ;165 >> 4 Low Byte
+DEFB 96  ;166 >> 4 Low Byte
+DEFB 112  ;167 >> 4 Low Byte
+DEFB 128  ;168 >> 4 Low Byte
+DEFB 144  ;169 >> 4 Low Byte
+DEFB 160  ;170 >> 4 Low Byte
+DEFB 176  ;171 >> 4 Low Byte
+DEFB 192  ;172 >> 4 Low Byte
+DEFB 208  ;173 >> 4 Low Byte
+DEFB 224  ;174 >> 4 Low Byte
+DEFB 240  ;175 >> 4 Low Byte
+DEFB 0  ;176 >> 4 Low Byte
+DEFB 16  ;177 >> 4 Low Byte
+DEFB 32  ;178 >> 4 Low Byte
+DEFB 48  ;179 >> 4 Low Byte
+DEFB 64  ;180 >> 4 Low Byte
+DEFB 80  ;181 >> 4 Low Byte
+DEFB 96  ;182 >> 4 Low Byte
+DEFB 112  ;183 >> 4 Low Byte
+DEFB 128  ;184 >> 4 Low Byte
+DEFB 144  ;185 >> 4 Low Byte
+DEFB 160  ;186 >> 4 Low Byte
+DEFB 176  ;187 >> 4 Low Byte
+DEFB 192  ;188 >> 4 Low Byte
+DEFB 208  ;189 >> 4 Low Byte
+DEFB 224  ;190 >> 4 Low Byte
+DEFB 240  ;191 >> 4 Low Byte
+DEFB 0  ;192 >> 4 Low Byte
+DEFB 16  ;193 >> 4 Low Byte
+DEFB 32  ;194 >> 4 Low Byte
+DEFB 48  ;195 >> 4 Low Byte
+DEFB 64  ;196 >> 4 Low Byte
+DEFB 80  ;197 >> 4 Low Byte
+DEFB 96  ;198 >> 4 Low Byte
+DEFB 112  ;199 >> 4 Low Byte
+DEFB 128  ;200 >> 4 Low Byte
+DEFB 144  ;201 >> 4 Low Byte
+DEFB 160  ;202 >> 4 Low Byte
+DEFB 176  ;203 >> 4 Low Byte
+DEFB 192  ;204 >> 4 Low Byte
+DEFB 208  ;205 >> 4 Low Byte
+DEFB 224  ;206 >> 4 Low Byte
+DEFB 240  ;207 >> 4 Low Byte
+DEFB 0  ;208 >> 4 Low Byte
+DEFB 16  ;209 >> 4 Low Byte
+DEFB 32  ;210 >> 4 Low Byte
+DEFB 48  ;211 >> 4 Low Byte
+DEFB 64  ;212 >> 4 Low Byte
+DEFB 80  ;213 >> 4 Low Byte
+DEFB 96  ;214 >> 4 Low Byte
+DEFB 112  ;215 >> 4 Low Byte
+DEFB 128  ;216 >> 4 Low Byte
+DEFB 144  ;217 >> 4 Low Byte
+DEFB 160  ;218 >> 4 Low Byte
+DEFB 176  ;219 >> 4 Low Byte
+DEFB 192  ;220 >> 4 Low Byte
+DEFB 208  ;221 >> 4 Low Byte
+DEFB 224  ;222 >> 4 Low Byte
+DEFB 240  ;223 >> 4 Low Byte
+DEFB 0  ;224 >> 4 Low Byte
+DEFB 16  ;225 >> 4 Low Byte
+DEFB 32  ;226 >> 4 Low Byte
+DEFB 48  ;227 >> 4 Low Byte
+DEFB 64  ;228 >> 4 Low Byte
+DEFB 80  ;229 >> 4 Low Byte
+DEFB 96  ;230 >> 4 Low Byte
+DEFB 112  ;231 >> 4 Low Byte
+DEFB 128  ;232 >> 4 Low Byte
+DEFB 144  ;233 >> 4 Low Byte
+DEFB 160  ;234 >> 4 Low Byte
+DEFB 176  ;235 >> 4 Low Byte
+DEFB 192  ;236 >> 4 Low Byte
+DEFB 208  ;237 >> 4 Low Byte
+DEFB 224  ;238 >> 4 Low Byte
+DEFB 240  ;239 >> 4 Low Byte
+DEFB 0  ;240 >> 4 Low Byte
+DEFB 16  ;241 >> 4 Low Byte
+DEFB 32  ;242 >> 4 Low Byte
+DEFB 48  ;243 >> 4 Low Byte
+DEFB 64  ;244 >> 4 Low Byte
+DEFB 80  ;245 >> 4 Low Byte
+DEFB 96  ;246 >> 4 Low Byte
+DEFB 112  ;247 >> 4 Low Byte
+DEFB 128  ;248 >> 4 Low Byte
+DEFB 144  ;249 >> 4 Low Byte
+DEFB 160  ;250 >> 4 Low Byte
+DEFB 176  ;251 >> 4 Low Byte
+DEFB 192  ;252 >> 4 Low Byte
+DEFB 208  ;253 >> 4 Low Byte
+DEFB 224  ;254 >> 4 Low Byte
+DEFB 240  ;255 >> 4 Low Byte
+
+DEFB 0  ;0 >> 5 High Byte
+DEFB 0  ;1 >> 5 High Byte
+DEFB 0  ;2 >> 5 High Byte
+DEFB 0  ;3 >> 5 High Byte
+DEFB 0  ;4 >> 5 High Byte
+DEFB 0  ;5 >> 5 High Byte
+DEFB 0  ;6 >> 5 High Byte
+DEFB 0  ;7 >> 5 High Byte
+DEFB 0  ;8 >> 5 High Byte
+DEFB 0  ;9 >> 5 High Byte
+DEFB 0  ;10 >> 5 High Byte
+DEFB 0  ;11 >> 5 High Byte
+DEFB 0  ;12 >> 5 High Byte
+DEFB 0  ;13 >> 5 High Byte
+DEFB 0  ;14 >> 5 High Byte
+DEFB 0  ;15 >> 5 High Byte
+DEFB 0  ;16 >> 5 High Byte
+DEFB 0  ;17 >> 5 High Byte
+DEFB 0  ;18 >> 5 High Byte
+DEFB 0  ;19 >> 5 High Byte
+DEFB 0  ;20 >> 5 High Byte
+DEFB 0  ;21 >> 5 High Byte
+DEFB 0  ;22 >> 5 High Byte
+DEFB 0  ;23 >> 5 High Byte
+DEFB 0  ;24 >> 5 High Byte
+DEFB 0  ;25 >> 5 High Byte
+DEFB 0  ;26 >> 5 High Byte
+DEFB 0  ;27 >> 5 High Byte
+DEFB 0  ;28 >> 5 High Byte
+DEFB 0  ;29 >> 5 High Byte
+DEFB 0  ;30 >> 5 High Byte
+DEFB 0  ;31 >> 5 High Byte
+DEFB 1  ;32 >> 5 High Byte
+DEFB 1  ;33 >> 5 High Byte
+DEFB 1  ;34 >> 5 High Byte
+DEFB 1  ;35 >> 5 High Byte
+DEFB 1  ;36 >> 5 High Byte
+DEFB 1  ;37 >> 5 High Byte
+DEFB 1  ;38 >> 5 High Byte
+DEFB 1  ;39 >> 5 High Byte
+DEFB 1  ;40 >> 5 High Byte
+DEFB 1  ;41 >> 5 High Byte
+DEFB 1  ;42 >> 5 High Byte
+DEFB 1  ;43 >> 5 High Byte
+DEFB 1  ;44 >> 5 High Byte
+DEFB 1  ;45 >> 5 High Byte
+DEFB 1  ;46 >> 5 High Byte
+DEFB 1  ;47 >> 5 High Byte
+DEFB 1  ;48 >> 5 High Byte
+DEFB 1  ;49 >> 5 High Byte
+DEFB 1  ;50 >> 5 High Byte
+DEFB 1  ;51 >> 5 High Byte
+DEFB 1  ;52 >> 5 High Byte
+DEFB 1  ;53 >> 5 High Byte
+DEFB 1  ;54 >> 5 High Byte
+DEFB 1  ;55 >> 5 High Byte
+DEFB 1  ;56 >> 5 High Byte
+DEFB 1  ;57 >> 5 High Byte
+DEFB 1  ;58 >> 5 High Byte
+DEFB 1  ;59 >> 5 High Byte
+DEFB 1  ;60 >> 5 High Byte
+DEFB 1  ;61 >> 5 High Byte
+DEFB 1  ;62 >> 5 High Byte
+DEFB 1  ;63 >> 5 High Byte
+DEFB 2  ;64 >> 5 High Byte
+DEFB 2  ;65 >> 5 High Byte
+DEFB 2  ;66 >> 5 High Byte
+DEFB 2  ;67 >> 5 High Byte
+DEFB 2  ;68 >> 5 High Byte
+DEFB 2  ;69 >> 5 High Byte
+DEFB 2  ;70 >> 5 High Byte
+DEFB 2  ;71 >> 5 High Byte
+DEFB 2  ;72 >> 5 High Byte
+DEFB 2  ;73 >> 5 High Byte
+DEFB 2  ;74 >> 5 High Byte
+DEFB 2  ;75 >> 5 High Byte
+DEFB 2  ;76 >> 5 High Byte
+DEFB 2  ;77 >> 5 High Byte
+DEFB 2  ;78 >> 5 High Byte
+DEFB 2  ;79 >> 5 High Byte
+DEFB 2  ;80 >> 5 High Byte
+DEFB 2  ;81 >> 5 High Byte
+DEFB 2  ;82 >> 5 High Byte
+DEFB 2  ;83 >> 5 High Byte
+DEFB 2  ;84 >> 5 High Byte
+DEFB 2  ;85 >> 5 High Byte
+DEFB 2  ;86 >> 5 High Byte
+DEFB 2  ;87 >> 5 High Byte
+DEFB 2  ;88 >> 5 High Byte
+DEFB 2  ;89 >> 5 High Byte
+DEFB 2  ;90 >> 5 High Byte
+DEFB 2  ;91 >> 5 High Byte
+DEFB 2  ;92 >> 5 High Byte
+DEFB 2  ;93 >> 5 High Byte
+DEFB 2  ;94 >> 5 High Byte
+DEFB 2  ;95 >> 5 High Byte
+DEFB 3  ;96 >> 5 High Byte
+DEFB 3  ;97 >> 5 High Byte
+DEFB 3  ;98 >> 5 High Byte
+DEFB 3  ;99 >> 5 High Byte
+DEFB 3  ;100 >> 5 High Byte
+DEFB 3  ;101 >> 5 High Byte
+DEFB 3  ;102 >> 5 High Byte
+DEFB 3  ;103 >> 5 High Byte
+DEFB 3  ;104 >> 5 High Byte
+DEFB 3  ;105 >> 5 High Byte
+DEFB 3  ;106 >> 5 High Byte
+DEFB 3  ;107 >> 5 High Byte
+DEFB 3  ;108 >> 5 High Byte
+DEFB 3  ;109 >> 5 High Byte
+DEFB 3  ;110 >> 5 High Byte
+DEFB 3  ;111 >> 5 High Byte
+DEFB 3  ;112 >> 5 High Byte
+DEFB 3  ;113 >> 5 High Byte
+DEFB 3  ;114 >> 5 High Byte
+DEFB 3  ;115 >> 5 High Byte
+DEFB 3  ;116 >> 5 High Byte
+DEFB 3  ;117 >> 5 High Byte
+DEFB 3  ;118 >> 5 High Byte
+DEFB 3  ;119 >> 5 High Byte
+DEFB 3  ;120 >> 5 High Byte
+DEFB 3  ;121 >> 5 High Byte
+DEFB 3  ;122 >> 5 High Byte
+DEFB 3  ;123 >> 5 High Byte
+DEFB 3  ;124 >> 5 High Byte
+DEFB 3  ;125 >> 5 High Byte
+DEFB 3  ;126 >> 5 High Byte
+DEFB 3  ;127 >> 5 High Byte
+DEFB 4  ;128 >> 5 High Byte
+DEFB 4  ;129 >> 5 High Byte
+DEFB 4  ;130 >> 5 High Byte
+DEFB 4  ;131 >> 5 High Byte
+DEFB 4  ;132 >> 5 High Byte
+DEFB 4  ;133 >> 5 High Byte
+DEFB 4  ;134 >> 5 High Byte
+DEFB 4  ;135 >> 5 High Byte
+DEFB 4  ;136 >> 5 High Byte
+DEFB 4  ;137 >> 5 High Byte
+DEFB 4  ;138 >> 5 High Byte
+DEFB 4  ;139 >> 5 High Byte
+DEFB 4  ;140 >> 5 High Byte
+DEFB 4  ;141 >> 5 High Byte
+DEFB 4  ;142 >> 5 High Byte
+DEFB 4  ;143 >> 5 High Byte
+DEFB 4  ;144 >> 5 High Byte
+DEFB 4  ;145 >> 5 High Byte
+DEFB 4  ;146 >> 5 High Byte
+DEFB 4  ;147 >> 5 High Byte
+DEFB 4  ;148 >> 5 High Byte
+DEFB 4  ;149 >> 5 High Byte
+DEFB 4  ;150 >> 5 High Byte
+DEFB 4  ;151 >> 5 High Byte
+DEFB 4  ;152 >> 5 High Byte
+DEFB 4  ;153 >> 5 High Byte
+DEFB 4  ;154 >> 5 High Byte
+DEFB 4  ;155 >> 5 High Byte
+DEFB 4  ;156 >> 5 High Byte
+DEFB 4  ;157 >> 5 High Byte
+DEFB 4  ;158 >> 5 High Byte
+DEFB 4  ;159 >> 5 High Byte
+DEFB 5  ;160 >> 5 High Byte
+DEFB 5  ;161 >> 5 High Byte
+DEFB 5  ;162 >> 5 High Byte
+DEFB 5  ;163 >> 5 High Byte
+DEFB 5  ;164 >> 5 High Byte
+DEFB 5  ;165 >> 5 High Byte
+DEFB 5  ;166 >> 5 High Byte
+DEFB 5  ;167 >> 5 High Byte
+DEFB 5  ;168 >> 5 High Byte
+DEFB 5  ;169 >> 5 High Byte
+DEFB 5  ;170 >> 5 High Byte
+DEFB 5  ;171 >> 5 High Byte
+DEFB 5  ;172 >> 5 High Byte
+DEFB 5  ;173 >> 5 High Byte
+DEFB 5  ;174 >> 5 High Byte
+DEFB 5  ;175 >> 5 High Byte
+DEFB 5  ;176 >> 5 High Byte
+DEFB 5  ;177 >> 5 High Byte
+DEFB 5  ;178 >> 5 High Byte
+DEFB 5  ;179 >> 5 High Byte
+DEFB 5  ;180 >> 5 High Byte
+DEFB 5  ;181 >> 5 High Byte
+DEFB 5  ;182 >> 5 High Byte
+DEFB 5  ;183 >> 5 High Byte
+DEFB 5  ;184 >> 5 High Byte
+DEFB 5  ;185 >> 5 High Byte
+DEFB 5  ;186 >> 5 High Byte
+DEFB 5  ;187 >> 5 High Byte
+DEFB 5  ;188 >> 5 High Byte
+DEFB 5  ;189 >> 5 High Byte
+DEFB 5  ;190 >> 5 High Byte
+DEFB 5  ;191 >> 5 High Byte
+DEFB 6  ;192 >> 5 High Byte
+DEFB 6  ;193 >> 5 High Byte
+DEFB 6  ;194 >> 5 High Byte
+DEFB 6  ;195 >> 5 High Byte
+DEFB 6  ;196 >> 5 High Byte
+DEFB 6  ;197 >> 5 High Byte
+DEFB 6  ;198 >> 5 High Byte
+DEFB 6  ;199 >> 5 High Byte
+DEFB 6  ;200 >> 5 High Byte
+DEFB 6  ;201 >> 5 High Byte
+DEFB 6  ;202 >> 5 High Byte
+DEFB 6  ;203 >> 5 High Byte
+DEFB 6  ;204 >> 5 High Byte
+DEFB 6  ;205 >> 5 High Byte
+DEFB 6  ;206 >> 5 High Byte
+DEFB 6  ;207 >> 5 High Byte
+DEFB 6  ;208 >> 5 High Byte
+DEFB 6  ;209 >> 5 High Byte
+DEFB 6  ;210 >> 5 High Byte
+DEFB 6  ;211 >> 5 High Byte
+DEFB 6  ;212 >> 5 High Byte
+DEFB 6  ;213 >> 5 High Byte
+DEFB 6  ;214 >> 5 High Byte
+DEFB 6  ;215 >> 5 High Byte
+DEFB 6  ;216 >> 5 High Byte
+DEFB 6  ;217 >> 5 High Byte
+DEFB 6  ;218 >> 5 High Byte
+DEFB 6  ;219 >> 5 High Byte
+DEFB 6  ;220 >> 5 High Byte
+DEFB 6  ;221 >> 5 High Byte
+DEFB 6  ;222 >> 5 High Byte
+DEFB 6  ;223 >> 5 High Byte
+DEFB 7  ;224 >> 5 High Byte
+DEFB 7  ;225 >> 5 High Byte
+DEFB 7  ;226 >> 5 High Byte
+DEFB 7  ;227 >> 5 High Byte
+DEFB 7  ;228 >> 5 High Byte
+DEFB 7  ;229 >> 5 High Byte
+DEFB 7  ;230 >> 5 High Byte
+DEFB 7  ;231 >> 5 High Byte
+DEFB 7  ;232 >> 5 High Byte
+DEFB 7  ;233 >> 5 High Byte
+DEFB 7  ;234 >> 5 High Byte
+DEFB 7  ;235 >> 5 High Byte
+DEFB 7  ;236 >> 5 High Byte
+DEFB 7  ;237 >> 5 High Byte
+DEFB 7  ;238 >> 5 High Byte
+DEFB 7  ;239 >> 5 High Byte
+DEFB 7  ;240 >> 5 High Byte
+DEFB 7  ;241 >> 5 High Byte
+DEFB 7  ;242 >> 5 High Byte
+DEFB 7  ;243 >> 5 High Byte
+DEFB 7  ;244 >> 5 High Byte
+DEFB 7  ;245 >> 5 High Byte
+DEFB 7  ;246 >> 5 High Byte
+DEFB 7  ;247 >> 5 High Byte
+DEFB 7  ;248 >> 5 High Byte
+DEFB 7  ;249 >> 5 High Byte
+DEFB 7  ;250 >> 5 High Byte
+DEFB 7  ;251 >> 5 High Byte
+DEFB 7  ;252 >> 5 High Byte
+DEFB 7  ;253 >> 5 High Byte
+DEFB 7  ;254 >> 5 High Byte
+DEFB 7  ;255 >> 5 High Byte
+
+DEFB 0  ;0 >> 5 Low Byte
+DEFB 8  ;1 >> 5 Low Byte
+DEFB 16  ;2 >> 5 Low Byte
+DEFB 24  ;3 >> 5 Low Byte
+DEFB 32  ;4 >> 5 Low Byte
+DEFB 40  ;5 >> 5 Low Byte
+DEFB 48  ;6 >> 5 Low Byte
+DEFB 56  ;7 >> 5 Low Byte
+DEFB 64  ;8 >> 5 Low Byte
+DEFB 72  ;9 >> 5 Low Byte
+DEFB 80  ;10 >> 5 Low Byte
+DEFB 88  ;11 >> 5 Low Byte
+DEFB 96  ;12 >> 5 Low Byte
+DEFB 104  ;13 >> 5 Low Byte
+DEFB 112  ;14 >> 5 Low Byte
+DEFB 120  ;15 >> 5 Low Byte
+DEFB 128  ;16 >> 5 Low Byte
+DEFB 136  ;17 >> 5 Low Byte
+DEFB 144  ;18 >> 5 Low Byte
+DEFB 152  ;19 >> 5 Low Byte
+DEFB 160  ;20 >> 5 Low Byte
+DEFB 168  ;21 >> 5 Low Byte
+DEFB 176  ;22 >> 5 Low Byte
+DEFB 184  ;23 >> 5 Low Byte
+DEFB 192  ;24 >> 5 Low Byte
+DEFB 200  ;25 >> 5 Low Byte
+DEFB 208  ;26 >> 5 Low Byte
+DEFB 216  ;27 >> 5 Low Byte
+DEFB 224  ;28 >> 5 Low Byte
+DEFB 232  ;29 >> 5 Low Byte
+DEFB 240  ;30 >> 5 Low Byte
+DEFB 248  ;31 >> 5 Low Byte
+DEFB 0  ;32 >> 5 Low Byte
+DEFB 8  ;33 >> 5 Low Byte
+DEFB 16  ;34 >> 5 Low Byte
+DEFB 24  ;35 >> 5 Low Byte
+DEFB 32  ;36 >> 5 Low Byte
+DEFB 40  ;37 >> 5 Low Byte
+DEFB 48  ;38 >> 5 Low Byte
+DEFB 56  ;39 >> 5 Low Byte
+DEFB 64  ;40 >> 5 Low Byte
+DEFB 72  ;41 >> 5 Low Byte
+DEFB 80  ;42 >> 5 Low Byte
+DEFB 88  ;43 >> 5 Low Byte
+DEFB 96  ;44 >> 5 Low Byte
+DEFB 104  ;45 >> 5 Low Byte
+DEFB 112  ;46 >> 5 Low Byte
+DEFB 120  ;47 >> 5 Low Byte
+DEFB 128  ;48 >> 5 Low Byte
+DEFB 136  ;49 >> 5 Low Byte
+DEFB 144  ;50 >> 5 Low Byte
+DEFB 152  ;51 >> 5 Low Byte
+DEFB 160  ;52 >> 5 Low Byte
+DEFB 168  ;53 >> 5 Low Byte
+DEFB 176  ;54 >> 5 Low Byte
+DEFB 184  ;55 >> 5 Low Byte
+DEFB 192  ;56 >> 5 Low Byte
+DEFB 200  ;57 >> 5 Low Byte
+DEFB 208  ;58 >> 5 Low Byte
+DEFB 216  ;59 >> 5 Low Byte
+DEFB 224  ;60 >> 5 Low Byte
+DEFB 232  ;61 >> 5 Low Byte
+DEFB 240  ;62 >> 5 Low Byte
+DEFB 248  ;63 >> 5 Low Byte
+DEFB 0  ;64 >> 5 Low Byte
+DEFB 8  ;65 >> 5 Low Byte
+DEFB 16  ;66 >> 5 Low Byte
+DEFB 24  ;67 >> 5 Low Byte
+DEFB 32  ;68 >> 5 Low Byte
+DEFB 40  ;69 >> 5 Low Byte
+DEFB 48  ;70 >> 5 Low Byte
+DEFB 56  ;71 >> 5 Low Byte
+DEFB 64  ;72 >> 5 Low Byte
+DEFB 72  ;73 >> 5 Low Byte
+DEFB 80  ;74 >> 5 Low Byte
+DEFB 88  ;75 >> 5 Low Byte
+DEFB 96  ;76 >> 5 Low Byte
+DEFB 104  ;77 >> 5 Low Byte
+DEFB 112  ;78 >> 5 Low Byte
+DEFB 120  ;79 >> 5 Low Byte
+DEFB 128  ;80 >> 5 Low Byte
+DEFB 136  ;81 >> 5 Low Byte
+DEFB 144  ;82 >> 5 Low Byte
+DEFB 152  ;83 >> 5 Low Byte
+DEFB 160  ;84 >> 5 Low Byte
+DEFB 168  ;85 >> 5 Low Byte
+DEFB 176  ;86 >> 5 Low Byte
+DEFB 184  ;87 >> 5 Low Byte
+DEFB 192  ;88 >> 5 Low Byte
+DEFB 200  ;89 >> 5 Low Byte
+DEFB 208  ;90 >> 5 Low Byte
+DEFB 216  ;91 >> 5 Low Byte
+DEFB 224  ;92 >> 5 Low Byte
+DEFB 232  ;93 >> 5 Low Byte
+DEFB 240  ;94 >> 5 Low Byte
+DEFB 248  ;95 >> 5 Low Byte
+DEFB 0  ;96 >> 5 Low Byte
+DEFB 8  ;97 >> 5 Low Byte
+DEFB 16  ;98 >> 5 Low Byte
+DEFB 24  ;99 >> 5 Low Byte
+DEFB 32  ;100 >> 5 Low Byte
+DEFB 40  ;101 >> 5 Low Byte
+DEFB 48  ;102 >> 5 Low Byte
+DEFB 56  ;103 >> 5 Low Byte
+DEFB 64  ;104 >> 5 Low Byte
+DEFB 72  ;105 >> 5 Low Byte
+DEFB 80  ;106 >> 5 Low Byte
+DEFB 88  ;107 >> 5 Low Byte
+DEFB 96  ;108 >> 5 Low Byte
+DEFB 104  ;109 >> 5 Low Byte
+DEFB 112  ;110 >> 5 Low Byte
+DEFB 120  ;111 >> 5 Low Byte
+DEFB 128  ;112 >> 5 Low Byte
+DEFB 136  ;113 >> 5 Low Byte
+DEFB 144  ;114 >> 5 Low Byte
+DEFB 152  ;115 >> 5 Low Byte
+DEFB 160  ;116 >> 5 Low Byte
+DEFB 168  ;117 >> 5 Low Byte
+DEFB 176  ;118 >> 5 Low Byte
+DEFB 184  ;119 >> 5 Low Byte
+DEFB 192  ;120 >> 5 Low Byte
+DEFB 200  ;121 >> 5 Low Byte
+DEFB 208  ;122 >> 5 Low Byte
+DEFB 216  ;123 >> 5 Low Byte
+DEFB 224  ;124 >> 5 Low Byte
+DEFB 232  ;125 >> 5 Low Byte
+DEFB 240  ;126 >> 5 Low Byte
+DEFB 248  ;127 >> 5 Low Byte
+DEFB 0  ;128 >> 5 Low Byte
+DEFB 8  ;129 >> 5 Low Byte
+DEFB 16  ;130 >> 5 Low Byte
+DEFB 24  ;131 >> 5 Low Byte
+DEFB 32  ;132 >> 5 Low Byte
+DEFB 40  ;133 >> 5 Low Byte
+DEFB 48  ;134 >> 5 Low Byte
+DEFB 56  ;135 >> 5 Low Byte
+DEFB 64  ;136 >> 5 Low Byte
+DEFB 72  ;137 >> 5 Low Byte
+DEFB 80  ;138 >> 5 Low Byte
+DEFB 88  ;139 >> 5 Low Byte
+DEFB 96  ;140 >> 5 Low Byte
+DEFB 104  ;141 >> 5 Low Byte
+DEFB 112  ;142 >> 5 Low Byte
+DEFB 120  ;143 >> 5 Low Byte
+DEFB 128  ;144 >> 5 Low Byte
+DEFB 136  ;145 >> 5 Low Byte
+DEFB 144  ;146 >> 5 Low Byte
+DEFB 152  ;147 >> 5 Low Byte
+DEFB 160  ;148 >> 5 Low Byte
+DEFB 168  ;149 >> 5 Low Byte
+DEFB 176  ;150 >> 5 Low Byte
+DEFB 184  ;151 >> 5 Low Byte
+DEFB 192  ;152 >> 5 Low Byte
+DEFB 200  ;153 >> 5 Low Byte
+DEFB 208  ;154 >> 5 Low Byte
+DEFB 216  ;155 >> 5 Low Byte
+DEFB 224  ;156 >> 5 Low Byte
+DEFB 232  ;157 >> 5 Low Byte
+DEFB 240  ;158 >> 5 Low Byte
+DEFB 248  ;159 >> 5 Low Byte
+DEFB 0  ;160 >> 5 Low Byte
+DEFB 8  ;161 >> 5 Low Byte
+DEFB 16  ;162 >> 5 Low Byte
+DEFB 24  ;163 >> 5 Low Byte
+DEFB 32  ;164 >> 5 Low Byte
+DEFB 40  ;165 >> 5 Low Byte
+DEFB 48  ;166 >> 5 Low Byte
+DEFB 56  ;167 >> 5 Low Byte
+DEFB 64  ;168 >> 5 Low Byte
+DEFB 72  ;169 >> 5 Low Byte
+DEFB 80  ;170 >> 5 Low Byte
+DEFB 88  ;171 >> 5 Low Byte
+DEFB 96  ;172 >> 5 Low Byte
+DEFB 104  ;173 >> 5 Low Byte
+DEFB 112  ;174 >> 5 Low Byte
+DEFB 120  ;175 >> 5 Low Byte
+DEFB 128  ;176 >> 5 Low Byte
+DEFB 136  ;177 >> 5 Low Byte
+DEFB 144  ;178 >> 5 Low Byte
+DEFB 152  ;179 >> 5 Low Byte
+DEFB 160  ;180 >> 5 Low Byte
+DEFB 168  ;181 >> 5 Low Byte
+DEFB 176  ;182 >> 5 Low Byte
+DEFB 184  ;183 >> 5 Low Byte
+DEFB 192  ;184 >> 5 Low Byte
+DEFB 200  ;185 >> 5 Low Byte
+DEFB 208  ;186 >> 5 Low Byte
+DEFB 216  ;187 >> 5 Low Byte
+DEFB 224  ;188 >> 5 Low Byte
+DEFB 232  ;189 >> 5 Low Byte
+DEFB 240  ;190 >> 5 Low Byte
+DEFB 248  ;191 >> 5 Low Byte
+DEFB 0  ;192 >> 5 Low Byte
+DEFB 8  ;193 >> 5 Low Byte
+DEFB 16  ;194 >> 5 Low Byte
+DEFB 24  ;195 >> 5 Low Byte
+DEFB 32  ;196 >> 5 Low Byte
+DEFB 40  ;197 >> 5 Low Byte
+DEFB 48  ;198 >> 5 Low Byte
+DEFB 56  ;199 >> 5 Low Byte
+DEFB 64  ;200 >> 5 Low Byte
+DEFB 72  ;201 >> 5 Low Byte
+DEFB 80  ;202 >> 5 Low Byte
+DEFB 88  ;203 >> 5 Low Byte
+DEFB 96  ;204 >> 5 Low Byte
+DEFB 104  ;205 >> 5 Low Byte
+DEFB 112  ;206 >> 5 Low Byte
+DEFB 120  ;207 >> 5 Low Byte
+DEFB 128  ;208 >> 5 Low Byte
+DEFB 136  ;209 >> 5 Low Byte
+DEFB 144  ;210 >> 5 Low Byte
+DEFB 152  ;211 >> 5 Low Byte
+DEFB 160  ;212 >> 5 Low Byte
+DEFB 168  ;213 >> 5 Low Byte
+DEFB 176  ;214 >> 5 Low Byte
+DEFB 184  ;215 >> 5 Low Byte
+DEFB 192  ;216 >> 5 Low Byte
+DEFB 200  ;217 >> 5 Low Byte
+DEFB 208  ;218 >> 5 Low Byte
+DEFB 216  ;219 >> 5 Low Byte
+DEFB 224  ;220 >> 5 Low Byte
+DEFB 232  ;221 >> 5 Low Byte
+DEFB 240  ;222 >> 5 Low Byte
+DEFB 248  ;223 >> 5 Low Byte
+DEFB 0  ;224 >> 5 Low Byte
+DEFB 8  ;225 >> 5 Low Byte
+DEFB 16  ;226 >> 5 Low Byte
+DEFB 24  ;227 >> 5 Low Byte
+DEFB 32  ;228 >> 5 Low Byte
+DEFB 40  ;229 >> 5 Low Byte
+DEFB 48  ;230 >> 5 Low Byte
+DEFB 56  ;231 >> 5 Low Byte
+DEFB 64  ;232 >> 5 Low Byte
+DEFB 72  ;233 >> 5 Low Byte
+DEFB 80  ;234 >> 5 Low Byte
+DEFB 88  ;235 >> 5 Low Byte
+DEFB 96  ;236 >> 5 Low Byte
+DEFB 104  ;237 >> 5 Low Byte
+DEFB 112  ;238 >> 5 Low Byte
+DEFB 120  ;239 >> 5 Low Byte
+DEFB 128  ;240 >> 5 Low Byte
+DEFB 136  ;241 >> 5 Low Byte
+DEFB 144  ;242 >> 5 Low Byte
+DEFB 152  ;243 >> 5 Low Byte
+DEFB 160  ;244 >> 5 Low Byte
+DEFB 168  ;245 >> 5 Low Byte
+DEFB 176  ;246 >> 5 Low Byte
+DEFB 184  ;247 >> 5 Low Byte
+DEFB 192  ;248 >> 5 Low Byte
+DEFB 200  ;249 >> 5 Low Byte
+DEFB 208  ;250 >> 5 Low Byte
+DEFB 216  ;251 >> 5 Low Byte
+DEFB 224  ;252 >> 5 Low Byte
+DEFB 232  ;253 >> 5 Low Byte
+DEFB 240  ;254 >> 5 Low Byte
+DEFB 248  ;255 >> 5 Low Byte
+
+DEFB 0  ;0 >> 6 High Byte
+DEFB 0  ;1 >> 6 High Byte
+DEFB 0  ;2 >> 6 High Byte
+DEFB 0  ;3 >> 6 High Byte
+DEFB 0  ;4 >> 6 High Byte
+DEFB 0  ;5 >> 6 High Byte
+DEFB 0  ;6 >> 6 High Byte
+DEFB 0  ;7 >> 6 High Byte
+DEFB 0  ;8 >> 6 High Byte
+DEFB 0  ;9 >> 6 High Byte
+DEFB 0  ;10 >> 6 High Byte
+DEFB 0  ;11 >> 6 High Byte
+DEFB 0  ;12 >> 6 High Byte
+DEFB 0  ;13 >> 6 High Byte
+DEFB 0  ;14 >> 6 High Byte
+DEFB 0  ;15 >> 6 High Byte
+DEFB 0  ;16 >> 6 High Byte
+DEFB 0  ;17 >> 6 High Byte
+DEFB 0  ;18 >> 6 High Byte
+DEFB 0  ;19 >> 6 High Byte
+DEFB 0  ;20 >> 6 High Byte
+DEFB 0  ;21 >> 6 High Byte
+DEFB 0  ;22 >> 6 High Byte
+DEFB 0  ;23 >> 6 High Byte
+DEFB 0  ;24 >> 6 High Byte
+DEFB 0  ;25 >> 6 High Byte
+DEFB 0  ;26 >> 6 High Byte
+DEFB 0  ;27 >> 6 High Byte
+DEFB 0  ;28 >> 6 High Byte
+DEFB 0  ;29 >> 6 High Byte
+DEFB 0  ;30 >> 6 High Byte
+DEFB 0  ;31 >> 6 High Byte
+DEFB 0  ;32 >> 6 High Byte
+DEFB 0  ;33 >> 6 High Byte
+DEFB 0  ;34 >> 6 High Byte
+DEFB 0  ;35 >> 6 High Byte
+DEFB 0  ;36 >> 6 High Byte
+DEFB 0  ;37 >> 6 High Byte
+DEFB 0  ;38 >> 6 High Byte
+DEFB 0  ;39 >> 6 High Byte
+DEFB 0  ;40 >> 6 High Byte
+DEFB 0  ;41 >> 6 High Byte
+DEFB 0  ;42 >> 6 High Byte
+DEFB 0  ;43 >> 6 High Byte
+DEFB 0  ;44 >> 6 High Byte
+DEFB 0  ;45 >> 6 High Byte
+DEFB 0  ;46 >> 6 High Byte
+DEFB 0  ;47 >> 6 High Byte
+DEFB 0  ;48 >> 6 High Byte
+DEFB 0  ;49 >> 6 High Byte
+DEFB 0  ;50 >> 6 High Byte
+DEFB 0  ;51 >> 6 High Byte
+DEFB 0  ;52 >> 6 High Byte
+DEFB 0  ;53 >> 6 High Byte
+DEFB 0  ;54 >> 6 High Byte
+DEFB 0  ;55 >> 6 High Byte
+DEFB 0  ;56 >> 6 High Byte
+DEFB 0  ;57 >> 6 High Byte
+DEFB 0  ;58 >> 6 High Byte
+DEFB 0  ;59 >> 6 High Byte
+DEFB 0  ;60 >> 6 High Byte
+DEFB 0  ;61 >> 6 High Byte
+DEFB 0  ;62 >> 6 High Byte
+DEFB 0  ;63 >> 6 High Byte
+DEFB 1  ;64 >> 6 High Byte
+DEFB 1  ;65 >> 6 High Byte
+DEFB 1  ;66 >> 6 High Byte
+DEFB 1  ;67 >> 6 High Byte
+DEFB 1  ;68 >> 6 High Byte
+DEFB 1  ;69 >> 6 High Byte
+DEFB 1  ;70 >> 6 High Byte
+DEFB 1  ;71 >> 6 High Byte
+DEFB 1  ;72 >> 6 High Byte
+DEFB 1  ;73 >> 6 High Byte
+DEFB 1  ;74 >> 6 High Byte
+DEFB 1  ;75 >> 6 High Byte
+DEFB 1  ;76 >> 6 High Byte
+DEFB 1  ;77 >> 6 High Byte
+DEFB 1  ;78 >> 6 High Byte
+DEFB 1  ;79 >> 6 High Byte
+DEFB 1  ;80 >> 6 High Byte
+DEFB 1  ;81 >> 6 High Byte
+DEFB 1  ;82 >> 6 High Byte
+DEFB 1  ;83 >> 6 High Byte
+DEFB 1  ;84 >> 6 High Byte
+DEFB 1  ;85 >> 6 High Byte
+DEFB 1  ;86 >> 6 High Byte
+DEFB 1  ;87 >> 6 High Byte
+DEFB 1  ;88 >> 6 High Byte
+DEFB 1  ;89 >> 6 High Byte
+DEFB 1  ;90 >> 6 High Byte
+DEFB 1  ;91 >> 6 High Byte
+DEFB 1  ;92 >> 6 High Byte
+DEFB 1  ;93 >> 6 High Byte
+DEFB 1  ;94 >> 6 High Byte
+DEFB 1  ;95 >> 6 High Byte
+DEFB 1  ;96 >> 6 High Byte
+DEFB 1  ;97 >> 6 High Byte
+DEFB 1  ;98 >> 6 High Byte
+DEFB 1  ;99 >> 6 High Byte
+DEFB 1  ;100 >> 6 High Byte
+DEFB 1  ;101 >> 6 High Byte
+DEFB 1  ;102 >> 6 High Byte
+DEFB 1  ;103 >> 6 High Byte
+DEFB 1  ;104 >> 6 High Byte
+DEFB 1  ;105 >> 6 High Byte
+DEFB 1  ;106 >> 6 High Byte
+DEFB 1  ;107 >> 6 High Byte
+DEFB 1  ;108 >> 6 High Byte
+DEFB 1  ;109 >> 6 High Byte
+DEFB 1  ;110 >> 6 High Byte
+DEFB 1  ;111 >> 6 High Byte
+DEFB 1  ;112 >> 6 High Byte
+DEFB 1  ;113 >> 6 High Byte
+DEFB 1  ;114 >> 6 High Byte
+DEFB 1  ;115 >> 6 High Byte
+DEFB 1  ;116 >> 6 High Byte
+DEFB 1  ;117 >> 6 High Byte
+DEFB 1  ;118 >> 6 High Byte
+DEFB 1  ;119 >> 6 High Byte
+DEFB 1  ;120 >> 6 High Byte
+DEFB 1  ;121 >> 6 High Byte
+DEFB 1  ;122 >> 6 High Byte
+DEFB 1  ;123 >> 6 High Byte
+DEFB 1  ;124 >> 6 High Byte
+DEFB 1  ;125 >> 6 High Byte
+DEFB 1  ;126 >> 6 High Byte
+DEFB 1  ;127 >> 6 High Byte
+DEFB 2  ;128 >> 6 High Byte
+DEFB 2  ;129 >> 6 High Byte
+DEFB 2  ;130 >> 6 High Byte
+DEFB 2  ;131 >> 6 High Byte
+DEFB 2  ;132 >> 6 High Byte
+DEFB 2  ;133 >> 6 High Byte
+DEFB 2  ;134 >> 6 High Byte
+DEFB 2  ;135 >> 6 High Byte
+DEFB 2  ;136 >> 6 High Byte
+DEFB 2  ;137 >> 6 High Byte
+DEFB 2  ;138 >> 6 High Byte
+DEFB 2  ;139 >> 6 High Byte
+DEFB 2  ;140 >> 6 High Byte
+DEFB 2  ;141 >> 6 High Byte
+DEFB 2  ;142 >> 6 High Byte
+DEFB 2  ;143 >> 6 High Byte
+DEFB 2  ;144 >> 6 High Byte
+DEFB 2  ;145 >> 6 High Byte
+DEFB 2  ;146 >> 6 High Byte
+DEFB 2  ;147 >> 6 High Byte
+DEFB 2  ;148 >> 6 High Byte
+DEFB 2  ;149 >> 6 High Byte
+DEFB 2  ;150 >> 6 High Byte
+DEFB 2  ;151 >> 6 High Byte
+DEFB 2  ;152 >> 6 High Byte
+DEFB 2  ;153 >> 6 High Byte
+DEFB 2  ;154 >> 6 High Byte
+DEFB 2  ;155 >> 6 High Byte
+DEFB 2  ;156 >> 6 High Byte
+DEFB 2  ;157 >> 6 High Byte
+DEFB 2  ;158 >> 6 High Byte
+DEFB 2  ;159 >> 6 High Byte
+DEFB 2  ;160 >> 6 High Byte
+DEFB 2  ;161 >> 6 High Byte
+DEFB 2  ;162 >> 6 High Byte
+DEFB 2  ;163 >> 6 High Byte
+DEFB 2  ;164 >> 6 High Byte
+DEFB 2  ;165 >> 6 High Byte
+DEFB 2  ;166 >> 6 High Byte
+DEFB 2  ;167 >> 6 High Byte
+DEFB 2  ;168 >> 6 High Byte
+DEFB 2  ;169 >> 6 High Byte
+DEFB 2  ;170 >> 6 High Byte
+DEFB 2  ;171 >> 6 High Byte
+DEFB 2  ;172 >> 6 High Byte
+DEFB 2  ;173 >> 6 High Byte
+DEFB 2  ;174 >> 6 High Byte
+DEFB 2  ;175 >> 6 High Byte
+DEFB 2  ;176 >> 6 High Byte
+DEFB 2  ;177 >> 6 High Byte
+DEFB 2  ;178 >> 6 High Byte
+DEFB 2  ;179 >> 6 High Byte
+DEFB 2  ;180 >> 6 High Byte
+DEFB 2  ;181 >> 6 High Byte
+DEFB 2  ;182 >> 6 High Byte
+DEFB 2  ;183 >> 6 High Byte
+DEFB 2  ;184 >> 6 High Byte
+DEFB 2  ;185 >> 6 High Byte
+DEFB 2  ;186 >> 6 High Byte
+DEFB 2  ;187 >> 6 High Byte
+DEFB 2  ;188 >> 6 High Byte
+DEFB 2  ;189 >> 6 High Byte
+DEFB 2  ;190 >> 6 High Byte
+DEFB 2  ;191 >> 6 High Byte
+DEFB 3  ;192 >> 6 High Byte
+DEFB 3  ;193 >> 6 High Byte
+DEFB 3  ;194 >> 6 High Byte
+DEFB 3  ;195 >> 6 High Byte
+DEFB 3  ;196 >> 6 High Byte
+DEFB 3  ;197 >> 6 High Byte
+DEFB 3  ;198 >> 6 High Byte
+DEFB 3  ;199 >> 6 High Byte
+DEFB 3  ;200 >> 6 High Byte
+DEFB 3  ;201 >> 6 High Byte
+DEFB 3  ;202 >> 6 High Byte
+DEFB 3  ;203 >> 6 High Byte
+DEFB 3  ;204 >> 6 High Byte
+DEFB 3  ;205 >> 6 High Byte
+DEFB 3  ;206 >> 6 High Byte
+DEFB 3  ;207 >> 6 High Byte
+DEFB 3  ;208 >> 6 High Byte
+DEFB 3  ;209 >> 6 High Byte
+DEFB 3  ;210 >> 6 High Byte
+DEFB 3  ;211 >> 6 High Byte
+DEFB 3  ;212 >> 6 High Byte
+DEFB 3  ;213 >> 6 High Byte
+DEFB 3  ;214 >> 6 High Byte
+DEFB 3  ;215 >> 6 High Byte
+DEFB 3  ;216 >> 6 High Byte
+DEFB 3  ;217 >> 6 High Byte
+DEFB 3  ;218 >> 6 High Byte
+DEFB 3  ;219 >> 6 High Byte
+DEFB 3  ;220 >> 6 High Byte
+DEFB 3  ;221 >> 6 High Byte
+DEFB 3  ;222 >> 6 High Byte
+DEFB 3  ;223 >> 6 High Byte
+DEFB 3  ;224 >> 6 High Byte
+DEFB 3  ;225 >> 6 High Byte
+DEFB 3  ;226 >> 6 High Byte
+DEFB 3  ;227 >> 6 High Byte
+DEFB 3  ;228 >> 6 High Byte
+DEFB 3  ;229 >> 6 High Byte
+DEFB 3  ;230 >> 6 High Byte
+DEFB 3  ;231 >> 6 High Byte
+DEFB 3  ;232 >> 6 High Byte
+DEFB 3  ;233 >> 6 High Byte
+DEFB 3  ;234 >> 6 High Byte
+DEFB 3  ;235 >> 6 High Byte
+DEFB 3  ;236 >> 6 High Byte
+DEFB 3  ;237 >> 6 High Byte
+DEFB 3  ;238 >> 6 High Byte
+DEFB 3  ;239 >> 6 High Byte
+DEFB 3  ;240 >> 6 High Byte
+DEFB 3  ;241 >> 6 High Byte
+DEFB 3  ;242 >> 6 High Byte
+DEFB 3  ;243 >> 6 High Byte
+DEFB 3  ;244 >> 6 High Byte
+DEFB 3  ;245 >> 6 High Byte
+DEFB 3  ;246 >> 6 High Byte
+DEFB 3  ;247 >> 6 High Byte
+DEFB 3  ;248 >> 6 High Byte
+DEFB 3  ;249 >> 6 High Byte
+DEFB 3  ;250 >> 6 High Byte
+DEFB 3  ;251 >> 6 High Byte
+DEFB 3  ;252 >> 6 High Byte
+DEFB 3  ;253 >> 6 High Byte
+DEFB 3  ;254 >> 6 High Byte
+DEFB 3  ;255 >> 6 High Byte
+
+DEFB 0  ;0 >> 6 Low Byte
+DEFB 4  ;1 >> 6 Low Byte
+DEFB 8  ;2 >> 6 Low Byte
+DEFB 12  ;3 >> 6 Low Byte
+DEFB 16  ;4 >> 6 Low Byte
+DEFB 20  ;5 >> 6 Low Byte
+DEFB 24  ;6 >> 6 Low Byte
+DEFB 28  ;7 >> 6 Low Byte
+DEFB 32  ;8 >> 6 Low Byte
+DEFB 36  ;9 >> 6 Low Byte
+DEFB 40  ;10 >> 6 Low Byte
+DEFB 44  ;11 >> 6 Low Byte
+DEFB 48  ;12 >> 6 Low Byte
+DEFB 52  ;13 >> 6 Low Byte
+DEFB 56  ;14 >> 6 Low Byte
+DEFB 60  ;15 >> 6 Low Byte
+DEFB 64  ;16 >> 6 Low Byte
+DEFB 68  ;17 >> 6 Low Byte
+DEFB 72  ;18 >> 6 Low Byte
+DEFB 76  ;19 >> 6 Low Byte
+DEFB 80  ;20 >> 6 Low Byte
+DEFB 84  ;21 >> 6 Low Byte
+DEFB 88  ;22 >> 6 Low Byte
+DEFB 92  ;23 >> 6 Low Byte
+DEFB 96  ;24 >> 6 Low Byte
+DEFB 100  ;25 >> 6 Low Byte
+DEFB 104  ;26 >> 6 Low Byte
+DEFB 108  ;27 >> 6 Low Byte
+DEFB 112  ;28 >> 6 Low Byte
+DEFB 116  ;29 >> 6 Low Byte
+DEFB 120  ;30 >> 6 Low Byte
+DEFB 124  ;31 >> 6 Low Byte
+DEFB 128  ;32 >> 6 Low Byte
+DEFB 132  ;33 >> 6 Low Byte
+DEFB 136  ;34 >> 6 Low Byte
+DEFB 140  ;35 >> 6 Low Byte
+DEFB 144  ;36 >> 6 Low Byte
+DEFB 148  ;37 >> 6 Low Byte
+DEFB 152  ;38 >> 6 Low Byte
+DEFB 156  ;39 >> 6 Low Byte
+DEFB 160  ;40 >> 6 Low Byte
+DEFB 164  ;41 >> 6 Low Byte
+DEFB 168  ;42 >> 6 Low Byte
+DEFB 172  ;43 >> 6 Low Byte
+DEFB 176  ;44 >> 6 Low Byte
+DEFB 180  ;45 >> 6 Low Byte
+DEFB 184  ;46 >> 6 Low Byte
+DEFB 188  ;47 >> 6 Low Byte
+DEFB 192  ;48 >> 6 Low Byte
+DEFB 196  ;49 >> 6 Low Byte
+DEFB 200  ;50 >> 6 Low Byte
+DEFB 204  ;51 >> 6 Low Byte
+DEFB 208  ;52 >> 6 Low Byte
+DEFB 212  ;53 >> 6 Low Byte
+DEFB 216  ;54 >> 6 Low Byte
+DEFB 220  ;55 >> 6 Low Byte
+DEFB 224  ;56 >> 6 Low Byte
+DEFB 228  ;57 >> 6 Low Byte
+DEFB 232  ;58 >> 6 Low Byte
+DEFB 236  ;59 >> 6 Low Byte
+DEFB 240  ;60 >> 6 Low Byte
+DEFB 244  ;61 >> 6 Low Byte
+DEFB 248  ;62 >> 6 Low Byte
+DEFB 252  ;63 >> 6 Low Byte
+DEFB 0  ;64 >> 6 Low Byte
+DEFB 4  ;65 >> 6 Low Byte
+DEFB 8  ;66 >> 6 Low Byte
+DEFB 12  ;67 >> 6 Low Byte
+DEFB 16  ;68 >> 6 Low Byte
+DEFB 20  ;69 >> 6 Low Byte
+DEFB 24  ;70 >> 6 Low Byte
+DEFB 28  ;71 >> 6 Low Byte
+DEFB 32  ;72 >> 6 Low Byte
+DEFB 36  ;73 >> 6 Low Byte
+DEFB 40  ;74 >> 6 Low Byte
+DEFB 44  ;75 >> 6 Low Byte
+DEFB 48  ;76 >> 6 Low Byte
+DEFB 52  ;77 >> 6 Low Byte
+DEFB 56  ;78 >> 6 Low Byte
+DEFB 60  ;79 >> 6 Low Byte
+DEFB 64  ;80 >> 6 Low Byte
+DEFB 68  ;81 >> 6 Low Byte
+DEFB 72  ;82 >> 6 Low Byte
+DEFB 76  ;83 >> 6 Low Byte
+DEFB 80  ;84 >> 6 Low Byte
+DEFB 84  ;85 >> 6 Low Byte
+DEFB 88  ;86 >> 6 Low Byte
+DEFB 92  ;87 >> 6 Low Byte
+DEFB 96  ;88 >> 6 Low Byte
+DEFB 100  ;89 >> 6 Low Byte
+DEFB 104  ;90 >> 6 Low Byte
+DEFB 108  ;91 >> 6 Low Byte
+DEFB 112  ;92 >> 6 Low Byte
+DEFB 116  ;93 >> 6 Low Byte
+DEFB 120  ;94 >> 6 Low Byte
+DEFB 124  ;95 >> 6 Low Byte
+DEFB 128  ;96 >> 6 Low Byte
+DEFB 132  ;97 >> 6 Low Byte
+DEFB 136  ;98 >> 6 Low Byte
+DEFB 140  ;99 >> 6 Low Byte
+DEFB 144  ;100 >> 6 Low Byte
+DEFB 148  ;101 >> 6 Low Byte
+DEFB 152  ;102 >> 6 Low Byte
+DEFB 156  ;103 >> 6 Low Byte
+DEFB 160  ;104 >> 6 Low Byte
+DEFB 164  ;105 >> 6 Low Byte
+DEFB 168  ;106 >> 6 Low Byte
+DEFB 172  ;107 >> 6 Low Byte
+DEFB 176  ;108 >> 6 Low Byte
+DEFB 180  ;109 >> 6 Low Byte
+DEFB 184  ;110 >> 6 Low Byte
+DEFB 188  ;111 >> 6 Low Byte
+DEFB 192  ;112 >> 6 Low Byte
+DEFB 196  ;113 >> 6 Low Byte
+DEFB 200  ;114 >> 6 Low Byte
+DEFB 204  ;115 >> 6 Low Byte
+DEFB 208  ;116 >> 6 Low Byte
+DEFB 212  ;117 >> 6 Low Byte
+DEFB 216  ;118 >> 6 Low Byte
+DEFB 220  ;119 >> 6 Low Byte
+DEFB 224  ;120 >> 6 Low Byte
+DEFB 228  ;121 >> 6 Low Byte
+DEFB 232  ;122 >> 6 Low Byte
+DEFB 236  ;123 >> 6 Low Byte
+DEFB 240  ;124 >> 6 Low Byte
+DEFB 244  ;125 >> 6 Low Byte
+DEFB 248  ;126 >> 6 Low Byte
+DEFB 252  ;127 >> 6 Low Byte
+DEFB 0  ;128 >> 6 Low Byte
+DEFB 4  ;129 >> 6 Low Byte
+DEFB 8  ;130 >> 6 Low Byte
+DEFB 12  ;131 >> 6 Low Byte
+DEFB 16  ;132 >> 6 Low Byte
+DEFB 20  ;133 >> 6 Low Byte
+DEFB 24  ;134 >> 6 Low Byte
+DEFB 28  ;135 >> 6 Low Byte
+DEFB 32  ;136 >> 6 Low Byte
+DEFB 36  ;137 >> 6 Low Byte
+DEFB 40  ;138 >> 6 Low Byte
+DEFB 44  ;139 >> 6 Low Byte
+DEFB 48  ;140 >> 6 Low Byte
+DEFB 52  ;141 >> 6 Low Byte
+DEFB 56  ;142 >> 6 Low Byte
+DEFB 60  ;143 >> 6 Low Byte
+DEFB 64  ;144 >> 6 Low Byte
+DEFB 68  ;145 >> 6 Low Byte
+DEFB 72  ;146 >> 6 Low Byte
+DEFB 76  ;147 >> 6 Low Byte
+DEFB 80  ;148 >> 6 Low Byte
+DEFB 84  ;149 >> 6 Low Byte
+DEFB 88  ;150 >> 6 Low Byte
+DEFB 92  ;151 >> 6 Low Byte
+DEFB 96  ;152 >> 6 Low Byte
+DEFB 100  ;153 >> 6 Low Byte
+DEFB 104  ;154 >> 6 Low Byte
+DEFB 108  ;155 >> 6 Low Byte
+DEFB 112  ;156 >> 6 Low Byte
+DEFB 116  ;157 >> 6 Low Byte
+DEFB 120  ;158 >> 6 Low Byte
+DEFB 124  ;159 >> 6 Low Byte
+DEFB 128  ;160 >> 6 Low Byte
+DEFB 132  ;161 >> 6 Low Byte
+DEFB 136  ;162 >> 6 Low Byte
+DEFB 140  ;163 >> 6 Low Byte
+DEFB 144  ;164 >> 6 Low Byte
+DEFB 148  ;165 >> 6 Low Byte
+DEFB 152  ;166 >> 6 Low Byte
+DEFB 156  ;167 >> 6 Low Byte
+DEFB 160  ;168 >> 6 Low Byte
+DEFB 164  ;169 >> 6 Low Byte
+DEFB 168  ;170 >> 6 Low Byte
+DEFB 172  ;171 >> 6 Low Byte
+DEFB 176  ;172 >> 6 Low Byte
+DEFB 180  ;173 >> 6 Low Byte
+DEFB 184  ;174 >> 6 Low Byte
+DEFB 188  ;175 >> 6 Low Byte
+DEFB 192  ;176 >> 6 Low Byte
+DEFB 196  ;177 >> 6 Low Byte
+DEFB 200  ;178 >> 6 Low Byte
+DEFB 204  ;179 >> 6 Low Byte
+DEFB 208  ;180 >> 6 Low Byte
+DEFB 212  ;181 >> 6 Low Byte
+DEFB 216  ;182 >> 6 Low Byte
+DEFB 220  ;183 >> 6 Low Byte
+DEFB 224  ;184 >> 6 Low Byte
+DEFB 228  ;185 >> 6 Low Byte
+DEFB 232  ;186 >> 6 Low Byte
+DEFB 236  ;187 >> 6 Low Byte
+DEFB 240  ;188 >> 6 Low Byte
+DEFB 244  ;189 >> 6 Low Byte
+DEFB 248  ;190 >> 6 Low Byte
+DEFB 252  ;191 >> 6 Low Byte
+DEFB 0  ;192 >> 6 Low Byte
+DEFB 4  ;193 >> 6 Low Byte
+DEFB 8  ;194 >> 6 Low Byte
+DEFB 12  ;195 >> 6 Low Byte
+DEFB 16  ;196 >> 6 Low Byte
+DEFB 20  ;197 >> 6 Low Byte
+DEFB 24  ;198 >> 6 Low Byte
+DEFB 28  ;199 >> 6 Low Byte
+DEFB 32  ;200 >> 6 Low Byte
+DEFB 36  ;201 >> 6 Low Byte
+DEFB 40  ;202 >> 6 Low Byte
+DEFB 44  ;203 >> 6 Low Byte
+DEFB 48  ;204 >> 6 Low Byte
+DEFB 52  ;205 >> 6 Low Byte
+DEFB 56  ;206 >> 6 Low Byte
+DEFB 60  ;207 >> 6 Low Byte
+DEFB 64  ;208 >> 6 Low Byte
+DEFB 68  ;209 >> 6 Low Byte
+DEFB 72  ;210 >> 6 Low Byte
+DEFB 76  ;211 >> 6 Low Byte
+DEFB 80  ;212 >> 6 Low Byte
+DEFB 84  ;213 >> 6 Low Byte
+DEFB 88  ;214 >> 6 Low Byte
+DEFB 92  ;215 >> 6 Low Byte
+DEFB 96  ;216 >> 6 Low Byte
+DEFB 100  ;217 >> 6 Low Byte
+DEFB 104  ;218 >> 6 Low Byte
+DEFB 108  ;219 >> 6 Low Byte
+DEFB 112  ;220 >> 6 Low Byte
+DEFB 116  ;221 >> 6 Low Byte
+DEFB 120  ;222 >> 6 Low Byte
+DEFB 124  ;223 >> 6 Low Byte
+DEFB 128  ;224 >> 6 Low Byte
+DEFB 132  ;225 >> 6 Low Byte
+DEFB 136  ;226 >> 6 Low Byte
+DEFB 140  ;227 >> 6 Low Byte
+DEFB 144  ;228 >> 6 Low Byte
+DEFB 148  ;229 >> 6 Low Byte
+DEFB 152  ;230 >> 6 Low Byte
+DEFB 156  ;231 >> 6 Low Byte
+DEFB 160  ;232 >> 6 Low Byte
+DEFB 164  ;233 >> 6 Low Byte
+DEFB 168  ;234 >> 6 Low Byte
+DEFB 172  ;235 >> 6 Low Byte
+DEFB 176  ;236 >> 6 Low Byte
+DEFB 180  ;237 >> 6 Low Byte
+DEFB 184  ;238 >> 6 Low Byte
+DEFB 188  ;239 >> 6 Low Byte
+DEFB 192  ;240 >> 6 Low Byte
+DEFB 196  ;241 >> 6 Low Byte
+DEFB 200  ;242 >> 6 Low Byte
+DEFB 204  ;243 >> 6 Low Byte
+DEFB 208  ;244 >> 6 Low Byte
+DEFB 212  ;245 >> 6 Low Byte
+DEFB 216  ;246 >> 6 Low Byte
+DEFB 220  ;247 >> 6 Low Byte
+DEFB 224  ;248 >> 6 Low Byte
+DEFB 228  ;249 >> 6 Low Byte
+DEFB 232  ;250 >> 6 Low Byte
+DEFB 236  ;251 >> 6 Low Byte
+DEFB 240  ;252 >> 6 Low Byte
+DEFB 244  ;253 >> 6 Low Byte
+DEFB 248  ;254 >> 6 Low Byte
+DEFB 252  ;255 >> 6 Low Byte
+
+DEFB 0  ;0 >> 7 High Byte
+DEFB 0  ;1 >> 7 High Byte
+DEFB 0  ;2 >> 7 High Byte
+DEFB 0  ;3 >> 7 High Byte
+DEFB 0  ;4 >> 7 High Byte
+DEFB 0  ;5 >> 7 High Byte
+DEFB 0  ;6 >> 7 High Byte
+DEFB 0  ;7 >> 7 High Byte
+DEFB 0  ;8 >> 7 High Byte
+DEFB 0  ;9 >> 7 High Byte
+DEFB 0  ;10 >> 7 High Byte
+DEFB 0  ;11 >> 7 High Byte
+DEFB 0  ;12 >> 7 High Byte
+DEFB 0  ;13 >> 7 High Byte
+DEFB 0  ;14 >> 7 High Byte
+DEFB 0  ;15 >> 7 High Byte
+DEFB 0  ;16 >> 7 High Byte
+DEFB 0  ;17 >> 7 High Byte
+DEFB 0  ;18 >> 7 High Byte
+DEFB 0  ;19 >> 7 High Byte
+DEFB 0  ;20 >> 7 High Byte
+DEFB 0  ;21 >> 7 High Byte
+DEFB 0  ;22 >> 7 High Byte
+DEFB 0  ;23 >> 7 High Byte
+DEFB 0  ;24 >> 7 High Byte
+DEFB 0  ;25 >> 7 High Byte
+DEFB 0  ;26 >> 7 High Byte
+DEFB 0  ;27 >> 7 High Byte
+DEFB 0  ;28 >> 7 High Byte
+DEFB 0  ;29 >> 7 High Byte
+DEFB 0  ;30 >> 7 High Byte
+DEFB 0  ;31 >> 7 High Byte
+DEFB 0  ;32 >> 7 High Byte
+DEFB 0  ;33 >> 7 High Byte
+DEFB 0  ;34 >> 7 High Byte
+DEFB 0  ;35 >> 7 High Byte
+DEFB 0  ;36 >> 7 High Byte
+DEFB 0  ;37 >> 7 High Byte
+DEFB 0  ;38 >> 7 High Byte
+DEFB 0  ;39 >> 7 High Byte
+DEFB 0  ;40 >> 7 High Byte
+DEFB 0  ;41 >> 7 High Byte
+DEFB 0  ;42 >> 7 High Byte
+DEFB 0  ;43 >> 7 High Byte
+DEFB 0  ;44 >> 7 High Byte
+DEFB 0  ;45 >> 7 High Byte
+DEFB 0  ;46 >> 7 High Byte
+DEFB 0  ;47 >> 7 High Byte
+DEFB 0  ;48 >> 7 High Byte
+DEFB 0  ;49 >> 7 High Byte
+DEFB 0  ;50 >> 7 High Byte
+DEFB 0  ;51 >> 7 High Byte
+DEFB 0  ;52 >> 7 High Byte
+DEFB 0  ;53 >> 7 High Byte
+DEFB 0  ;54 >> 7 High Byte
+DEFB 0  ;55 >> 7 High Byte
+DEFB 0  ;56 >> 7 High Byte
+DEFB 0  ;57 >> 7 High Byte
+DEFB 0  ;58 >> 7 High Byte
+DEFB 0  ;59 >> 7 High Byte
+DEFB 0  ;60 >> 7 High Byte
+DEFB 0  ;61 >> 7 High Byte
+DEFB 0  ;62 >> 7 High Byte
+DEFB 0  ;63 >> 7 High Byte
+DEFB 0  ;64 >> 7 High Byte
+DEFB 0  ;65 >> 7 High Byte
+DEFB 0  ;66 >> 7 High Byte
+DEFB 0  ;67 >> 7 High Byte
+DEFB 0  ;68 >> 7 High Byte
+DEFB 0  ;69 >> 7 High Byte
+DEFB 0  ;70 >> 7 High Byte
+DEFB 0  ;71 >> 7 High Byte
+DEFB 0  ;72 >> 7 High Byte
+DEFB 0  ;73 >> 7 High Byte
+DEFB 0  ;74 >> 7 High Byte
+DEFB 0  ;75 >> 7 High Byte
+DEFB 0  ;76 >> 7 High Byte
+DEFB 0  ;77 >> 7 High Byte
+DEFB 0  ;78 >> 7 High Byte
+DEFB 0  ;79 >> 7 High Byte
+DEFB 0  ;80 >> 7 High Byte
+DEFB 0  ;81 >> 7 High Byte
+DEFB 0  ;82 >> 7 High Byte
+DEFB 0  ;83 >> 7 High Byte
+DEFB 0  ;84 >> 7 High Byte
+DEFB 0  ;85 >> 7 High Byte
+DEFB 0  ;86 >> 7 High Byte
+DEFB 0  ;87 >> 7 High Byte
+DEFB 0  ;88 >> 7 High Byte
+DEFB 0  ;89 >> 7 High Byte
+DEFB 0  ;90 >> 7 High Byte
+DEFB 0  ;91 >> 7 High Byte
+DEFB 0  ;92 >> 7 High Byte
+DEFB 0  ;93 >> 7 High Byte
+DEFB 0  ;94 >> 7 High Byte
+DEFB 0  ;95 >> 7 High Byte
+DEFB 0  ;96 >> 7 High Byte
+DEFB 0  ;97 >> 7 High Byte
+DEFB 0  ;98 >> 7 High Byte
+DEFB 0  ;99 >> 7 High Byte
+DEFB 0  ;100 >> 7 High Byte
+DEFB 0  ;101 >> 7 High Byte
+DEFB 0  ;102 >> 7 High Byte
+DEFB 0  ;103 >> 7 High Byte
+DEFB 0  ;104 >> 7 High Byte
+DEFB 0  ;105 >> 7 High Byte
+DEFB 0  ;106 >> 7 High Byte
+DEFB 0  ;107 >> 7 High Byte
+DEFB 0  ;108 >> 7 High Byte
+DEFB 0  ;109 >> 7 High Byte
+DEFB 0  ;110 >> 7 High Byte
+DEFB 0  ;111 >> 7 High Byte
+DEFB 0  ;112 >> 7 High Byte
+DEFB 0  ;113 >> 7 High Byte
+DEFB 0  ;114 >> 7 High Byte
+DEFB 0  ;115 >> 7 High Byte
+DEFB 0  ;116 >> 7 High Byte
+DEFB 0  ;117 >> 7 High Byte
+DEFB 0  ;118 >> 7 High Byte
+DEFB 0  ;119 >> 7 High Byte
+DEFB 0  ;120 >> 7 High Byte
+DEFB 0  ;121 >> 7 High Byte
+DEFB 0  ;122 >> 7 High Byte
+DEFB 0  ;123 >> 7 High Byte
+DEFB 0  ;124 >> 7 High Byte
+DEFB 0  ;125 >> 7 High Byte
+DEFB 0  ;126 >> 7 High Byte
+DEFB 0  ;127 >> 7 High Byte
+DEFB 1  ;128 >> 7 High Byte
+DEFB 1  ;129 >> 7 High Byte
+DEFB 1  ;130 >> 7 High Byte
+DEFB 1  ;131 >> 7 High Byte
+DEFB 1  ;132 >> 7 High Byte
+DEFB 1  ;133 >> 7 High Byte
+DEFB 1  ;134 >> 7 High Byte
+DEFB 1  ;135 >> 7 High Byte
+DEFB 1  ;136 >> 7 High Byte
+DEFB 1  ;137 >> 7 High Byte
+DEFB 1  ;138 >> 7 High Byte
+DEFB 1  ;139 >> 7 High Byte
+DEFB 1  ;140 >> 7 High Byte
+DEFB 1  ;141 >> 7 High Byte
+DEFB 1  ;142 >> 7 High Byte
+DEFB 1  ;143 >> 7 High Byte
+DEFB 1  ;144 >> 7 High Byte
+DEFB 1  ;145 >> 7 High Byte
+DEFB 1  ;146 >> 7 High Byte
+DEFB 1  ;147 >> 7 High Byte
+DEFB 1  ;148 >> 7 High Byte
+DEFB 1  ;149 >> 7 High Byte
+DEFB 1  ;150 >> 7 High Byte
+DEFB 1  ;151 >> 7 High Byte
+DEFB 1  ;152 >> 7 High Byte
+DEFB 1  ;153 >> 7 High Byte
+DEFB 1  ;154 >> 7 High Byte
+DEFB 1  ;155 >> 7 High Byte
+DEFB 1  ;156 >> 7 High Byte
+DEFB 1  ;157 >> 7 High Byte
+DEFB 1  ;158 >> 7 High Byte
+DEFB 1  ;159 >> 7 High Byte
+DEFB 1  ;160 >> 7 High Byte
+DEFB 1  ;161 >> 7 High Byte
+DEFB 1  ;162 >> 7 High Byte
+DEFB 1  ;163 >> 7 High Byte
+DEFB 1  ;164 >> 7 High Byte
+DEFB 1  ;165 >> 7 High Byte
+DEFB 1  ;166 >> 7 High Byte
+DEFB 1  ;167 >> 7 High Byte
+DEFB 1  ;168 >> 7 High Byte
+DEFB 1  ;169 >> 7 High Byte
+DEFB 1  ;170 >> 7 High Byte
+DEFB 1  ;171 >> 7 High Byte
+DEFB 1  ;172 >> 7 High Byte
+DEFB 1  ;173 >> 7 High Byte
+DEFB 1  ;174 >> 7 High Byte
+DEFB 1  ;175 >> 7 High Byte
+DEFB 1  ;176 >> 7 High Byte
+DEFB 1  ;177 >> 7 High Byte
+DEFB 1  ;178 >> 7 High Byte
+DEFB 1  ;179 >> 7 High Byte
+DEFB 1  ;180 >> 7 High Byte
+DEFB 1  ;181 >> 7 High Byte
+DEFB 1  ;182 >> 7 High Byte
+DEFB 1  ;183 >> 7 High Byte
+DEFB 1  ;184 >> 7 High Byte
+DEFB 1  ;185 >> 7 High Byte
+DEFB 1  ;186 >> 7 High Byte
+DEFB 1  ;187 >> 7 High Byte
+DEFB 1  ;188 >> 7 High Byte
+DEFB 1  ;189 >> 7 High Byte
+DEFB 1  ;190 >> 7 High Byte
+DEFB 1  ;191 >> 7 High Byte
+DEFB 1  ;192 >> 7 High Byte
+DEFB 1  ;193 >> 7 High Byte
+DEFB 1  ;194 >> 7 High Byte
+DEFB 1  ;195 >> 7 High Byte
+DEFB 1  ;196 >> 7 High Byte
+DEFB 1  ;197 >> 7 High Byte
+DEFB 1  ;198 >> 7 High Byte
+DEFB 1  ;199 >> 7 High Byte
+DEFB 1  ;200 >> 7 High Byte
+DEFB 1  ;201 >> 7 High Byte
+DEFB 1  ;202 >> 7 High Byte
+DEFB 1  ;203 >> 7 High Byte
+DEFB 1  ;204 >> 7 High Byte
+DEFB 1  ;205 >> 7 High Byte
+DEFB 1  ;206 >> 7 High Byte
+DEFB 1  ;207 >> 7 High Byte
+DEFB 1  ;208 >> 7 High Byte
+DEFB 1  ;209 >> 7 High Byte
+DEFB 1  ;210 >> 7 High Byte
+DEFB 1  ;211 >> 7 High Byte
+DEFB 1  ;212 >> 7 High Byte
+DEFB 1  ;213 >> 7 High Byte
+DEFB 1  ;214 >> 7 High Byte
+DEFB 1  ;215 >> 7 High Byte
+DEFB 1  ;216 >> 7 High Byte
+DEFB 1  ;217 >> 7 High Byte
+DEFB 1  ;218 >> 7 High Byte
+DEFB 1  ;219 >> 7 High Byte
+DEFB 1  ;220 >> 7 High Byte
+DEFB 1  ;221 >> 7 High Byte
+DEFB 1  ;222 >> 7 High Byte
+DEFB 1  ;223 >> 7 High Byte
+DEFB 1  ;224 >> 7 High Byte
+DEFB 1  ;225 >> 7 High Byte
+DEFB 1  ;226 >> 7 High Byte
+DEFB 1  ;227 >> 7 High Byte
+DEFB 1  ;228 >> 7 High Byte
+DEFB 1  ;229 >> 7 High Byte
+DEFB 1  ;230 >> 7 High Byte
+DEFB 1  ;231 >> 7 High Byte
+DEFB 1  ;232 >> 7 High Byte
+DEFB 1  ;233 >> 7 High Byte
+DEFB 1  ;234 >> 7 High Byte
+DEFB 1  ;235 >> 7 High Byte
+DEFB 1  ;236 >> 7 High Byte
+DEFB 1  ;237 >> 7 High Byte
+DEFB 1  ;238 >> 7 High Byte
+DEFB 1  ;239 >> 7 High Byte
+DEFB 1  ;240 >> 7 High Byte
+DEFB 1  ;241 >> 7 High Byte
+DEFB 1  ;242 >> 7 High Byte
+DEFB 1  ;243 >> 7 High Byte
+DEFB 1  ;244 >> 7 High Byte
+DEFB 1  ;245 >> 7 High Byte
+DEFB 1  ;246 >> 7 High Byte
+DEFB 1  ;247 >> 7 High Byte
+DEFB 1  ;248 >> 7 High Byte
+DEFB 1  ;249 >> 7 High Byte
+DEFB 1  ;250 >> 7 High Byte
+DEFB 1  ;251 >> 7 High Byte
+DEFB 1  ;252 >> 7 High Byte
+DEFB 1  ;253 >> 7 High Byte
+DEFB 1  ;254 >> 7 High Byte
+DEFB 1  ;255 >> 7 High Byte
+
+DEFB 0  ;0 >> 7 Low Byte
+DEFB 2  ;1 >> 7 Low Byte
+DEFB 4  ;2 >> 7 Low Byte
+DEFB 6  ;3 >> 7 Low Byte
+DEFB 8  ;4 >> 7 Low Byte
+DEFB 10  ;5 >> 7 Low Byte
+DEFB 12  ;6 >> 7 Low Byte
+DEFB 14  ;7 >> 7 Low Byte
+DEFB 16  ;8 >> 7 Low Byte
+DEFB 18  ;9 >> 7 Low Byte
+DEFB 20  ;10 >> 7 Low Byte
+DEFB 22  ;11 >> 7 Low Byte
+DEFB 24  ;12 >> 7 Low Byte
+DEFB 26  ;13 >> 7 Low Byte
+DEFB 28  ;14 >> 7 Low Byte
+DEFB 30  ;15 >> 7 Low Byte
+DEFB 32  ;16 >> 7 Low Byte
+DEFB 34  ;17 >> 7 Low Byte
+DEFB 36  ;18 >> 7 Low Byte
+DEFB 38  ;19 >> 7 Low Byte
+DEFB 40  ;20 >> 7 Low Byte
+DEFB 42  ;21 >> 7 Low Byte
+DEFB 44  ;22 >> 7 Low Byte
+DEFB 46  ;23 >> 7 Low Byte
+DEFB 48  ;24 >> 7 Low Byte
+DEFB 50  ;25 >> 7 Low Byte
+DEFB 52  ;26 >> 7 Low Byte
+DEFB 54  ;27 >> 7 Low Byte
+DEFB 56  ;28 >> 7 Low Byte
+DEFB 58  ;29 >> 7 Low Byte
+DEFB 60  ;30 >> 7 Low Byte
+DEFB 62  ;31 >> 7 Low Byte
+DEFB 64  ;32 >> 7 Low Byte
+DEFB 66  ;33 >> 7 Low Byte
+DEFB 68  ;34 >> 7 Low Byte
+DEFB 70  ;35 >> 7 Low Byte
+DEFB 72  ;36 >> 7 Low Byte
+DEFB 74  ;37 >> 7 Low Byte
+DEFB 76  ;38 >> 7 Low Byte
+DEFB 78  ;39 >> 7 Low Byte
+DEFB 80  ;40 >> 7 Low Byte
+DEFB 82  ;41 >> 7 Low Byte
+DEFB 84  ;42 >> 7 Low Byte
+DEFB 86  ;43 >> 7 Low Byte
+DEFB 88  ;44 >> 7 Low Byte
+DEFB 90  ;45 >> 7 Low Byte
+DEFB 92  ;46 >> 7 Low Byte
+DEFB 94  ;47 >> 7 Low Byte
+DEFB 96  ;48 >> 7 Low Byte
+DEFB 98  ;49 >> 7 Low Byte
+DEFB 100  ;50 >> 7 Low Byte
+DEFB 102  ;51 >> 7 Low Byte
+DEFB 104  ;52 >> 7 Low Byte
+DEFB 106  ;53 >> 7 Low Byte
+DEFB 108  ;54 >> 7 Low Byte
+DEFB 110  ;55 >> 7 Low Byte
+DEFB 112  ;56 >> 7 Low Byte
+DEFB 114  ;57 >> 7 Low Byte
+DEFB 116  ;58 >> 7 Low Byte
+DEFB 118  ;59 >> 7 Low Byte
+DEFB 120  ;60 >> 7 Low Byte
+DEFB 122  ;61 >> 7 Low Byte
+DEFB 124  ;62 >> 7 Low Byte
+DEFB 126  ;63 >> 7 Low Byte
+DEFB 128  ;64 >> 7 Low Byte
+DEFB 130  ;65 >> 7 Low Byte
+DEFB 132  ;66 >> 7 Low Byte
+DEFB 134  ;67 >> 7 Low Byte
+DEFB 136  ;68 >> 7 Low Byte
+DEFB 138  ;69 >> 7 Low Byte
+DEFB 140  ;70 >> 7 Low Byte
+DEFB 142  ;71 >> 7 Low Byte
+DEFB 144  ;72 >> 7 Low Byte
+DEFB 146  ;73 >> 7 Low Byte
+DEFB 148  ;74 >> 7 Low Byte
+DEFB 150  ;75 >> 7 Low Byte
+DEFB 152  ;76 >> 7 Low Byte
+DEFB 154  ;77 >> 7 Low Byte
+DEFB 156  ;78 >> 7 Low Byte
+DEFB 158  ;79 >> 7 Low Byte
+DEFB 160  ;80 >> 7 Low Byte
+DEFB 162  ;81 >> 7 Low Byte
+DEFB 164  ;82 >> 7 Low Byte
+DEFB 166  ;83 >> 7 Low Byte
+DEFB 168  ;84 >> 7 Low Byte
+DEFB 170  ;85 >> 7 Low Byte
+DEFB 172  ;86 >> 7 Low Byte
+DEFB 174  ;87 >> 7 Low Byte
+DEFB 176  ;88 >> 7 Low Byte
+DEFB 178  ;89 >> 7 Low Byte
+DEFB 180  ;90 >> 7 Low Byte
+DEFB 182  ;91 >> 7 Low Byte
+DEFB 184  ;92 >> 7 Low Byte
+DEFB 186  ;93 >> 7 Low Byte
+DEFB 188  ;94 >> 7 Low Byte
+DEFB 190  ;95 >> 7 Low Byte
+DEFB 192  ;96 >> 7 Low Byte
+DEFB 194  ;97 >> 7 Low Byte
+DEFB 196  ;98 >> 7 Low Byte
+DEFB 198  ;99 >> 7 Low Byte
+DEFB 200  ;100 >> 7 Low Byte
+DEFB 202  ;101 >> 7 Low Byte
+DEFB 204  ;102 >> 7 Low Byte
+DEFB 206  ;103 >> 7 Low Byte
+DEFB 208  ;104 >> 7 Low Byte
+DEFB 210  ;105 >> 7 Low Byte
+DEFB 212  ;106 >> 7 Low Byte
+DEFB 214  ;107 >> 7 Low Byte
+DEFB 216  ;108 >> 7 Low Byte
+DEFB 218  ;109 >> 7 Low Byte
+DEFB 220  ;110 >> 7 Low Byte
+DEFB 222  ;111 >> 7 Low Byte
+DEFB 224  ;112 >> 7 Low Byte
+DEFB 226  ;113 >> 7 Low Byte
+DEFB 228  ;114 >> 7 Low Byte
+DEFB 230  ;115 >> 7 Low Byte
+DEFB 232  ;116 >> 7 Low Byte
+DEFB 234  ;117 >> 7 Low Byte
+DEFB 236  ;118 >> 7 Low Byte
+DEFB 238  ;119 >> 7 Low Byte
+DEFB 240  ;120 >> 7 Low Byte
+DEFB 242  ;121 >> 7 Low Byte
+DEFB 244  ;122 >> 7 Low Byte
+DEFB 246  ;123 >> 7 Low Byte
+DEFB 248  ;124 >> 7 Low Byte
+DEFB 250  ;125 >> 7 Low Byte
+DEFB 252  ;126 >> 7 Low Byte
+DEFB 254  ;127 >> 7 Low Byte
+DEFB 0  ;128 >> 7 Low Byte
+DEFB 2  ;129 >> 7 Low Byte
+DEFB 4  ;130 >> 7 Low Byte
+DEFB 6  ;131 >> 7 Low Byte
+DEFB 8  ;132 >> 7 Low Byte
+DEFB 10  ;133 >> 7 Low Byte
+DEFB 12  ;134 >> 7 Low Byte
+DEFB 14  ;135 >> 7 Low Byte
+DEFB 16  ;136 >> 7 Low Byte
+DEFB 18  ;137 >> 7 Low Byte
+DEFB 20  ;138 >> 7 Low Byte
+DEFB 22  ;139 >> 7 Low Byte
+DEFB 24  ;140 >> 7 Low Byte
+DEFB 26  ;141 >> 7 Low Byte
+DEFB 28  ;142 >> 7 Low Byte
+DEFB 30  ;143 >> 7 Low Byte
+DEFB 32  ;144 >> 7 Low Byte
+DEFB 34  ;145 >> 7 Low Byte
+DEFB 36  ;146 >> 7 Low Byte
+DEFB 38  ;147 >> 7 Low Byte
+DEFB 40  ;148 >> 7 Low Byte
+DEFB 42  ;149 >> 7 Low Byte
+DEFB 44  ;150 >> 7 Low Byte
+DEFB 46  ;151 >> 7 Low Byte
+DEFB 48  ;152 >> 7 Low Byte
+DEFB 50  ;153 >> 7 Low Byte
+DEFB 52  ;154 >> 7 Low Byte
+DEFB 54  ;155 >> 7 Low Byte
+DEFB 56  ;156 >> 7 Low Byte
+DEFB 58  ;157 >> 7 Low Byte
+DEFB 60  ;158 >> 7 Low Byte
+DEFB 62  ;159 >> 7 Low Byte
+DEFB 64  ;160 >> 7 Low Byte
+DEFB 66  ;161 >> 7 Low Byte
+DEFB 68  ;162 >> 7 Low Byte
+DEFB 70  ;163 >> 7 Low Byte
+DEFB 72  ;164 >> 7 Low Byte
+DEFB 74  ;165 >> 7 Low Byte
+DEFB 76  ;166 >> 7 Low Byte
+DEFB 78  ;167 >> 7 Low Byte
+DEFB 80  ;168 >> 7 Low Byte
+DEFB 82  ;169 >> 7 Low Byte
+DEFB 84  ;170 >> 7 Low Byte
+DEFB 86  ;171 >> 7 Low Byte
+DEFB 88  ;172 >> 7 Low Byte
+DEFB 90  ;173 >> 7 Low Byte
+DEFB 92  ;174 >> 7 Low Byte
+DEFB 94  ;175 >> 7 Low Byte
+DEFB 96  ;176 >> 7 Low Byte
+DEFB 98  ;177 >> 7 Low Byte
+DEFB 100  ;178 >> 7 Low Byte
+DEFB 102  ;179 >> 7 Low Byte
+DEFB 104  ;180 >> 7 Low Byte
+DEFB 106  ;181 >> 7 Low Byte
+DEFB 108  ;182 >> 7 Low Byte
+DEFB 110  ;183 >> 7 Low Byte
+DEFB 112  ;184 >> 7 Low Byte
+DEFB 114  ;185 >> 7 Low Byte
+DEFB 116  ;186 >> 7 Low Byte
+DEFB 118  ;187 >> 7 Low Byte
+DEFB 120  ;188 >> 7 Low Byte
+DEFB 122  ;189 >> 7 Low Byte
+DEFB 124  ;190 >> 7 Low Byte
+DEFB 126  ;191 >> 7 Low Byte
+DEFB 128  ;192 >> 7 Low Byte
+DEFB 130  ;193 >> 7 Low Byte
+DEFB 132  ;194 >> 7 Low Byte
+DEFB 134  ;195 >> 7 Low Byte
+DEFB 136  ;196 >> 7 Low Byte
+DEFB 138  ;197 >> 7 Low Byte
+DEFB 140  ;198 >> 7 Low Byte
+DEFB 142  ;199 >> 7 Low Byte
+DEFB 144  ;200 >> 7 Low Byte
+DEFB 146  ;201 >> 7 Low Byte
+DEFB 148  ;202 >> 7 Low Byte
+DEFB 150  ;203 >> 7 Low Byte
+DEFB 152  ;204 >> 7 Low Byte
+DEFB 154  ;205 >> 7 Low Byte
+DEFB 156  ;206 >> 7 Low Byte
+DEFB 158  ;207 >> 7 Low Byte
+DEFB 160  ;208 >> 7 Low Byte
+DEFB 162  ;209 >> 7 Low Byte
+DEFB 164  ;210 >> 7 Low Byte
+DEFB 166  ;211 >> 7 Low Byte
+DEFB 168  ;212 >> 7 Low Byte
+DEFB 170  ;213 >> 7 Low Byte
+DEFB 172  ;214 >> 7 Low Byte
+DEFB 174  ;215 >> 7 Low Byte
+DEFB 176  ;216 >> 7 Low Byte
+DEFB 178  ;217 >> 7 Low Byte
+DEFB 180  ;218 >> 7 Low Byte
+DEFB 182  ;219 >> 7 Low Byte
+DEFB 184  ;220 >> 7 Low Byte
+DEFB 186  ;221 >> 7 Low Byte
+DEFB 188  ;222 >> 7 Low Byte
+DEFB 190  ;223 >> 7 Low Byte
+DEFB 192  ;224 >> 7 Low Byte
+DEFB 194  ;225 >> 7 Low Byte
+DEFB 196  ;226 >> 7 Low Byte
+DEFB 198  ;227 >> 7 Low Byte
+DEFB 200  ;228 >> 7 Low Byte
+DEFB 202  ;229 >> 7 Low Byte
+DEFB 204  ;230 >> 7 Low Byte
+DEFB 206  ;231 >> 7 Low Byte
+DEFB 208  ;232 >> 7 Low Byte
+DEFB 210  ;233 >> 7 Low Byte
+DEFB 212  ;234 >> 7 Low Byte
+DEFB 214  ;235 >> 7 Low Byte
+DEFB 216  ;236 >> 7 Low Byte
+DEFB 218  ;237 >> 7 Low Byte
+DEFB 220  ;238 >> 7 Low Byte
+DEFB 222  ;239 >> 7 Low Byte
+DEFB 224  ;240 >> 7 Low Byte
+DEFB 226  ;241 >> 7 Low Byte
+DEFB 228  ;242 >> 7 Low Byte
+DEFB 230  ;243 >> 7 Low Byte
+DEFB 232  ;244 >> 7 Low Byte
+DEFB 234  ;245 >> 7 Low Byte
+DEFB 236  ;246 >> 7 Low Byte
+DEFB 238  ;247 >> 7 Low Byte
+DEFB 240  ;248 >> 7 Low Byte
+DEFB 242  ;249 >> 7 Low Byte
+DEFB 244  ;250 >> 7 Low Byte
+DEFB 246  ;251 >> 7 Low Byte
+DEFB 248  ;252 >> 7 Low Byte
+DEFB 250  ;253 >> 7 Low Byte
+DEFB 252  ;254 >> 7 Low Byte
+DEFB 254  ;255 >> 7 Low Byte
+
+; End of Rotate Tables.
+ 
+HRPrintEnd:
+ 
+END ASM
+END SUB

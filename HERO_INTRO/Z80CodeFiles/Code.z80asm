@@ -1,0 +1,27 @@
+﻿; Put your Z80 assembly code into code files
+Start:
+    .model Spectrum128
+	.org #8000
+    di
+	TesterStart:
+    ;1 - Initializes the music.
+    ld hl,HERO_START    ;The music.
+    xor a     ;The Subsong to play (>=0).
+    call PLY_AKG_INIT
+
+    ;2 - Wait for the frame flyback (MSX/Spectrum/Pentagon specific).
+Sync:
+    ei
+    nop
+    halt
+    di
+
+    ;3 - Play one frame of the song.
+    call PLY_AKG_PLAY
+
+    ;4 - Loop!
+    jr Sync
+
+    ;Of course we have to include the music/sfx/player!
+    #include "chandelier_disassembled.z80asm"
+TesterEnd: 

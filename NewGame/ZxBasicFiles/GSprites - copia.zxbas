@@ -1,0 +1,1389 @@
+﻿'GSprites, 2020, El Dr. Gusman
+'Feel free to use it as you wish
+#include <asc.bas>
+
+Dim bitmapBuffer(6144) as uByte at 49152
+Dim attribBuffer(768) as uByte at 55296
+Dim tableLo(192) as uByte at 56064
+Dim tableHi(192) as uByte at 56320
+Dim tableCP(384) as uInteger at 56832
+
+sub initTable()
+
+    dim y as uInteger
+
+    for y = 0 to 191
+
+        Dim add as uInteger = ((y << 2) band $e0) bor ((y << 8) band $700) bor ((y << 5) band $1800)
+
+        tableLo(y + 1) = add band $FF
+        tableHi(y + 1) = (add >> 8) band $FF
+
+        tableCP(y * 2 + 1) = add + 16384 + 16
+        tableCP(y * 2 + 2) = add + 16384 + 32
+
+    next y
+
+end sub
+
+
+function ZXCharAddress(character as string) as uinteger
+
+    Dim vals as uinteger
+    vals = code(character$(1))
+    vals = vals * 8 + 15360
+    return vals
+
+end function
+
+
+function createAttrib(tinta as uByte, papel as uByte, brillo as uByte, parpadeo as uByte) as uByte
+
+    Dim atr as uByte
+    atr = tinta band 7
+    atr = atr bor ((papel << 3) band 56)
+
+    if brillo > 0 then atr = atr bor 64
+    if parpadeo > 0 then atr = atr bor 128
+
+    return atr
+
+end function
+
+sub fastcall setAttrib(yPos as uinteger, xPos as uinteger, attrib as uInteger)
+
+    asm
+
+    exx
+    pop hl
+    exx
+    pop de
+    pop bc
+    exx
+    push hl
+    exx
+
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    add hl, hl
+
+    add hl, de
+    ld de, 55296
+    add hl, de
+    ld (hl), c
+
+    end asm
+
+end sub 
+
+sub fastcall clearBuffer(attrib as uByte)
+
+    asm
+    
+    ld de, 49153
+    ld hl, 49152
+    ld (hl), 0
+    ld bc, 6143
+    ldir
+
+    ld de, 55297
+    ld hl, 55296
+    ld (hl), a
+    ld bc, 767
+    ldir
+
+    end asm
+
+end sub
+
+sub fastcall printColorChar(charAddress as uinteger, yPos as uinteger, xPos as uinteger, attrib as uInteger)
+
+    asm
+
+    exx
+    pop hl
+    exx
+    pop de
+    pop bc
+    exx
+    pop de
+    push hl
+    exx
+    ex de, hl
+
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    
+    push bc
+    push hl
+    
+    add hl, hl
+    add hl, hl
+    add hl, hl
+
+    add hl, bc
+
+    exx
+    pop bc
+    pop hl
+    add hl, bc
+    ld bc, 55296
+    add hl, bc
+    ld (hl), e
+    exx
+
+    ld bc, 49152
+    add hl, bc
+
+    ld a, (de)
+    ld (hl), a
+
+    inc de
+    ld bc, 32
+    add hl, bc
+    ld a, (de)
+    ld (hl), a
+    
+     inc de
+    ld bc, 32
+    add hl, bc
+    ld a, (de)
+    ld (hl), a
+
+     inc de
+    ld bc, 32
+    add hl, bc
+    ld a, (de)
+    ld (hl), a
+
+     inc de
+    ld bc, 32
+    add hl, bc
+    ld a, (de)
+    ld (hl), a
+
+     inc de
+    ld bc, 32
+    add hl, bc
+    ld a, (de)
+    ld (hl), a
+
+     inc de
+    ld bc, 32
+    add hl, bc
+    ld a, (de)
+    ld (hl), a
+
+     inc de
+    ld bc, 32
+    add hl, bc
+    ld a, (de)
+    ld (hl), a
+
+    end asm
+
+end sub
+
+sub fastcall drawColorSprite (spriteAddress as uinteger, yPos as uInteger, xPos as uInteger, attrib as uInteger)
+
+asm
+
+    exx
+    pop hl
+    exx
+    pop de
+    pop bc
+    exx
+    pop de
+    push hl
+    push de
+    exx
+    ex de, hl
+
+    ;Orden de los registros (optimizado para menor nº de cargas)
+    ;de = direccionChar
+    ;hl = posicionY
+    ;bc = posicionH
+
+    ld a, c ; addrInc = x / 8
+    srl a
+    srl a
+    srl a
+
+    push af
+    push hl
+
+    push af ;addrInc
+    
+    ld a, c  ; if posicionX mod 8 <> 0 then goto print ext
+    and 7
+    jp nz, dcs_print_ext
+
+dcs_print_simple:
+
+    add hl, hl    ; posicionY = posicionY * 32
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    
+    ld bc, 49152
+
+    add hl, bc; videoAddress = 49152 + posicionY
+    pop af
+    ld c, a
+    ld b, 0
+    add hl, bc; videoAddress = videoAddress + addrInc
+    ld bc, 32
+
+    ld a, (hl); cValue = peek(videoAddress)
+    ex de, hl
+    xor (hl)  ; cValue = peek(charAddress) xor cValue
+    ex de, hl
+    ld (hl), a ; poke videoAddress, cValue
+
+    inc de      ;charAddress = charAddress + 1
+    add hl, bc  ;videoAddress = videoAddress + 32
+    ld a, (hl)  ; cValue = peek(videoAddress)
+    ex de, hl
+    xor (hl)    ; cValue = peek(charAddress) xor cValue
+    ex de, hl
+    ld (hl), a  ; poke videoAddress, cValue
+    
+    inc de
+    add hl, bc
+    ld a, (hl)
+    ex de, hl
+    xor (hl)
+    ex de, hl
+    ld (hl), a
+
+    inc de
+    add hl, bc
+    ld a, (hl)
+    ex de, hl
+    xor (hl)
+    ex de, hl
+    ld (hl), a
+
+    inc de
+    add hl, bc
+    ld a, (hl)
+    ex de, hl
+    xor (hl)
+    ex de, hl
+    ld (hl), a
+
+    inc de
+    add hl, bc
+    ld a, (hl)
+    ex de, hl
+    xor (hl)
+    ex de, hl
+    ld (hl), a
+
+    inc de
+    add hl, bc
+    ld a, (hl)
+    ex de, hl
+    xor (hl)
+    ex de, hl
+    ld (hl), a
+
+    inc de
+    add hl, bc
+    ld a, (hl)
+    ex de, hl
+    xor (hl)
+    ex de, hl
+    ld (hl), a
+
+    ;poner attrib
+    pop hl          ;y
+    ld a, l
+    ex af, af'
+    
+
+    srl l           ; / 8
+    srl l
+    srl l
+
+    add hl, hl      ; * 32
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    pop af          ;x
+    ld e, a
+    ld d, 0
+    add hl, de      ;+ xChar
+    ld de, 55296    
+    add hl, de      ;attribAddress = attribBuffer + (xChar + (y / 8) * 32)
+    pop de          ;attrib
+    ld (hl), e      ;escribe atributo
+
+    ex af, af'
+    and 7
+
+    jp z, dcs_print_exit
+    
+    ld bc, 32
+    add hl, bc
+    ld (hl), e      ;escribe atributo
+    
+    jp dcs_print_exit
+
+dcs_print_ext:
+
+    ld a, 8                 ;Init counter vueltas
+    ld (dcs_loopCounter), a
+
+    ;stack: addrInc
+    
+
+    push bc ;shift = posicionX - addrInc * 8  
+    exx
+    pop bc
+    pop af
+    ld l, a
+    ld h, 0
+    push hl
+
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    
+    push de
+    push bc
+    pop de
+    ex de, hl
+
+    sbc hl, de
+    pop de
+    pop bc
+    push hl
+    push bc
+    exx
+
+    ;stack: addrInc
+    ;       shift
+
+    add hl, hl    ; posicionY = posicionY * 32
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    
+    ld bc, 49152
+
+    add hl, bc; videoAddress = 49152 + posicionY
+    pop bc
+    add hl, bc; videoAddress = videoAddress + addrInc
+
+    ;stack: shift
+    ex de, hl   
+    pop bc
+    push bc
+    push hl
+    
+dcs_ext_loop:
+
+    ld a, (hl) 
+
+    ;stack: charAddress
+    ;       shift
+    ;       de = videoAddress
+    ;        c = shift
+    ;       hl = charAddress
+    ;        a = valor del char
+
+    
+    call dcs_rshift ; rotamos (shift) bytes a la derecha
+
+    push de   ;xor con video
+    pop hl
+    xor (hl)
+    ld (hl), a
+
+    pop hl
+    pop bc
+    push bc
+    push hl
+
+    
+
+    inc de     ;videoAddress = videoAddress + 1
+
+    ld a, 8    ;shift = 8 - shift
+    sub c
+    ld c, a
+    ld a, (hl) ;a = char value
+    
+    ;stack: charAddress
+    ;       shift
+    ;       de = videoAddress
+    ;        c = shift inverso
+    ;       hl = charAddress
+    ;        a = valor del char
+
+    call dcs_lshift ; rotamos (8 - shift) bytes a la izquierda
+    push de   ;xor con video
+    pop hl
+    xor (hl)
+    ld (hl), a
+
+    ld bc, 31   ;videoAddress = videoAddress + 31
+    add hl, bc
+    push hl
+    pop de
+
+    pop hl
+    pop bc
+    inc hl
+    push bc
+    push hl
+
+    ;stack: charAddress
+    ;       shift
+    ;       de = videoAddress
+    ;        c = shift
+    ;       hl = charAddress
+    ;        a = valor del char
+
+    ld a, (dcs_loopCounter)
+    dec a
+    ld (dcs_loopCounter), a
+    jp nz, dcs_ext_loop
+
+
+    pop hl
+    pop hl
+
+    ;poner attrib
+    pop hl          ;y
+    ld a, l
+    ex af, af'      ;guardamos y en a'
+
+    srl l           ; / 8
+    srl l
+    srl l
+
+    add hl, hl      ; * 32
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    pop af          ;x
+    ld e, a
+    ld d, 0
+    add hl, de      ;+ xChar
+    ld de, 55296    
+    add hl, de      ;attribAddress = attribBuffer + (xChar + (y / 8) * 32)
+    pop de          ;attrib
+    ld (hl), e      ;escribe atributo
+    inc hl          ;siguiente char
+    ld (hl), e      ;escribe atributo
+
+    ex af, af'      ;y no es char completo?
+    and 7
+
+    jp z, dcs_print_exit
+    
+    ld bc, 31
+    add hl, bc
+    ld (hl), e      ;escribe atributo
+    inc hl          ;siguiente char
+    ld (hl), e      ;escribe atributo
+
+    jp dcs_print_exit
+
+dcs_rshift:
+
+    srl a
+    dec c
+    jr nz, dcs_rshift
+
+    ret
+
+dcs_lshift:
+
+    sla a
+    dec c
+    jr nz, dcs_lshift
+
+    ret
+
+dcs_print_exit:
+
+    ret
+
+dcs_loopCounter:
+defb 0
+
+end asm
+
+end sub
+
+sub fastcall printChar(charAddress as uinteger, yPos as uinteger, xPos as uinteger)
+
+    asm
+
+    exx
+    pop hl
+    exx
+    pop de
+    pop bc
+    exx
+    push hl
+    exx
+    ex de, hl
+
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    add hl, hl
+
+    add hl, bc
+    ld bc, 49152
+    add hl, bc
+
+    ld a, (de)
+    ld (hl), a
+
+    inc de
+    ld bc, 32
+    add hl, bc
+    ld a, (de)
+    ld (hl), a
+    
+     inc de
+    ld bc, 32
+    add hl, bc
+    ld a, (de)
+    ld (hl), a
+
+     inc de
+    ld bc, 32
+    add hl, bc
+    ld a, (de)
+    ld (hl), a
+
+     inc de
+    ld bc, 32
+    add hl, bc
+    ld a, (de)
+    ld (hl), a
+
+     inc de
+    ld bc, 32
+    add hl, bc
+    ld a, (de)
+    ld (hl), a
+
+     inc de
+    ld bc, 32
+    add hl, bc
+    ld a, (de)
+    ld (hl), a
+
+     inc de
+    ld bc, 32
+    add hl, bc
+    ld a, (de)
+    ld (hl), a
+
+    end asm
+
+end sub
+
+sub fastcall drawSprite (spriteAddress as uinteger, yPos as uInteger, xPos as uInteger)
+
+asm
+
+    exx
+    pop hl
+    exx
+    pop de
+    pop bc
+    exx
+    push hl
+    exx
+    ex de, hl
+
+    ;Orden de los registros (optimizado para menor nº de cargas)
+    ;de = direccionChar
+    ;hl = posicionY
+    ;bc = posicionH
+
+    ld a, c ; addrInc = x / 8
+    srl a
+    srl a
+    srl a
+
+    push af ;addrInc
+    
+    ld a, c  ; if posicionX mod 8 <> 0 then goto print ext
+    and 7
+    jp nz, ds_print_ext
+
+ds_print_simple:
+
+    add hl, hl    ; posicionY = posicionY * 32
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    
+    ld bc, 49152
+
+    add hl, bc; videoAddress = 49152 + posicionY
+    pop af
+    ld c, a
+    ld b, 0
+    add hl, bc; videoAddress = videoAddress + addrInc
+    ld bc, 32
+
+    ld a, (hl); cValue = peek(videoAddress)
+    ex de, hl
+    xor (hl)  ; cValue = peek(charAddress) xor cValue
+    ex de, hl
+    ld (hl), a ; poke videoAddress, cValue
+
+    inc de      ;charAddress = charAddress + 1
+    add hl, bc  ;videoAddress = videoAddress + 32
+    ld a, (hl)  ; cValue = peek(videoAddress)
+    ex de, hl
+    xor (hl)    ; cValue = peek(charAddress) xor cValue
+    ex de, hl
+    ld (hl), a  ; poke videoAddress, cValue
+    
+    inc de
+    add hl, bc
+    ld a, (hl)
+    ex de, hl
+    xor (hl)
+    ex de, hl
+    ld (hl), a
+
+    inc de
+    add hl, bc
+    ld a, (hl)
+    ex de, hl
+    xor (hl)
+    ex de, hl
+    ld (hl), a
+
+    inc de
+    add hl, bc
+    ld a, (hl)
+    ex de, hl
+    xor (hl)
+    ex de, hl
+    ld (hl), a
+
+    inc de
+    add hl, bc
+    ld a, (hl)
+    ex de, hl
+    xor (hl)
+    ex de, hl
+    ld (hl), a
+
+    inc de
+    add hl, bc
+    ld a, (hl)
+    ex de, hl
+    xor (hl)
+    ex de, hl
+    ld (hl), a
+
+    inc de
+    add hl, bc
+    ld a, (hl)
+    ex de, hl
+    xor (hl)
+    ex de, hl
+    ld (hl), a
+
+    jp ds_print_exit
+
+ds_print_ext:
+
+    ld a, 8                 ;Init counter vueltas
+    ld (ds_loopCounter), a
+
+    ;stack: addrInc
+    
+
+    push bc ;shift = posicionX - addrInc * 8  
+    exx
+    pop bc
+    pop af
+    ld l, a
+    ld h, 0
+    push hl
+
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    
+    push de
+    push bc
+    pop de
+    ex de, hl
+
+    sbc hl, de
+    pop de
+    pop bc
+    push hl
+    push bc
+    exx
+
+    ;stack: addrInc
+    ;       shift
+
+    add hl, hl    ; posicionY = posicionY * 32
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    
+    ld bc, 49152
+
+    add hl, bc; videoAddress = 49152 + posicionY
+    pop bc
+    add hl, bc; videoAddress = videoAddress + addrInc
+
+    ;stack: shift
+    ex de, hl   
+    pop bc
+    push bc
+    push hl
+    
+ds_ext_loop:
+
+    ld a, (hl) 
+
+    ;stack: charAddress
+    ;       shift
+    ;       de = videoAddress
+    ;        c = shift
+    ;       hl = charAddress
+    ;        a = valor del char
+
+    
+    call ds_rshift ; rotamos (shift) bytes a la derecha
+
+    push de   ;xor con video
+    pop hl
+    xor (hl)
+    ld (hl), a
+
+    pop hl
+    pop bc
+    push bc
+    push hl
+
+    
+
+    inc de     ;videoAddress = videoAddress + 1
+
+    ld a, 8    ;shift = 8 - shift
+    sub c
+    ld c, a
+    ld a, (hl) ;a = char value
+    
+    ;stack: charAddress
+    ;       shift
+    ;       de = videoAddress
+    ;        c = shift inverso
+    ;       hl = charAddress
+    ;        a = valor del char
+
+    call ds_lshift ; rotamos (8 - shift) bytes a la izquierda
+    push de   ;xor con video
+    pop hl
+    xor (hl)
+    ld (hl), a
+
+    ld bc, 31   ;videoAddress = videoAddress + 31
+    add hl, bc
+    push hl
+    pop de
+
+    pop hl
+    pop bc
+    inc hl
+    push bc
+    push hl
+
+    ;stack: charAddress
+    ;       shift
+    ;       de = videoAddress
+    ;        c = shift
+    ;       hl = charAddress
+    ;        a = valor del char
+
+    ld a, (ds_loopCounter)
+    dec a
+    ld (ds_loopCounter), a
+    jp nz, ds_ext_loop
+
+
+    pop hl
+    pop hl
+
+    jp ds_print_exit
+
+ds_rshift:
+
+    srl a
+    dec c
+    jr nz, ds_rshift
+
+    ret
+
+ds_lshift:
+
+    sla a
+    dec c
+    jr nz, ds_lshift
+
+    ret
+
+ds_print_exit:
+
+    ret
+
+ds_loopCounter:
+defb 0
+
+end asm
+
+end sub
+
+sub dumpScreen()
+
+
+asm
+
+    xor a
+    
+    ld hl, 49120
+    push hl
+
+    exx
+    ld de, 22528
+    ld hl, 55296
+    exx
+
+dps_loop:
+
+    exx
+    ld bc, 32
+    ldir
+    exx
+    
+
+    ld hl, 56064     ;load displacement table
+    ld d, 0
+    ld e, a
+    add hl, de
+    ld c, (hl)
+  
+    
+    ld hl, 56320
+    add hl, de
+    ld b, (hl)
+
+    ld hl, 16384        ;load dest address
+    add hl, bc
+    push hl
+    pop de
+
+    pop hl
+    ld bc, 32
+    add hl, bc
+    push hl
+
+    ldir
+
+    inc a
+
+
+    ld hl, 56064     ;load displacement table
+    ld d, 0
+    ld e, a
+    add hl, de
+    ld c, (hl)
+  
+    
+    ld hl, 56320
+    add hl, de
+    ld b, (hl)
+
+    ld hl, 16384        ;load dest address
+    add hl, bc
+    push hl
+    pop de
+
+    pop hl
+    ld bc, 32
+    add hl, bc
+    push hl
+
+    ldir
+
+    inc a
+
+    ld hl, 56064     ;load displacement table
+    ld d, 0
+    ld e, a
+    add hl, de
+    ld c, (hl)
+  
+    
+    ld hl, 56320
+    add hl, de
+    ld b, (hl)
+
+    ld hl, 16384        ;load dest address
+    add hl, bc
+    push hl
+    pop de
+
+    pop hl
+    ld bc, 32
+    add hl, bc
+    push hl
+
+    ldir
+
+    inc a
+
+    ld hl, 56064     ;load displacement table
+    ld d, 0
+    ld e, a
+    add hl, de
+    ld c, (hl)
+  
+    
+    ld hl, 56320
+    add hl, de
+    ld b, (hl)
+
+    ld hl, 16384        ;load dest address
+    add hl, bc
+    push hl
+    pop de
+
+    pop hl
+    ld bc, 32
+    add hl, bc
+    push hl
+
+    ldir
+
+    inc a
+
+    ld hl, 56064     ;load displacement table
+    ld d, 0
+    ld e, a
+    add hl, de
+    ld c, (hl)
+  
+    
+    ld hl, 56320
+    add hl, de
+    ld b, (hl)
+
+    ld hl, 16384        ;load dest address
+    add hl, bc
+    push hl
+    pop de
+
+    pop hl
+    ld bc, 32
+    add hl, bc
+    push hl
+
+    ldir
+
+    inc a
+
+    ld hl, 56064     ;load displacement table
+    ld d, 0
+    ld e, a
+    add hl, de
+    ld c, (hl)
+  
+    
+    ld hl, 56320
+    add hl, de
+    ld b, (hl)
+
+    ld hl, 16384        ;load dest address
+    add hl, bc
+    push hl
+    pop de
+
+    pop hl
+    ld bc, 32
+    add hl, bc
+    push hl
+
+    ldir
+
+    inc a
+
+    ld hl, 56064     ;load displacement table
+    ld d, 0
+    ld e, a
+    add hl, de
+    ld c, (hl)
+  
+    
+    ld hl, 56320
+    add hl, de
+    ld b, (hl)
+
+    ld hl, 16384        ;load dest address
+    add hl, bc
+    push hl
+    pop de
+
+    pop hl
+    ld bc, 32
+    add hl, bc
+    push hl
+
+    ldir
+
+    inc a
+
+    ld hl, 56064     ;load displacement table
+    ld d, 0
+    ld e, a
+    add hl, de
+    ld c, (hl)
+  
+    
+    ld hl, 56320
+    add hl, de
+    ld b, (hl)
+
+    ld hl, 16384        ;load dest address
+    add hl, bc
+    push hl
+    pop de
+
+    pop hl
+    ld bc, 32
+    add hl, bc
+    push hl
+
+    ldir
+
+    inc a
+
+
+
+    cp 192
+    jp nz, dps_loop
+
+dps_end_copy:
+
+    pop hl
+
+end asm
+
+end sub
+
+
+
+
+
+
+sub dumpHalfScreen()
+
+
+asm
+
+    xor a
+    
+    ld hl, 49120
+    push hl
+
+    exx
+    ld de, 22528
+    ld hl, 55296
+    exx
+
+dphs_loop:
+
+    exx
+    ld bc, 16
+    ldir
+    ld bc, 16
+    add hl, bc
+    ex de, hl
+    add hl, bc
+    ex de, hl
+    exx
+    
+
+    ld hl, 56064     ;load displacement table
+    ld d, 0
+    ld e, a
+    add hl, de
+    ld c, (hl)
+  
+    
+    ld hl, 56320
+    add hl, de
+    ld b, (hl)
+
+    ld hl, 16384        ;load dest address
+    add hl, bc
+    push hl
+    pop de
+
+    pop hl
+    ld bc, 32
+    add hl, bc
+    push hl
+
+    ldir
+
+    inc a
+
+    ld hl, 56064     ;load displacement table
+    ld d, 0
+    ld e, a
+    add hl, de
+    ld c, (hl)
+  
+    
+    ld hl, 56320
+    add hl, de
+    ld b, (hl)
+
+    ld hl, 16384        ;load dest address
+    add hl, bc
+    push hl
+    pop de
+
+    pop hl
+    ld bc, 32
+    add hl, bc
+    add hl, bc
+    push hl
+
+    ldir
+
+    inc a
+    inc a
+
+    ld hl, 56064     ;load displacement table
+    ld d, 0
+    ld e, a
+    add hl, de
+    ld c, (hl)
+  
+    
+    ld hl, 56320
+    add hl, de
+    ld b, (hl)
+
+    ld hl, 16384        ;load dest address
+    add hl, bc
+    push hl
+    pop de
+
+    pop hl
+    ld bc, 32
+    add hl, bc
+    add hl, bc
+    push hl
+
+    ldir
+
+    inc a
+    inc a
+
+    ld hl, 56064     ;load displacement table
+    ld d, 0
+    ld e, a
+    add hl, de
+    ld c, (hl)
+  
+    
+    ld hl, 56320
+    add hl, de
+    ld b, (hl)
+
+    ld hl, 16384        ;load dest address
+    add hl, bc
+    push hl
+    pop de
+
+    pop hl
+    ld bc, 32
+    add hl, bc
+    add hl, bc
+    push hl
+
+    ldir
+
+    inc a
+    inc a
+
+
+
+    cp 192
+    jp nz, dphs_loop
+
+dphs_end_copy:
+
+    pop hl
+
+end asm
+
+end sub
+
+sub dumpPixels()
+
+asm
+
+    xor a
+    
+    ld hl, 49120
+    push hl
+
+dpx_loop:
+
+    ld hl, 56064     ;load displacement table
+    ld d, 0
+    ld e, a
+    add hl, de
+    ld c, (hl)
+  
+    
+    ld hl, 56320
+    add hl, de
+    ld b, (hl)
+
+    ld hl, 16384        ;load dest address
+    add hl, bc
+    push hl
+    pop de
+
+    pop hl
+    ld bc, 32
+    add hl, bc
+    push hl
+
+    ldir
+
+    inc a
+
+    cp 192
+    jp nz, dpx_loop
+
+dpx_end_copy:
+
+    pop hl
+
+end asm
+
+end sub
+
+sub dumpPixelsFast()
+
+asm
+
+    push ix
+    push iy
+    ld de, 192
+    ld (dxp_counter), de
+    ld (dxp_restore_stack + 1), sp
+    ld hl, 49152
+    ld (dxp_copy + 1), hl
+    ld hl, 56832
+    ld (dxp_target + 1), hl
+
+dxp_copy:
+
+    ld sp, 0
+    pop bc
+    pop de
+    pop hl
+    pop ix
+    pop iy
+    exx
+    pop bc
+    pop de
+    pop af
+    ld (dxp_copy+1), sp
+
+dxp_target:
+
+    ld sp, 0
+    pop hl
+    ld (dxp_target + 1), sp
+    ld sp, hl
+    push af
+    push de
+    push bc
+    exx
+    push iy
+    push ix
+    push hl
+    push de
+    push bc
+    
+    ld hl, (dxp_counter)
+    ld de, 1
+    xor a
+    sbc hl, de
+    ld (dxp_counter), hl
+    jp nz, dxp_copy
+    jp dxp_restore_stack
+
+dxp_counter:
+
+    defw 0
+    
+
+dxp_restore_stack:
+
+    ld sp, 0
+    pop iy
+    pop ix
+
+end asm
+
+end sub
+
+sub dumpAttribs()
+
+asm
+
+    xor a
+    ld de, 22528
+    ld hl, 55296
+    ld bc, 768
+    ldir
+
+end asm
+
+end sub

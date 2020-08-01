@@ -1,0 +1,669 @@
+﻿REM @options --asm --array-base 1 --string-base 1 --optimize 1 --org 32768 --heap-size 128 --explicit --strict -D HIDE_LOAD_MSG
+
+#include "ScreenDecompressor.zxbas"
+#include "sceneOne.zxbas"
+#include "sceneTwo.zxbas"
+#include "sceneThree.zxbas"
+#include "sceneFour.zxbas"
+#include "sceneFive.zxbas"
+
+dim jpSpace(3) as uByte at $FDFD
+
+#define fsftl1 "- Somewhere in New York"
+#define fsftl2 "A regular night in your flat"
+#define fsftl3 "whatching the news."
+
+#define fsstl1 "Something gets your attention."
+#define fsstl2 "An accident in a coal mine..."
+#define fsstl3 "That brings back memories..."
+
+#define ssftl1 "-Collapse in a coal mine has"
+#define ssftl2 "trapped sixteen workers."
+#define ssftl3 "-The mine connected to an"
+#define ssftl4 "old cavern system and that"
+
+#define ssstl1 "caused an overthrow."
+#define ssstl2 "-The authorities are working"
+#define ssstl3 "with the fire dept. to rescue"
+#define ssstl4 "them but the operation is"
+
+#define ssttl1 "in pause as the cavern system"
+#define ssttl2 "has a very intrincated tracing"
+#define ssttl3 "so they are waiting for"
+#define ssttl4 "specialized equipment."
+
+#define ssotl1 "-Chances to rescue the miners"
+#define ssotl2 "alive are dwindling as time"
+#define ssotl3 "passes..."
+
+#define tsftl1 "Damn! That's a tragedy!"
+#define tsftl2 "You know how dangerous those"
+#define tsftl3 "caves are as this is not the"
+#define tsftl4 "first time you see them..."
+
+#define tsstl1 "You are retired, old and out of"
+#define tsstl2 "shape, you know this is not your"
+#define tsstl3 "fight but something inside you"
+#define tsstl4 "can't let this pass."
+
+#define osftl1 "This may be the time to remove"
+#define osftl2 "the dust in your old equipment."
+#define osftl3 "A last mission from which you"
+#define osftl4 "may not return, your end, but"
+
+#define osstl1 "at least it will be a good"
+#define osstl2 "ending to your life. An end"
+#define osstl3 "worthy of a..."
+
+
+#define spccont "<SPACE to continue>"
+
+ink 0
+paper 0
+border 0
+cls
+
+print at 12, 0; ink 2; paper 7; bright 1; flash 1; "         STOP THE TAPE          "
+
+pause 0
+
+initMusic()
+playOnInterrupt()
+
+ink 0
+paper 0
+border 0
+cls
+
+DescomprimirImagen(@firstScene)
+
+typeLowLine(fsftl1, 0)
+longDelay()
+typeLowLine(fsftl2, 2)
+typeLowLine(fsftl3, 3)
+longDelay()
+typeLowLine(spccont, 4)
+waitForKey()
+
+clearBottom()
+
+typeLowLine(fsstl1, 0)
+typeLowLine(fsstl2, 1)
+longDelay()
+typeLowLine(fsstl3, 3)
+longDelay()
+typeLowLine(spccont, 4)
+waitForKey()
+
+ink 0
+paper 0
+border 0
+cls
+
+DescomprimirImagen(@secondScene)
+
+typeLowLine(ssftl1, 0)
+typeLowLine(ssftl2, 1)
+longDelay()
+typeLowLine(ssftl3, 2)
+typeLowLine(ssftl4, 3)
+longDelay()
+typeLowLine(spccont, 4)
+waitForKey()
+
+clearBottom()
+typeLowLine(ssstl1, 0)
+longDelay()
+typeLowLine(ssstl2, 1)
+typeLowLine(ssstl3, 2)
+typeLowLine(ssstl4, 3)
+longDelay()
+typeLowLine(spccont, 4)
+waitForKey()
+
+clearBottom()
+typeLowLine(ssttl1, 0)
+typeLowLine(ssttl2, 1)
+typeLowLine(ssttl3, 2)
+typeLowLine(ssttl4, 3)
+longDelay()
+typeLowLine(spccont, 4)
+waitForKey()
+
+clearBottom()
+typeLowLine(ssotl1, 0)
+typeLowLine(ssotl2, 1)
+typeLowLine(ssotl3, 2)
+longDelay()
+typeLowLine(spccont, 4)
+waitForKey()
+
+ink 0
+paper 0
+border 0
+cls
+
+DescomprimirImagen(@thirdScene)
+
+typeLowLine(tsftl1, 0)
+longDelay()
+typeLowLine(tsftl2, 1)
+typeLowLine(tsftl3, 2)
+typeLowLine(tsftl4, 3)
+longDelay()
+typeLowLine(spccont, 4)
+waitForKey()
+
+clearBottom()
+typeLowLine(tsstl1, 0)
+typeLowLine(tsstl2, 1)
+typeLowLine(tsstl3, 2)
+typeLowLine(tsstl4, 3)
+longDelay()
+typeLowLine(spccont, 4)
+waitForKey()
+
+ink 0
+paper 0
+border 0
+cls
+
+DescomprimirImagen(@fourthScene)
+
+typeLowLine(osftl1, 0)
+typeLowLine(osftl2, 1)
+longDelay()
+typeLowLine(osftl3, 2)
+typeLowLine(osftl4, 3)
+longDelay()
+typeLowLine(spccont, 4)
+waitForKey()
+
+clearBottom()
+typeLowLine(osstl1, 0)
+typeLowLine(osstl2, 1)
+typeLowLine(osstl3, 2)
+longDelay()
+typeLowLine(spccont, 4)
+waitForKey()
+
+ink 0
+paper 0
+border 0
+cls
+
+DescomprimirImagen(@fifthScene)
+
+waitForKey()
+
+ink 0
+paper 0
+border 0
+cls
+
+typeLine("        H.E.R.O. Returns        ", 2)
+typeLine("     By El Dr. Gusman, 2020     ", 4)
+typeLine("           Thanks  to           ", 6)
+typeLine("          Mr. Chuxman           ", 8)
+typeLine("            Jesusrcm            ", 9)
+typeLine("   El spectrumero Javi Ortiz    ", 10)
+typeLine("           PacoVespa            ", 11)
+typeLine("          Miguel Angel          ", 12)
+typeLine("             Boriel             ", 13)
+typeLine(" And everybody in the wonderful ", 15)
+typeLine("    spanish retro community!    ", 16)
+typeLine(spccont, 20)
+
+waitForKey()
+
+stopMusic()
+
+ink 0
+paper 0
+border 0
+cls
+
+print at 12, 0; ink 2; paper 7; bright 1; flash 1; "         START THE TAPE         "
+
+waitForNoKey()
+
+end
+
+sub waitForKey()
+
+asm
+wait_loop:
+ld bc, 32766
+in a, (c)
+and 31
+xor 31
+jp z, wait_loop
+end asm
+
+end sub
+
+
+sub waitForNoKey()
+
+asm
+wait_no_loop:
+ld bc, 32766
+in a, (c)
+and 31
+xor 31
+jp nz, wait_no_loop
+end asm
+
+end sub
+
+'Initialize music
+sub initMusic()
+
+asm
+    push ix
+    call PrepareMusic
+    pop ix
+
+end asm
+
+end sub
+
+'Play loop
+sub playOnInterrupt()
+
+asm
+
+    push ix
+    call PlayMusic
+    pop ix
+    
+end asm
+
+end sub
+
+'stop music
+sub stopMusic()
+
+asm
+
+    push ix
+    call StopMusic
+    pop ix
+
+end asm
+
+end sub
+
+sub typeLowLine(text as string, line as uByte)
+
+	typeLine(text, line + 18)
+
+end sub
+
+sub typeLine(text as string, line as uByte)
+
+	Dim strLen as uByte = len(text)
+	Dim buc as uByte
+
+	for buc = 1 to strLen
+		print at line, buc - 1; paper 0; ink 7; bright 1; text$(buc to buc)
+		if text$(buc to buc) <> " " then playAudio(0)
+		delay()
+	next buc
+	
+end sub
+
+sub clearBottom()
+
+	print at 18, 0; paper 0; ink 7; bright 1; "                                "
+	print at 19, 0; paper 0; ink 7; bright 1; "                                "
+	print at 20, 0; paper 0; ink 7; bright 1; "                                "
+	print at 21, 0; paper 0; ink 7; bright 1; "                                "
+	print at 22, 0; paper 0; ink 7; bright 1; "                                "
+	
+end sub
+
+sub delay()
+
+asm 
+halt
+halt
+halt
+halt
+halt
+end asm
+
+end sub
+
+sub longDelay()
+
+asm 
+halt
+halt
+halt
+halt
+halt
+halt
+halt
+halt
+halt
+halt
+halt
+halt
+halt
+halt
+halt
+halt
+halt
+halt
+halt
+halt
+halt
+halt
+halt
+halt
+halt
+halt
+halt
+halt
+halt
+halt
+end asm
+
+end sub
+
+sub fastcall playAudio(audioEffect as uByte)
+
+asm
+
+playBasic:
+    push ix
+play:
+	ld hl,sfxData	;address of sound effects data
+
+	push ix
+	push iy
+
+	ld b,0
+	ld c,a
+	add hl,bc
+	add hl,bc
+	ld e,(hl)
+	inc hl
+	ld d,(hl)
+	push de
+	pop ix			;put it into ix
+
+	ld a,(23624)	;get border color from BASIC vars to keep it unchanged
+	rra
+	rra
+	rra
+	and 7
+	ld (sfxRoutineToneBorder  +1),a
+	ld (sfxRoutineNoiseBorder +1),a
+	ld (sfxRoutineSampleBorder+1),a
+
+
+readData:
+	ld a,(ix+0)		;read block type
+	ld c,(ix+1)		;read duration 1
+	ld b,(ix+2)
+	ld e,(ix+3)		;read duration 2
+	ld d,(ix+4)
+	push de
+	pop iy
+
+	dec a
+	jr z,sfxRoutineTone
+	dec a
+	jr z,sfxRoutineNoise
+	dec a
+	jr z,sfxRoutineSample
+	pop iy
+	pop ix
+	pop ix
+    jp end_audio
+
+	
+
+;play sample
+
+sfxRoutineSample:
+	ex de,hl
+sfxRS0:
+	ld e,8
+	ld d,(hl)
+	inc hl
+sfxRS1:
+	ld a,(ix+5)
+sfxRS2:
+	dec a
+	jr nz,sfxRS2
+	rl d
+	sbc a,a
+	and 16
+sfxRoutineSampleBorder:
+	or 0
+	out (254),a
+	dec e
+	jr nz,sfxRS1
+	dec bc
+	ld a,b
+	or c
+	jr nz,sfxRS0
+
+	ld c,6
+	
+nextData:
+	add ix,bc		;skip to the next block
+	jr readData
+
+
+
+;generate tone with many parameters
+
+sfxRoutineTone:
+	ld e,(ix+5)		;freq
+	ld d,(ix+6)
+	ld a,(ix+9)		;duty
+	ld (sfxRoutineToneDuty+1),a
+	ld hl,0
+
+sfxRT0:
+	push bc
+	push iy
+	pop bc
+sfxRT1:
+	add hl,de
+	ld a,h
+sfxRoutineToneDuty:
+	cp 0
+	sbc a,a
+	and 16
+sfxRoutineToneBorder:
+	or 0
+	out (254),a
+
+	dec bc
+	ld a,b
+	or c
+	jr nz,sfxRT1
+
+	ld a,(sfxRoutineToneDuty+1)	 ;duty change
+	add a,(ix+10)
+	ld (sfxRoutineToneDuty+1),a
+
+	ld c,(ix+7)		;slide
+	ld b,(ix+8)
+	ex de,hl
+	add hl,bc
+	ex de,hl
+
+	pop bc
+	dec bc
+	ld a,b
+	or c
+	jr nz,sfxRT0
+
+	ld c,11
+	jr nextData
+
+;generate noise with two parameters
+
+sfxRoutineNoise:
+	ld e,(ix+5)		;pitch
+
+	ld d,1
+	ld h,d
+	ld l,d
+sfxRN0:
+	push bc
+	push iy
+	pop bc
+sfxRN1:
+	ld a,(hl)
+	and 16
+sfxRoutineNoiseBorder:
+	or 0
+	out (254),a
+	dec d
+	jr nz,sfxRN2
+	ld d,e
+	inc hl
+	ld a,h
+	and 31
+	ld h,a
+sfxRN2:
+	dec bc
+	ld a,b
+	or c
+	jr nz,sfxRN1
+
+	ld a,e
+	add a,(ix+6)	;slide
+	ld e,a
+
+	pop bc
+	dec bc
+	ld a,b
+	or c
+	jr nz,sfxRN0
+
+	ld c,7
+	jr nextData
+
+
+sfxData:
+
+SoundEffectsData:
+	defw SoundEffect0Data
+
+SoundEffect0Data:
+	defb 2 ;noise
+	defw 5,100,65295
+	defb 0
+
+
+end_audio:
+
+end asm
+
+end sub
+
+asm
+
+PrepareMusic:
+ld hl, HERO_START               ;load your song address
+xor a                           ;subtrack 0
+call PLY_AKG_INIT               ;call initialization routine
+ret
+
+PlayMusic:
+call Interrupt_Setup            ;This function is totally innecessary, just for readability of the code
+ret
+
+StopMusic:
+di                              ;disable interrupts
+call PLY_AKG_STOP               ;stop the player
+IM 1                            ;revert interrupt mode to mode 1
+ei                              ;enable interrupts
+ret
+
+Player:
+;your player+music code
+#include "music.z80asm"         
+
+JP_ADDRESS EQU #FDFD            ;JP address
+
+;IM 2 mode must be used on the spectrum to have a custom interrupt handler.
+;The spectrum architecture makes impossible to know what will be on the bus when an interrupt is executed
+;so the handler must be in an address where it's high and low bytes are equal.
+;To be able to store your interrupt handler anywhere three bytes at an address
+;with that characteristic (FDFD in this case) are reserved and written with "jp Interrupt_Handler"
+
+Interrupt_Handler:
+
+push af                     ;store all registers
+push bc
+push de
+push hl
+push ix
+push iy
+
+exx
+ex af, af'
+
+push af
+push bc
+push de
+push hl
+
+call PLY_AKG_PLAY           ;play music
+
+pop hl                      ;restore all registers
+pop de
+pop bc
+pop af
+
+ex af, af'
+exx
+
+pop iy
+pop ix
+pop hl
+pop de
+pop bc
+pop af
+
+ei                          ;reenable interrupts
+
+ret                         ;return from interrupt handler
+
+.align 256
+Interrupt_Table:            ;interrupt table must be aligned at page boundary
+                            ;with 256 + 1 bytes, all with the same value
+.defs 257
+
+Interrupt_Setup:
+di                          ;Disable interrupts
+ld de, Interrupt_Table      ;load interrupt table address
+ld hl, JP_ADDRESS           ;load "JP" address
+ld a, d
+ld i, a                     ;load I with the interrupt table high byte
+ld a, l                     ;load a with lower byte of JP address (indifferent to use H or L, both must be equal)
+Interrupt_Table_Loop:
+ld (de), a                  ;fill the table
+inc e
+jr nz, Interrupt_Table_Loop
+inc d                       ;write the 257th byte of the table
+ld (de), a
+ld (hl), #C3                ;write JP
+inc l
+ld (hl), low(Interrupt_Handler) ;write interrupt handler address
+inc l
+ld (hl), high(Interrupt_Handler)
+im 2                        ;set interrupt mode to 2
+ei                          ;enable interrupts
+ret
+
+end asm

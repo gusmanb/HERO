@@ -1,0 +1,5 @@
+{
+  "DefaultTapeFile": "TapeFiles\\nivel_prueba.tap",
+  "DefaultAnnotationFile": "Annotations.disann",
+  "DefaultCodeFile": "ZxBasicFiles\\HERO.zxbas"
+}
