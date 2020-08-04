@@ -7,7 +7,7 @@ Dim tableCP(384) as uInteger
 
 asm
 
-    ld hl, ZXBASIC_MEM_HEAP
+    ld hl, ZXBASIC_USER_DATA_END
 
 end asm
 

@@ -16,9 +16,39 @@ __START_PROGRAM:
 	call __MEM_INIT
 	call __PRINT_INIT
 #line 7
-		ld hl, ZXBASIC_MEM_HEAP
+		ld hl, ZXBASIC_USER_DATA_END
 #line 8
-	ld hl, __LABEL0
+	ld de, __LABEL0
+	ld hl, _initials.__DATA__ + 0
+	call __STORE_STR
+	ld de, __LABEL1
+	ld hl, _initials.__DATA__ + 2
+	call __STORE_STR
+	ld de, __LABEL2
+	ld hl, _initials.__DATA__ + 4
+	call __STORE_STR
+	ld de, __LABEL3
+	ld hl, _initials.__DATA__ + 6
+	call __STORE_STR
+	ld de, __LABEL4
+	ld hl, _initials.__DATA__ + 8
+	call __STORE_STR
+	ld de, __LABEL5
+	ld hl, _initials.__DATA__ + 10
+	call __STORE_STR
+	ld de, __LABEL6
+	ld hl, _initials.__DATA__ + 12
+	call __STORE_STR
+	ld de, __LABEL7
+	ld hl, _initials.__DATA__ + 14
+	call __STORE_STR
+	ld de, __LABEL8
+	ld hl, _initials.__DATA__ + 16
+	call __STORE_STR
+	ld de, __LABEL9
+	ld hl, _initials.__DATA__ + 18
+	call __STORE_STR
+	ld hl, __LABEL10
 	call __LOADSTR
 	push hl
 	ld hl, 24200
@@ -29,18 +59,18 @@ __START_PROGRAM:
 	push af
 	call LOAD_CODE
 	call _initTable
-#line 2493
+#line 2684
 		di
-		IM 0
+		IM 1
 		ei
 		di
-#line 2497
+#line 2688
 	xor a
 	call BORDER
-__LABEL1:
+__LABEL11:
 	ld a, (_state)
 	or a
-	jp nz, __LABEL3
+	jp nz, __LABEL13
 	call _intro
 	ld a, 1
 	ld (_state), a
@@ -70,11 +100,11 @@ __LABEL1:
 	ld (_levelNr), a
 	ld a, 1
 	ld (_continues), a
-	jp __LABEL4
-__LABEL3:
+	jp __LABEL14
+__LABEL13:
 	ld a, (_state)
 	dec a
-	jp nz, __LABEL5
+	jp nz, __LABEL15
 	xor a
 	ld (_lampX), a
 	xor a
@@ -97,12 +127,12 @@ __LABEL3:
 	ld (_activeEnemies), a
 	ld a, (_entryScreen)
 	or a
-	jp z, __LABEL7
+	jp z, __LABEL17
 	call _entrance
-	jp __LABEL8
-__LABEL7:
+	jp __LABEL18
+__LABEL17:
 	call _decodeCurrentScreen
-__LABEL8:
+__LABEL18:
 	xor a
 	ld (_updateResult), a
 	ld a, (_playerX)
@@ -135,18 +165,18 @@ __LABEL8:
 	call _dumpScreenCenter
 	ld a, 2
 	ld (_state), a
-	jp __LABEL6
-__LABEL5:
+	jp __LABEL16
+__LABEL15:
 	ld a, (_state)
 	sub 2
-	jp nz, __LABEL9
+	jp nz, __LABEL19
 	ld hl, _frameCounter
 	inc (hl)
 	xor a
 	ld (_updateResult), a
 	ld a, (_practice)
 	or a
-	jp nz, __LABEL12
+	jp nz, __LABEL22
 	ld hl, (_power)
 	dec hl
 	ld (_power), hl
@@ -158,7 +188,7 @@ __LABEL5:
 	pop hl
 	or a
 	sbc hl, de
-	jp nz, __LABEL14
+	jp nz, __LABEL24
 	ld hl, (_power)
 	ld de, 512
 	call __DIVU16
@@ -178,9 +208,9 @@ __LABEL5:
 	or a
 	sbc hl, de
 	jp z, __LABEL__forceDeath
-__LABEL16:
-__LABEL14:
-__LABEL12:
+__LABEL26:
+__LABEL24:
+__LABEL22:
 	call _movePlayer
 	ld h, a
 	ld a, (_updateResult)
@@ -195,14 +225,14 @@ __LABEL12:
 	call _checkLight
 	ld a, (_updateResult)
 	or a
-	jp nz, __LABEL18
+	jp nz, __LABEL28
 	call _checkDynamite
 	ld (_updateResult), a
-__LABEL18:
+__LABEL28:
 	call _render
 	ld a, (_updateResult)
 	dec a
-	jp nz, __LABEL19
+	jp nz, __LABEL29
 	call _processDeath
 	ld (_updateResult), a
 __LABEL__forceDeath:
@@ -214,7 +244,7 @@ __LABEL__forceDeath:
 	ld (_playerDir), a
 	ld a, (_dynaCounter)
 	sub 255
-	jp z, __LABEL22
+	jp z, __LABEL32
 	ld a, 255
 	ld (_dynaCounter), a
 	ld a, (_dynaX)
@@ -227,26 +257,26 @@ __LABEL__forceDeath:
 	push hl
 	ld hl, (_lastDyna)
 	call _drawSprite
-__LABEL22:
+__LABEL32:
 	ld a, (_playerDir)
 	dec a
-	jp nz, __LABEL23
+	jp nz, __LABEL33
 	ld hl, _head1l.__DATA__
 	ld (_lastHead), hl
 	ld hl, _body2l.__DATA__
 	ld (_lastBody), hl
-	jp __LABEL24
-__LABEL23:
+	jp __LABEL34
+__LABEL33:
 	ld hl, _head1r.__DATA__
 	ld (_lastHead), hl
 	ld hl, _body2r.__DATA__
 	ld (_lastBody), hl
-__LABEL24:
+__LABEL34:
 	ld a, 1
 	ld (_lightOn), a
 	ld a, (_updateResult)
 	or a
-	jp z, __LABEL25
+	jp z, __LABEL35
 	ld a, (_playerX)
 	ld l, a
 	ld h, 0
@@ -269,33 +299,33 @@ __LABEL24:
 	ld hl, (_lastBody)
 	call _drawSprite
 	call _dumpScreenCenter
-	jp __LABEL26
-__LABEL25:
+	jp __LABEL36
+__LABEL35:
 	call _gameOver
 	ld (_state), a
-__LABEL26:
-	jp __LABEL20
-__LABEL19:
+__LABEL36:
+	jp __LABEL30
+__LABEL29:
 	ld a, (_updateResult)
 	sub 2
-	jp nz, __LABEL27
+	jp nz, __LABEL37
 	ld a, 4
 	ld (_state), a
-	jp __LABEL28
-__LABEL27:
+	jp __LABEL38
+__LABEL37:
 	ld a, (_updateResult)
 	sub 3
-	jp nz, __LABEL30
+	jp nz, __LABEL40
 	ld a, 3
 	ld (_state), a
+__LABEL40:
+__LABEL38:
 __LABEL30:
-__LABEL28:
-__LABEL20:
-	jp __LABEL10
-__LABEL9:
+	jp __LABEL20
+__LABEL19:
 	ld a, (_state)
 	sub 3
-	jp nz, __LABEL31
+	jp nz, __LABEL41
 	call _personSaved
 	ld hl, (_power)
 	ld de, 10
@@ -324,8 +354,8 @@ __LABEL9:
 	inc (hl)
 	ld a, 1
 	ld (_tmpX), a
-	jp __LABEL33
-__LABEL36:
+	jp __LABEL43
+__LABEL46:
 	xor a
 	push af
 	ld a, 1
@@ -342,19 +372,19 @@ __LABEL36:
 	ld a, 21
 	push af
 	call _setattr
-__LABEL37:
+__LABEL47:
 	ld hl, _tmpX
 	inc (hl)
-__LABEL33:
+__LABEL43:
 	ld a, 4
 	ld hl, (_tmpX - 1)
 	cp h
-	jp nc, __LABEL36
-__LABEL35:
+	jp nc, __LABEL46
+__LABEL45:
 	ld a, 1
 	ld (_tmpX), a
-	jp __LABEL38
-__LABEL41:
+	jp __LABEL48
+__LABEL51:
 	xor a
 	push af
 	ld a, 1
@@ -370,15 +400,15 @@ __LABEL41:
 	ld a, 19
 	push af
 	call _setattr
-__LABEL42:
+__LABEL52:
 	ld hl, _tmpX
 	inc (hl)
-__LABEL38:
+__LABEL48:
 	ld a, 10
 	ld hl, (_tmpX - 1)
 	cp h
-	jp nc, __LABEL41
-__LABEL40:
+	jp nc, __LABEL51
+__LABEL50:
 	ld hl, (_currentMapIndex)
 	dec hl
 	push hl
@@ -386,16 +416,16 @@ __LABEL40:
 	call __ARRAY
 	ld a, (hl)
 	or a
-	jp nz, __LABEL44
+	jp nz, __LABEL54
 	call _presentEnd
 	xor a
 	ld (_state), a
-__LABEL44:
-	jp __LABEL32
-__LABEL31:
+__LABEL54:
+	jp __LABEL42
+__LABEL41:
 	ld a, (_state)
 	sub 4
-	jp nz, __LABEL46
+	jp nz, __LABEL56
 	xor a
 	ld (_exitResult), a
 	ld a, (_currentMapExit)
@@ -409,17 +439,17 @@ __LABEL31:
 	ld h, a
 	pop af
 	or a
-	jr z, __LABEL663
+	jr z, __LABEL746
 	ld a, h
-__LABEL663:
+__LABEL746:
 	or a
-	jp z, __LABEL47
+	jp z, __LABEL57
 	ld a, 136
 	ld (_playerY), a
 	ld a, 1
 	ld (_exitResult), a
-	jp __LABEL48
-__LABEL47:
+	jp __LABEL58
+__LABEL57:
 	ld a, (_currentMapExit)
 	dec a
 	sub 1
@@ -432,17 +462,17 @@ __LABEL47:
 	ld h, a
 	pop af
 	or a
-	jr z, __LABEL664
+	jr z, __LABEL747
 	ld a, h
-__LABEL664:
+__LABEL747:
 	or a
-	jp z, __LABEL49
+	jp z, __LABEL59
 	ld a, 40
 	ld (_playerY), a
 	ld a, 1
 	ld (_exitResult), a
-	jp __LABEL50
-__LABEL49:
+	jp __LABEL60
+__LABEL59:
 	ld a, (_currentMapExit)
 	sub 2
 	sub 1
@@ -454,17 +484,17 @@ __LABEL49:
 	ld h, a
 	pop af
 	or a
-	jr z, __LABEL665
+	jr z, __LABEL748
 	ld a, h
-__LABEL665:
+__LABEL748:
 	or a
-	jp z, __LABEL51
+	jp z, __LABEL61
 	ld a, 248
 	ld (_playerX), a
 	ld a, 1
 	ld (_exitResult), a
-	jp __LABEL52
-__LABEL51:
+	jp __LABEL62
+__LABEL61:
 	ld a, (_currentMapExit)
 	sub 3
 	sub 1
@@ -477,90 +507,90 @@ __LABEL51:
 	ld h, a
 	pop af
 	or a
-	jr z, __LABEL666
+	jr z, __LABEL749
 	ld a, h
-__LABEL666:
+__LABEL749:
 	or a
-	jp z, __LABEL53
+	jp z, __LABEL63
 	xor a
 	ld (_playerX), a
 	ld a, 1
 	ld (_exitResult), a
-	jp __LABEL54
-__LABEL53:
+	jp __LABEL64
+__LABEL63:
 	ld a, (_playerY)
 	sub 40
-	jp nz, __LABEL55
+	jp nz, __LABEL65
 	ld a, 136
 	ld (_playerY), a
-	jp __LABEL56
-__LABEL55:
+	jp __LABEL66
+__LABEL65:
 	ld a, (_playerY)
 	sub 136
-	jp nz, __LABEL57
+	jp nz, __LABEL67
 	ld a, 40
 	ld (_playerY), a
-	jp __LABEL58
-__LABEL57:
+	jp __LABEL68
+__LABEL67:
 	ld a, (_playerX)
 	or a
-	jp nz, __LABEL59
+	jp nz, __LABEL69
 	ld a, 248
 	ld (_playerX), a
-	jp __LABEL60
-__LABEL59:
+	jp __LABEL70
+__LABEL69:
 	ld a, (_playerX)
 	sub 248
-	jp nz, __LABEL62
+	jp nz, __LABEL72
 	xor a
 	ld (_playerX), a
+__LABEL72:
+__LABEL70:
+__LABEL68:
+__LABEL66:
+__LABEL64:
 __LABEL62:
 __LABEL60:
 __LABEL58:
-__LABEL56:
-__LABEL54:
-__LABEL52:
-__LABEL50:
-__LABEL48:
 	ld a, (_exitResult)
 	dec a
-	jp nz, __LABEL63
+	jp nz, __LABEL73
 	ld a, (_entryScreen)
 	or a
-	jp z, __LABEL65
+	jp z, __LABEL75
 	xor a
 	ld (_entryScreen), a
-	jp __LABEL66
-__LABEL65:
+	jp __LABEL76
+__LABEL75:
 	ld hl, (_currentMapIndex)
 	inc hl
 	ld (_currentMapIndex), hl
-__LABEL66:
-	jp __LABEL64
-__LABEL63:
+__LABEL76:
+	jp __LABEL74
+__LABEL73:
 	ld de, (_currentMapIndex)
 	ld hl, (_currentEntryIndex)
 	or a
 	sbc hl, de
-	jp nz, __LABEL67
+	jp nz, __LABEL77
 	ld a, 1
 	ld (_entryScreen), a
-	jp __LABEL68
-__LABEL67:
+	jp __LABEL78
+__LABEL77:
 	ld hl, (_currentMapIndex)
 	dec hl
 	ld (_currentMapIndex), hl
-__LABEL68:
-__LABEL64:
+__LABEL78:
+__LABEL74:
 	ld a, 1
 	ld (_state), a
-__LABEL46:
-__LABEL32:
-__LABEL10:
-__LABEL6:
-__LABEL4:
-	jp __LABEL1
-__LABEL2:
+__LABEL56:
+__LABEL42:
+__LABEL20:
+__LABEL16:
+__LABEL14:
+	jp __LABEL11
+__LABEL12:
 	ld hl, 0
 	ld b, h
 	ld c, l
@@ -640,8 +670,8 @@ _printRepeatColorChar:
 	inc sp
 	ld a, (ix+9)
 	ld (ix-1), a
-	jp __LABEL69
-__LABEL72:
+	jp __LABEL79
+__LABEL82:
 	ld a, (ix+13)
 	ld l, a
 	ld h, 0
@@ -657,17 +687,17 @@ __LABEL72:
 	ld l, (ix+4)
 	ld h, (ix+5)
 	call _printColorChar
-__LABEL73:
+__LABEL83:
 	inc (ix-1)
-__LABEL69:
+__LABEL79:
 	ld a, (ix-1)
 	push af
 	ld a, (ix+9)
 	add a, (ix+11)
 	pop hl
 	cp h
-	jp nc, __LABEL72
-__LABEL71:
+	jp nc, __LABEL82
+__LABEL81:
 _printRepeatColorChar__leave:
 	ld sp, ix
 	pop ix
@@ -737,8 +767,8 @@ _printZXString:
 	inc sp
 	ld a, (ix+9)
 	ld (ix-1), a
-	jp __LABEL74
-__LABEL77:
+	jp __LABEL84
+__LABEL87:
 	ld l, (ix+4)
 	ld h, (ix+5)
 	push hl
@@ -788,9 +818,9 @@ __LABEL77:
 	ld l, (ix-3)
 	ld h, (ix-2)
 	call _printColorChar
-__LABEL78:
+__LABEL88:
 	inc (ix-1)
-__LABEL74:
+__LABEL84:
 	ld a, (ix-1)
 	push af
 	ld a, (ix+9)
@@ -807,8 +837,8 @@ __LABEL74:
 	ld a, l
 	pop hl
 	cp h
-	jp nc, __LABEL77
-__LABEL76:
+	jp nc, __LABEL87
+__LABEL86:
 _printZXString__leave:
 	ex af, af'
 	exx
@@ -2230,46 +2260,524 @@ _attraddr:
 #line 102
 _attraddr__leave:
 	ret
+_inputHighScore:
+	push ix
+	ld ix, 0
+	add ix, sp
+	ld hl, 0
+	push hl
+	ld a, 7
+	call INK
+	call COPY_ATTR
+	xor a
+	call PAPER
+	call COPY_ATTR
+	xor a
+	call BORDER
+	call CLS
+	ld a, 65
+	ld (_tmpX), a
+	xor a
+	ld (_tmpY), a
+	ld de, __LABEL10
+	ld bc, -2
+	call __PSTORE_STR
+	ld a, 1
+	push af
+	ld a, 6
+	call PRINT_AT
+	ld hl, __LABEL89
+	xor a
+	call __PRINTSTR
+	call PRINT_EOL
+	ld a, 10
+	push af
+	ld a, 7
+	call PRINT_AT
+	ld hl, __LABEL90
+	xor a
+	call __PRINTSTR
+	call PRINT_EOL
+	ld a, 14
+	push af
+	ld a, 12
+	call PRINT_AT
+	ld hl, __LABEL91
+	xor a
+	call __PRINTSTR
+	call PRINT_EOL
+__LABEL92:
+	ld a, (_tmpY)
+	cp 3
+	jp nc, __LABEL93
+	ld a, 13
+	push af
+	ld a, (_tmpY)
+	add a, a
+	add a, a
+	add a, 12
+	call PRINT_AT
+	ld a, (_tmpX)
+	push af
+	ld hl, 1
+	call CHR
+	ld a, 1
+	call __PRINTSTR
+	call PRINT_EOL
+	call _keybScan
+	ld a, (_keyStates.__DATA__ + 2)
+	or a
+	jp z, __LABEL94
+	ld hl, _tmpX
+	dec (hl)
+	ld a, (_tmpX)
+	cp 65
+	jp nc, __LABEL97
+	ld a, 122
+	ld (_tmpX), a
+__LABEL97:
+	jp __LABEL95
+__LABEL94:
+	ld a, (_keyStates.__DATA__ + 3)
+	or a
+	jp z, __LABEL98
+	ld hl, _tmpX
+	inc (hl)
+	ld a, 122
+	ld hl, (_tmpX - 1)
+	cp h
+	jp nc, __LABEL101
+	ld a, 65
+	ld (_tmpX), a
+__LABEL101:
+	jp __LABEL99
+__LABEL98:
+	ld a, (_keyStates.__DATA__ + 4)
+	dec a
+	jp nz, __LABEL102
+	ld hl, _tmpY
+	inc (hl)
+	ld l, (ix-2)
+	ld h, (ix-1)
+	push hl
+	ld a, (_tmpX)
+	push af
+	ld hl, 1
+	call CHR
+	ex de, hl
+	pop hl
+	push de
+	call __ADDSTR
+	ex (sp), hl
+	call __MEM_FREE
+	pop hl
+	ld d, h
+	ld e, l
+	ld bc, -2
+	call __PSTORE_STR2
+	ld a, 65
+	ld (_tmpX), a
+	jp __LABEL103
+__LABEL102:
+	ld a, (_keyStates.__DATA__ + 4)
+	sub 2
+	jp nz, __LABEL105
+	xor a
+	ld hl, (_tmpY - 1)
+	cp h
+	jp nc, __LABEL107
+	ld a, 13
+	push af
+	ld a, (_tmpY)
+	add a, a
+	add a, a
+	add a, 12
+	call PRINT_AT
+	ld hl, __LABEL108
+	xor a
+	call __PRINTSTR
+	call PRINT_EOL
+	ld a, 65
+	ld (_tmpX), a
+	ld hl, _tmpY
+	dec (hl)
+	ld l, (ix-2)
+	ld h, (ix-1)
+	push hl
+	ld hl, 0
+	push hl
+	ld a, (_tmpY)
+	ld l, a
+	ld h, 0
+	dec hl
+	push hl
+	xor a
+	call __STRSLICE
+	ld d, h
+	ld e, l
+	ld bc, -2
+	call __PSTORE_STR2
+__LABEL107:
+__LABEL105:
+__LABEL103:
+__LABEL99:
+__LABEL95:
+__LABEL109:
+	ld a, (_keyStates.__DATA__ + 2)
+	ld hl, (_keyStates.__DATA__ + 3 - 1)
+	or h
+	ld hl, (_keyStates.__DATA__ + 4 - 1)
+	or h
+	jp z, __LABEL110
+	call _keybScan
+	jp __LABEL109
+__LABEL110:
+	jp __LABEL92
+__LABEL93:
+	ld a, 10
+	ld (_tmpX), a
+	ld a, 9
+	ld (_tmpY), a
+	jp __LABEL111
+__LABEL114:
+	ld a, (_tmpY)
+	ld l, a
+	ld h, 0
+	dec hl
+	push hl
+	ld hl, _highScores
+	call __ARRAY
+	ld e, (hl)
+	inc hl
+	ld d, (hl)
+	ex de, hl
+	ld de, (_score)
+	or a
+	sbc hl, de
+	jp nc, __LABEL116
+	ld a, (_tmpY)
+	ld (_tmpX), a
+	jp __LABEL117
+__LABEL116:
+	jp __LABEL113
+__LABEL117:
+__LABEL115:
+	ld hl, _tmpY
+	dec (hl)
+__LABEL111:
+	ld a, (_tmpY)
+	cp 1
+	jp nc, __LABEL114
+__LABEL113:
+	ld a, (_tmpX)
+	cp 10
+	jp nc, __LABEL119
+	ld a, 9
+	ld (_tmpY), a
+	jp __LABEL120
+__LABEL123:
+	ld a, (_tmpY)
+	ld l, a
+	ld h, 0
+	dec hl
+	push hl
+	ld hl, _highScores
+	call __ARRAY
+	ld e, (hl)
+	inc hl
+	ld d, (hl)
+	ex de, hl
+	push hl
+	ld a, (_tmpY)
+	inc a
+	ld l, a
+	ld h, 0
+	dec hl
+	push hl
+	ld hl, _highScores
+	call __ARRAY
+	pop de
+	ld (hl), e
+	inc hl
+	ld (hl), d
+	ld a, (_tmpY)
+	ld l, a
+	ld h, 0
+	dec hl
+	push hl
+	ld hl, _initials
+	call __ARRAY
+	call __ILOADSTR
+	push hl
+	ld a, (_tmpY)
+	inc a
+	ld l, a
+	ld h, 0
+	dec hl
+	push hl
+	ld hl, _initials
+	call __ARRAY
+	pop de
+	call __STORE_STR2
+__LABEL124:
+	ld hl, _tmpY
+	dec (hl)
+__LABEL120:
+	ld hl, (_tmpX - 1)
+	ld a, (_tmpY)
+	cp h
+	jp nc, __LABEL123
+__LABEL122:
+__LABEL119:
+	ld a, (_tmpX)
+	ld l, a
+	ld h, 0
+	dec hl
+	push hl
+	ld hl, _highScores
+	call __ARRAY
+	ld de, (_score)
+	ld (hl), e
+	inc hl
+	ld (hl), d
+	ld l, (ix-2)
+	ld h, (ix-1)
+	push hl
+	ld a, (_tmpX)
+	ld l, a
+	ld h, 0
+	dec hl
+	push hl
+	ld hl, _initials
+	call __ARRAY
+	pop de
+	call __STORE_STR
+_inputHighScore__leave:
+	ex af, af'
+	exx
+	ld l, (ix-2)
+	ld h, (ix-1)
+	call __MEM_FREE
+	ex af, af'
+	exx
+	ld sp, ix
+	pop ix
+	ret
+_showScores:
+	push ix
+	ld ix, 0
+	add ix, sp
+	ld hl, 0
+	push hl
+	ld a, 7
+	call INK
+	call COPY_ATTR
+	xor a
+	call PAPER
+	call COPY_ATTR
+	xor a
+	call BORDER
+	call CLS
+	ld a, 1
+	push af
+	ld a, 10
+	call PRINT_AT
+	ld hl, __LABEL125
+	xor a
+	call __PRINTSTR
+	call PRINT_EOL
+	ld a, 1
+	ld (_tmpX), a
+	jp __LABEL126
+__LABEL129:
+	ld a, (_tmpX)
+	ld l, a
+	ld h, 0
+	dec hl
+	push hl
+	ld hl, _highScores
+	call __ARRAY
+	ld e, (hl)
+	inc hl
+	ld d, (hl)
+	ex de, hl
+	ld de, 0
+	call __U32TOFREG
+	call __STR_FAST
+	ld d, h
+	ld e, l
+	ld bc, -2
+	call __PSTORE_STR2
+__LABEL131:
+	ld l, (ix-2)
+	ld h, (ix-1)
+	call __STRLEN
+	push hl
+	ld de, 5
+	pop hl
+	or a
+	sbc hl, de
+	jp nc, __LABEL132
+	ld l, (ix-2)
+	ld h, (ix-1)
+	ex de, hl
+	ld hl, __LABEL133
+	call __ADDSTR
+	ld d, h
+	ld e, l
+	ld bc, -2
+	call __PSTORE_STR2
+	jp __LABEL131
+__LABEL132:
+	ld a, (_tmpX)
+	add a, a
+	add a, 2
+	push af
+	ld a, 4
+	call PRINT_AT
+	ld a, (_tmpX)
+	ld l, a
+	ld h, 0
+	dec hl
+	push hl
+	ld hl, _initials
+	call __ARRAY
+	call __ILOADSTR
+	ld a, 1
+	call __PRINTSTR
+	ld hl, __LABEL134
+	xor a
+	call __PRINTSTR
+	ld l, (ix-2)
+	ld h, (ix-1)
+	xor a
+	call __PRINTSTR
+	call PRINT_EOL_ATTR
+__LABEL130:
+	ld hl, _tmpX
+	inc (hl)
+__LABEL126:
+	ld a, 10
+	ld hl, (_tmpX - 1)
+	cp h
+	jp nc, __LABEL129
+__LABEL128:
+_showScores__leave:
+	ex af, af'
+	exx
+	ld l, (ix-2)
+	ld h, (ix-1)
+	call __MEM_FREE
+	ex af, af'
+	exx
+	ld sp, ix
+	pop ix
+	ret
 _waitSpace:
 	push ix
 	ld ix, 0
 	add ix, sp
-#line 224
+#line 333
 		ei
-#line 225
+#line 334
 	xor a
 	ld (_keyStates.__DATA__ + 4), a
-__LABEL79:
+__LABEL135:
 	ld a, (_keyStates.__DATA__ + 4)
 	or a
-	jp nz, __LABEL80
+	jp nz, __LABEL136
 	call _keybScan
 	ld a, (_keyStates.__DATA__ + 4)
 	dec a
-	jp nz, __LABEL81
+	jp nz, __LABEL137
 	xor a
 	ld (_practice), a
-	jp __LABEL82
-__LABEL81:
+	jp __LABEL138
+__LABEL137:
 	ld a, (_keyStates.__DATA__ + 4)
 	sub 17
-	jp nz, __LABEL83
+	jp nz, __LABEL139
 	ld a, 1
 	ld (_practice), a
-	jp __LABEL84
-__LABEL83:
+	jp __LABEL140
+__LABEL139:
 	xor a
 	ld (_keyStates.__DATA__ + 4), a
-__LABEL84:
-__LABEL82:
-	jp __LABEL79
-__LABEL80:
-#line 239
+__LABEL140:
+__LABEL138:
+	jp __LABEL135
+__LABEL136:
+#line 348
 		di
-#line 240
+#line 349
 _waitSpace__leave:
 	ld sp, ix
 	pop ix
+	ret
+_waitSpaceUntil:
+	push ix
+	ld ix, 0
+	add ix, sp
+#line 356
+		ei
+#line 357
+	xor a
+	ld (_keyStates.__DATA__ + 4), a
+__LABEL141:
+	ld a, (_keyStates.__DATA__ + 4)
+	or a
+	jp nz, __LABEL142
+	call _keybScan
+	ld a, (_keyStates.__DATA__ + 4)
+	dec a
+	jp nz, __LABEL143
+	xor a
+	ld (_practice), a
+	jp __LABEL144
+__LABEL143:
+	ld a, (_keyStates.__DATA__ + 4)
+	sub 17
+	jp nz, __LABEL145
+	ld a, 1
+	ld (_practice), a
+	jp __LABEL146
+__LABEL145:
+	xor a
+	ld (_keyStates.__DATA__ + 4), a
+	ld l, (ix+4)
+	ld h, (ix+5)
+	dec hl
+	ld (ix+4), l
+	ld (ix+5), h
+	ld l, (ix+4)
+	ld h, (ix+5)
+	push hl
+	ld de, 0
+	pop hl
+	or a
+	sbc hl, de
+	jp nz, __LABEL148
+#line 373
+		di
+#line 374
+	xor a
+	jp _waitSpaceUntil__leave
+__LABEL148:
+__LABEL146:
+__LABEL144:
+	jp __LABEL141
+__LABEL142:
+#line 381
+		di
+#line 382
+	ld a, 1
+_waitSpaceUntil__leave:
+	ld sp, ix
+	pop ix
+	exx
+	pop hl
+	ex (sp), hl
+	exx
 	ret
 _title:
 	push ix
@@ -2369,9 +2877,9 @@ _title:
 	call _dumpScreenTop
 	ld a, 7
 	call _playAudio
-#line 264
+#line 408
 		di
-#line 265
+#line 409
 	ld a, (ix-1)
 	ld l, a
 	ld h, 0
@@ -2475,9 +2983,9 @@ _title:
 	call _dumpScreenTop
 	ld a, 7
 	call _playAudio
-#line 284
+#line 428
 		di
-#line 285
+#line 429
 	ld a, (ix-1)
 	ld l, a
 	ld h, 0
@@ -2581,9 +3089,9 @@ _title:
 	call _dumpScreenTop
 	ld a, 7
 	call _playAudio
-#line 304
+#line 448
 		di
-#line 305
+#line 449
 	ld a, (ix-1)
 	ld l, a
 	ld h, 0
@@ -2677,41 +3185,59 @@ _title:
 	call _dumpScreenTop
 	ld a, 7
 	call _playAudio
-#line 323
+#line 467
 		di
-#line 324
+#line 468
 	ld a, 1
 	ld (_tmpX), a
-	jp __LABEL85
-__LABEL88:
+	jp __LABEL149
+__LABEL152:
 	ld a, (_tmpX)
 	push af
 	ld a, 9
 	push af
 	ld a, 5
 	push af
-	ld hl, __LABEL90
+	ld hl, __LABEL154
 	call __LOADSTR
 	push hl
 	call _printZXString
 	call _dumpScreenTop
-#line 332
+#line 476
 		ei
 		halt
 		halt
 		halt
 		halt
 		di
-#line 338
-__LABEL89:
+#line 482
+__LABEL153:
 	ld hl, _tmpX
 	inc (hl)
-__LABEL85:
+__LABEL149:
 	ld a, 7
 	ld hl, (_tmpX - 1)
 	cp h
-	jp nc, __LABEL88
-__LABEL87:
+	jp nc, __LABEL152
+__LABEL151:
+	ld a, 1
+	push af
+	ld a, 1
+	push af
+	ld a, 5
+	push af
+	xor a
+	call _createAttrib
+	push af
+	ld a, 9
+	push af
+	ld a, 11
+	push af
+	ld hl, __LABEL155
+	call __LOADSTR
+	push hl
+	call _printZXString
+	call _dumpScreenCenter
 _title__leave:
 	ld sp, ix
 	pop ix
@@ -2752,8 +3278,8 @@ _interface:
 	ld (ix-1), a
 	xor a
 	ld (_tmpX), a
-	jp __LABEL91
-__LABEL94:
+	jp __LABEL156
+__LABEL159:
 	ld a, (ix-1)
 	ld l, a
 	ld h, 0
@@ -2778,16 +3304,16 @@ __LABEL94:
 	push hl
 	ld hl, _body1r.__DATA__
 	call _printColorChar
-__LABEL95:
+__LABEL160:
 	ld a, (_tmpX)
 	add a, 2
 	ld (_tmpX), a
-__LABEL91:
+__LABEL156:
 	ld a, 6
 	ld hl, (_tmpX - 1)
 	cp h
-	jp nc, __LABEL94
-__LABEL93:
+	jp nc, __LABEL159
+__LABEL158:
 	xor a
 	push af
 	ld a, 1
@@ -2850,7 +3376,7 @@ __LABEL93:
 	push af
 	ld a, 19
 	push af
-	ld hl, __LABEL96
+	ld hl, __LABEL161
 	call __LOADSTR
 	push hl
 	call _printZXString
@@ -2860,7 +3386,7 @@ __LABEL93:
 	push af
 	ld a, 19
 	push af
-	ld hl, __LABEL97
+	ld hl, __LABEL162
 	call __LOADSTR
 	push hl
 	call _printZXString
@@ -2870,7 +3396,7 @@ __LABEL93:
 	push af
 	ld a, 19
 	push af
-	ld hl, __LABEL98
+	ld hl, __LABEL163
 	call __LOADSTR
 	push hl
 	call _printZXString
@@ -2880,7 +3406,7 @@ __LABEL93:
 	push af
 	ld a, 23
 	push af
-	ld hl, __LABEL99
+	ld hl, __LABEL164
 	call __LOADSTR
 	push hl
 	call _printZXString
@@ -2890,7 +3416,7 @@ __LABEL93:
 	push af
 	ld a, 21
 	push af
-	ld hl, __LABEL100
+	ld hl, __LABEL165
 	call __LOADSTR
 	push hl
 	call _printZXString
@@ -2909,40 +3435,42 @@ _intro:
 	ld bc, -1
 	add hl, bc
 	ex de, hl
-	ld hl, __LABEL667
+	ld hl, __LABEL750
 	ld bc, 1
 	ldir
-#line 403
+#line 528
 		ei
 		halt
 		di
-#line 406
+#line 531
+__LABEL166:
+	ld a, (_showHighScore)
+	or a
+	jp z, __LABEL170
+	call _showScores
+	ld hl, 30000
+	push hl
+	call _waitSpaceUntil
+__LABEL170:
+	ld a, 1
+	ld (_showHighScore), a
 	xor a
 	call _clearScreen
 	call _dumpScreen
 	call _title
-	ld a, 1
-	push af
-	ld a, 1
-	push af
-	ld a, 5
-	push af
-	xor a
-	call _createAttrib
-	push af
-	ld a, 9
-	push af
-	ld a, 11
-	push af
-	ld hl, __LABEL101
-	call __LOADSTR
+__LABEL168:
+	ld hl, 60000
 	push hl
-	call _printZXString
-#line 416
+	call _waitSpaceUntil
+	or a
+	jp z, __LABEL166
+__LABEL167:
+#line 552
 		ei
+		nop
 		halt
 		di
-#line 419
+#line 556
 	call _dumpScreen
 	call _waitSpace
 	call _interface
@@ -2957,23 +3485,23 @@ _transformSolids:
 	add ix, sp
 	ld a, (ix+5)
 	dec a
-	jp nz, __LABEL102
+	jp nz, __LABEL171
 	ld hl, _pattern1.__DATA__
 	ld (_tmpPattern), hl
-	jp __LABEL103
-__LABEL102:
+	jp __LABEL172
+__LABEL171:
 	ld a, (ix+5)
 	sub 2
-	jp nz, __LABEL104
+	jp nz, __LABEL173
 	ld hl, _pattern2.__DATA__
 	ld (_tmpPattern), hl
-	jp __LABEL105
-__LABEL104:
+	jp __LABEL174
+__LABEL173:
 	ld hl, _pattern3.__DATA__
 	ld (_tmpPattern), hl
-__LABEL105:
-__LABEL103:
-#line 444
+__LABEL174:
+__LABEL172:
+#line 581
 		push ix
 		ld hl, _wallt.__DATA__
 		ld hl, solidTable
@@ -3022,7 +3550,7 @@ solidTable:
 solidTransformEnd:
 		pop hl
 		pop ix
-#line 492
+#line 629
 _transformSolids__leave:
 	ld sp, ix
 	pop ix
@@ -3086,9 +3614,9 @@ _decodeCurrentScreen:
 	ld (_emptyAttrib), a
 	ld a, (ix-2)
 	ld b, 6
-__LABEL668:
+__LABEL751:
 	srl a
-	djnz __LABEL668
+	djnz __LABEL751
 	push af
 	ld h, 3
 	pop af
@@ -3161,23 +3689,23 @@ __LABEL668:
 	ld (ix-6), a
 	ld a, (ix-2)
 	ld b, 6
-__LABEL669:
+__LABEL752:
 	srl a
-	djnz __LABEL669
+	djnz __LABEL752
 	push af
 	ld h, 3
 	pop af
 	and h
 	ld (_tmpX), a
 	or a
-	jp z, __LABEL107
+	jp z, __LABEL176
 	ld a, (_tmpX)
 	push af
 	call _transformSolids
-__LABEL107:
+__LABEL176:
 	ld (ix-1), 1
-	jp __LABEL108
-__LABEL111:
+	jp __LABEL177
+__LABEL180:
 	ld a, (ix-1)
 	dec a
 	ld h, 8
@@ -3261,9 +3789,9 @@ __LABEL111:
 	ld (hl), a
 	ld a, (ix-2)
 	ld b, 4
-__LABEL670:
+__LABEL753:
 	srl a
-	djnz __LABEL670
+	djnz __LABEL753
 	push af
 	ld h, 3
 	pop af
@@ -3287,9 +3815,9 @@ __LABEL670:
 	ld (hl), a
 	ld a, (ix-2)
 	ld b, 6
-__LABEL671:
+__LABEL754:
 	srl a
-	djnz __LABEL671
+	djnz __LABEL754
 	push af
 	ld h, 3
 	pop af
@@ -3310,25 +3838,25 @@ __LABEL671:
 	call __ARRAY
 	pop af
 	ld (hl), a
-__LABEL112:
+__LABEL181:
 	inc (ix-1)
-__LABEL108:
+__LABEL177:
 	ld a, (ix-1)
 	push af
 	ld a, 96
 	pop hl
 	cp h
-	jp nc, __LABEL111
-__LABEL110:
+	jp nc, __LABEL180
+__LABEL179:
 	ld (ix-16), 12
 	ld (ix-15), 0
-	jp __LABEL113
-__LABEL116:
+	jp __LABEL182
+__LABEL185:
 	ld (ix-12), 1
 	ld (ix-18), 1
 	ld (ix-17), 0
-	jp __LABEL118
-__LABEL121:
+	jp __LABEL187
+__LABEL190:
 	ld l, (ix-18)
 	ld h, (ix-17)
 	push hl
@@ -3426,36 +3954,36 @@ __LABEL121:
 	ld a, (hl)
 	ld (ix-11), a
 	or a
-	jp z, __LABEL123
+	jp z, __LABEL192
 	ld a, (ix-11)
 	dec a
-	jp nz, __LABEL125
+	jp nz, __LABEL194
 	ld a, (ix-3)
 	ld (ix-11), a
 	ld (ix-12), 1
-	jp __LABEL126
-__LABEL125:
+	jp __LABEL195
+__LABEL194:
 	ld a, (ix-11)
 	sub 2
-	jp nz, __LABEL127
+	jp nz, __LABEL196
 	ld a, (ix-9)
 	ld h, (ix-8)
 	or a
-	jr z, __LABEL672
+	jr z, __LABEL755
 	ld a, h
-__LABEL672:
+__LABEL755:
 	ld h, (ix-10)
 	or a
-	jr z, __LABEL673
+	jr z, __LABEL756
 	ld a, h
-__LABEL673:
+__LABEL756:
 	ld h, (ix-12)
 	or a
-	jr z, __LABEL674
+	jr z, __LABEL757
 	ld a, h
-__LABEL674:
+__LABEL757:
 	or a
-	jp z, __LABEL129
+	jp z, __LABEL198
 	ld a, (ix-6)
 	ld l, a
 	ld h, 0
@@ -3471,21 +3999,21 @@ __LABEL674:
 	push hl
 	ld hl, _water.__DATA__
 	call _printColorChar
-	jp __LABEL122
-__LABEL129:
+	jp __LABEL191
+__LABEL198:
 	ld a, (ix-5)
 	ld (ix-11), a
-__LABEL130:
-	jp __LABEL128
-__LABEL127:
+__LABEL199:
+	jp __LABEL197
+__LABEL196:
 	ld a, (ix-7)
 	ld h, (ix-8)
 	or a
-	jr z, __LABEL675
+	jr z, __LABEL758
 	ld a, h
-__LABEL675:
+__LABEL758:
 	or a
-	jp z, __LABEL131
+	jp z, __LABEL200
 	ld a, (ix-4)
 	ld l, a
 	ld h, 0
@@ -3501,16 +4029,16 @@ __LABEL675:
 	push hl
 	ld hl, _destructibleWallV.__DATA__
 	call _printColorChar
-	jp __LABEL122
-__LABEL131:
+	jp __LABEL191
+__LABEL200:
 	ld a, (ix-9)
 	ld h, (ix-10)
 	or a
-	jr z, __LABEL676
+	jr z, __LABEL759
 	ld a, h
-__LABEL676:
+__LABEL759:
 	or a
-	jp z, __LABEL134
+	jp z, __LABEL203
 	ld a, (ix-4)
 	ld l, a
 	ld h, 0
@@ -3526,230 +4054,230 @@ __LABEL676:
 	push hl
 	ld hl, _destructibleWallH.__DATA__
 	call _printColorChar
-	jp __LABEL122
-__LABEL134:
-__LABEL132:
-	jp __LABEL122
-__LABEL128:
-__LABEL126:
+	jp __LABEL191
+__LABEL203:
+__LABEL201:
+	jp __LABEL191
+__LABEL197:
+__LABEL195:
 	ld a, (ix-9)
 	ld h, (ix-10)
 	or a
-	jr z, __LABEL677
+	jr z, __LABEL760
 	ld a, h
-__LABEL677:
+__LABEL760:
 	ld h, (ix-7)
 	or a
-	jr z, __LABEL678
+	jr z, __LABEL761
 	ld a, h
-__LABEL678:
+__LABEL761:
 	ld h, (ix-8)
 	or a
-	jr z, __LABEL679
+	jr z, __LABEL762
 	ld a, h
-__LABEL679:
+__LABEL762:
 	or a
-	jp z, __LABEL135
+	jp z, __LABEL204
 	ld hl, _solid.__DATA__
 	ld (ix-20), l
 	ld (ix-19), h
-	jp __LABEL136
-__LABEL135:
+	jp __LABEL205
+__LABEL204:
 	ld a, (ix-9)
 	ld h, (ix-10)
 	or a
-	jr z, __LABEL680
+	jr z, __LABEL763
 	ld a, h
-__LABEL680:
+__LABEL763:
 	ld h, (ix-7)
 	or a
-	jr z, __LABEL681
+	jr z, __LABEL764
 	ld a, h
-__LABEL681:
+__LABEL764:
 	or a
-	jp z, __LABEL137
+	jp z, __LABEL206
 	ld hl, _wallt.__DATA__
 	ld (ix-20), l
 	ld (ix-19), h
-	jp __LABEL138
-__LABEL137:
+	jp __LABEL207
+__LABEL206:
 	ld a, (ix-9)
 	ld h, (ix-10)
 	or a
-	jr z, __LABEL682
+	jr z, __LABEL765
 	ld a, h
-__LABEL682:
+__LABEL765:
 	ld h, (ix-8)
 	or a
-	jr z, __LABEL683
+	jr z, __LABEL766
 	ld a, h
-__LABEL683:
+__LABEL766:
 	or a
-	jp z, __LABEL139
+	jp z, __LABEL208
 	ld hl, _wallb.__DATA__
 	ld (ix-20), l
 	ld (ix-19), h
-	jp __LABEL140
-__LABEL139:
+	jp __LABEL209
+__LABEL208:
 	ld a, (ix-9)
 	ld h, (ix-7)
 	or a
-	jr z, __LABEL684
+	jr z, __LABEL767
 	ld a, h
-__LABEL684:
+__LABEL767:
 	ld h, (ix-8)
 	or a
-	jr z, __LABEL685
+	jr z, __LABEL768
 	ld a, h
-__LABEL685:
+__LABEL768:
 	or a
-	jp z, __LABEL141
+	jp z, __LABEL210
 	ld hl, _walll.__DATA__
 	ld (ix-20), l
 	ld (ix-19), h
-	jp __LABEL142
-__LABEL141:
+	jp __LABEL211
+__LABEL210:
 	ld a, (ix-10)
 	ld h, (ix-7)
 	or a
-	jr z, __LABEL686
+	jr z, __LABEL769
 	ld a, h
-__LABEL686:
+__LABEL769:
 	ld h, (ix-8)
 	or a
-	jr z, __LABEL687
+	jr z, __LABEL770
 	ld a, h
-__LABEL687:
+__LABEL770:
 	or a
-	jp z, __LABEL143
+	jp z, __LABEL212
 	ld hl, _wallr.__DATA__
 	ld (ix-20), l
 	ld (ix-19), h
-	jp __LABEL144
-__LABEL143:
+	jp __LABEL213
+__LABEL212:
 	ld a, (ix-9)
 	ld h, (ix-10)
 	or a
-	jr z, __LABEL688
+	jr z, __LABEL771
 	ld a, h
-__LABEL688:
+__LABEL771:
 	or a
-	jp z, __LABEL145
+	jp z, __LABEL214
 	ld hl, _singleWallH.__DATA__
 	ld (ix-20), l
 	ld (ix-19), h
-	jp __LABEL146
-__LABEL145:
+	jp __LABEL215
+__LABEL214:
 	ld a, (ix-7)
 	ld h, (ix-8)
 	or a
-	jr z, __LABEL689
+	jr z, __LABEL772
 	ld a, h
-__LABEL689:
+__LABEL772:
 	or a
-	jp z, __LABEL147
+	jp z, __LABEL216
 	ld hl, _singleWallV.__DATA__
 	ld (ix-20), l
 	ld (ix-19), h
-	jp __LABEL148
-__LABEL147:
+	jp __LABEL217
+__LABEL216:
 	ld a, (ix-9)
 	ld h, (ix-7)
 	or a
-	jr z, __LABEL690
+	jr z, __LABEL773
 	ld a, h
-__LABEL690:
+__LABEL773:
 	or a
-	jp z, __LABEL149
+	jp z, __LABEL218
 	ld hl, _wallbr.__DATA__
 	ld (ix-20), l
 	ld (ix-19), h
-	jp __LABEL150
-__LABEL149:
+	jp __LABEL219
+__LABEL218:
 	ld a, (ix-9)
 	ld h, (ix-8)
 	or a
-	jr z, __LABEL691
+	jr z, __LABEL774
 	ld a, h
-__LABEL691:
+__LABEL774:
 	or a
-	jp z, __LABEL151
+	jp z, __LABEL220
 	ld hl, _walltr.__DATA__
 	ld (ix-20), l
 	ld (ix-19), h
-	jp __LABEL152
-__LABEL151:
+	jp __LABEL221
+__LABEL220:
 	ld a, (ix-10)
 	ld h, (ix-7)
 	or a
-	jr z, __LABEL692
+	jr z, __LABEL775
 	ld a, h
-__LABEL692:
+__LABEL775:
 	or a
-	jp z, __LABEL153
+	jp z, __LABEL222
 	ld hl, _wallbl.__DATA__
 	ld (ix-20), l
 	ld (ix-19), h
-	jp __LABEL154
-__LABEL153:
+	jp __LABEL223
+__LABEL222:
 	ld a, (ix-10)
 	ld h, (ix-8)
 	or a
-	jr z, __LABEL693
+	jr z, __LABEL776
 	ld a, h
-__LABEL693:
+__LABEL776:
 	or a
-	jp z, __LABEL155
+	jp z, __LABEL224
 	ld hl, _walltl.__DATA__
 	ld (ix-20), l
 	ld (ix-19), h
-	jp __LABEL156
-__LABEL155:
+	jp __LABEL225
+__LABEL224:
 	ld a, (ix-9)
 	or a
-	jp z, __LABEL157
+	jp z, __LABEL226
 	ld hl, _rockR.__DATA__
 	ld (ix-20), l
 	ld (ix-19), h
-	jp __LABEL158
-__LABEL157:
+	jp __LABEL227
+__LABEL226:
 	ld a, (ix-10)
 	or a
-	jp z, __LABEL159
+	jp z, __LABEL228
 	ld hl, _rockL.__DATA__
 	ld (ix-20), l
 	ld (ix-19), h
-	jp __LABEL160
-__LABEL159:
+	jp __LABEL229
+__LABEL228:
 	ld a, (ix-7)
 	or a
-	jp z, __LABEL161
+	jp z, __LABEL230
 	ld hl, _rockB.__DATA__
 	ld (ix-20), l
 	ld (ix-19), h
-	jp __LABEL162
-__LABEL161:
+	jp __LABEL231
+__LABEL230:
 	ld a, (ix-8)
 	or a
-	jp z, __LABEL164
+	jp z, __LABEL233
 	ld hl, _rockT.__DATA__
 	ld (ix-20), l
 	ld (ix-19), h
-__LABEL164:
-__LABEL162:
-__LABEL160:
-__LABEL158:
-__LABEL156:
-__LABEL154:
-__LABEL152:
-__LABEL150:
-__LABEL148:
-__LABEL146:
-__LABEL144:
-__LABEL142:
-__LABEL140:
-__LABEL138:
-__LABEL136:
+__LABEL233:
+__LABEL231:
+__LABEL229:
+__LABEL227:
+__LABEL225:
+__LABEL223:
+__LABEL221:
+__LABEL219:
+__LABEL217:
+__LABEL215:
+__LABEL213:
+__LABEL211:
+__LABEL209:
+__LABEL207:
+__LABEL205:
 	ld a, (ix-11)
 	ld l, a
 	ld h, 0
@@ -3766,17 +4294,17 @@ __LABEL136:
 	ld l, (ix-20)
 	ld h, (ix-19)
 	call _printColorChar
-	jp __LABEL124
-__LABEL123:
+	jp __LABEL193
+__LABEL192:
 	ld (ix-12), 0
-__LABEL124:
-__LABEL122:
+__LABEL193:
+__LABEL191:
 	ld l, (ix-18)
 	ld h, (ix-17)
 	inc hl
 	ld (ix-18), l
 	ld (ix-17), h
-__LABEL118:
+__LABEL187:
 	ld l, (ix-18)
 	ld h, (ix-17)
 	push hl
@@ -3784,15 +4312,15 @@ __LABEL118:
 	pop de
 	or a
 	sbc hl, de
-	jp nc, __LABEL121
-__LABEL120:
-__LABEL117:
+	jp nc, __LABEL190
+__LABEL189:
+__LABEL186:
 	ld l, (ix-16)
 	ld h, (ix-15)
 	dec hl
 	ld (ix-16), l
 	ld (ix-15), h
-__LABEL113:
+__LABEL182:
 	ld l, (ix-16)
 	ld h, (ix-15)
 	push hl
@@ -3800,27 +4328,27 @@ __LABEL113:
 	pop hl
 	or a
 	sbc hl, de
-	jp nc, __LABEL116
-__LABEL115:
+	jp nc, __LABEL185
+__LABEL184:
 	ld a, (_tmpX)
 	or a
-	jp z, __LABEL166
+	jp z, __LABEL235
 	ld a, (_tmpX)
 	push af
 	call _transformSolids
-__LABEL166:
+__LABEL235:
 	xor a
 	ld (_enemyCount), a
 	xor a
 	ld (_frameCounter), a
 	ld a, 1
 	ld (_tmpX), a
-	jp __LABEL167
-__LABEL170:
+	jp __LABEL236
+__LABEL239:
 	ld a, 1
 	ld (_tmpY), a
-	jp __LABEL172
-__LABEL175:
+	jp __LABEL241
+__LABEL244:
 	ld a, (_tmpY)
 	ld l, a
 	ld h, 0
@@ -3834,24 +4362,24 @@ __LABEL175:
 	ld hl, _enemyStates
 	call __ARRAY
 	ld (hl), 0
-__LABEL176:
+__LABEL245:
 	ld hl, _tmpY
 	inc (hl)
-__LABEL172:
+__LABEL241:
 	ld a, 11
 	ld hl, (_tmpY - 1)
 	cp h
-	jp nc, __LABEL175
-__LABEL174:
-__LABEL171:
+	jp nc, __LABEL244
+__LABEL243:
+__LABEL240:
 	ld hl, _tmpX
 	inc (hl)
-__LABEL167:
+__LABEL236:
 	ld a, 6
 	ld hl, (_tmpX - 1)
 	cp h
-	jp nc, __LABEL170
-__LABEL169:
+	jp nc, __LABEL239
+__LABEL238:
 	xor a
 	push af
 	xor a
@@ -3867,8 +4395,8 @@ __LABEL169:
 	ld (_dynaColor), a
 	ld (ix-18), 97
 	ld (ix-17), 0
-	jp __LABEL177
-__LABEL180:
+	jp __LABEL246
+__LABEL249:
 	ld l, (ix-18)
 	ld h, (ix-17)
 	dec hl
@@ -3882,8 +4410,8 @@ __LABEL180:
 	ld a, (hl)
 	ld (ix-2), a
 	or a
-	jp z, __LABEL179
-__LABEL183:
+	jp z, __LABEL248
+__LABEL252:
 	ld a, (ix-3)
 	ld (_tmpColor), a
 	ld l, (ix-18)
@@ -3926,7 +4454,7 @@ __LABEL183:
 	and h
 	push af
 	call _loadItem
-__LABEL181:
+__LABEL250:
 	ld l, (ix-18)
 	ld h, (ix-17)
 	inc hl
@@ -3934,7 +4462,7 @@ __LABEL181:
 	inc hl
 	ld (ix-18), l
 	ld (ix-17), h
-__LABEL177:
+__LABEL246:
 	ld l, (ix-18)
 	ld h, (ix-17)
 	push hl
@@ -3942,8 +4470,8 @@ __LABEL177:
 	pop de
 	or a
 	sbc hl, de
-	jp nc, __LABEL180
-__LABEL179:
+	jp nc, __LABEL249
+__LABEL248:
 _decodeCurrentScreen__leave:
 	ld sp, ix
 	pop ix
@@ -3957,7 +4485,7 @@ _loadItem:
 	ld h, 7
 	pop af
 	cp h
-	jp nc, __LABEL184
+	jp nc, __LABEL253
 	ld hl, _activeEnemies
 	inc (hl)
 	ld hl, _enemyCount
@@ -4029,7 +4557,7 @@ _loadItem:
 	ld (hl), a
 	ld a, (ix+5)
 	dec a
-	jp nz, __LABEL186
+	jp nz, __LABEL255
 	ld a, (ix+7)
 	push af
 	ld hl, 5
@@ -4120,11 +4648,11 @@ _loadItem:
 	ld (_tmpColor), a
 	ld hl, _vampUp.__DATA__
 	ld (_tmpItem), hl
-	jp __LABEL187
-__LABEL186:
+	jp __LABEL256
+__LABEL255:
 	ld a, (ix+5)
 	sub 2
-	jp nz, __LABEL188
+	jp nz, __LABEL257
 	ld a, (ix+7)
 	push af
 	ld hl, 5
@@ -4215,11 +4743,11 @@ __LABEL186:
 	ld (_tmpColor), a
 	ld hl, _spider.__DATA__
 	ld (_tmpItem), hl
-	jp __LABEL189
-__LABEL188:
+	jp __LABEL258
+__LABEL257:
 	ld a, (ix+5)
 	sub 3
-	jp nz, __LABEL190
+	jp nz, __LABEL259
 	ld a, (ix+7)
 	sub 16
 	push af
@@ -4310,11 +4838,11 @@ __LABEL188:
 	ld (_tmpColor), a
 	ld hl, _fly1.__DATA__
 	ld (_tmpItem), hl
-	jp __LABEL191
-__LABEL190:
+	jp __LABEL260
+__LABEL259:
 	ld a, (ix+5)
 	sub 4
-	jp nz, __LABEL192
+	jp nz, __LABEL261
 	ld a, (ix+7)
 	sub 16
 	push af
@@ -4407,11 +4935,11 @@ __LABEL190:
 	ld (_tmpColor), a
 	ld hl, _bug1.__DATA__
 	ld (_tmpItem), hl
-	jp __LABEL193
-__LABEL192:
+	jp __LABEL262
+__LABEL261:
 	ld a, (ix+5)
 	sub 5
-	jp nz, __LABEL194
+	jp nz, __LABEL263
 	xor a
 	ld (_tmpX), a
 	xor a
@@ -4426,8 +4954,8 @@ __LABEL192:
 	call __DIVU8_FAST
 	inc a
 	ld (_tmpZ), a
-	jp __LABEL196
-__LABEL199:
+	jp __LABEL265
+__LABEL268:
 	ld a, (_tmpColor)
 	ld l, a
 	ld h, 0
@@ -4442,30 +4970,30 @@ __LABEL199:
 	call __ARRAY
 	ld a, (hl)
 	or a
-	jp z, __LABEL202
+	jp z, __LABEL271
 	ld a, (_tmpZ)
 	sub 2
 	ld h, 8
 	call __MUL8_FAST
 	ld (_tmpX), a
-	jp __LABEL198
-__LABEL202:
-__LABEL200:
+	jp __LABEL267
+__LABEL271:
+__LABEL269:
 	ld hl, _tmpZ
 	inc (hl)
-__LABEL196:
+__LABEL265:
 	ld a, 32
 	ld hl, (_tmpZ - 1)
 	cp h
-	jp nc, __LABEL199
-__LABEL198:
+	jp nc, __LABEL268
+__LABEL267:
 	ld a, (ix+7)
 	ld h, 8
 	call __DIVU8_FAST
 	inc a
 	ld (_tmpZ), a
-	jp __LABEL203
-__LABEL206:
+	jp __LABEL272
+__LABEL275:
 	ld a, (_tmpColor)
 	ld l, a
 	ld h, 0
@@ -4480,21 +5008,21 @@ __LABEL206:
 	call __ARRAY
 	ld a, (hl)
 	or a
-	jp z, __LABEL209
+	jp z, __LABEL278
 	ld a, (_tmpZ)
 	ld h, 8
 	call __MUL8_FAST
 	ld (_tmpY), a
-	jp __LABEL205
-__LABEL209:
-__LABEL207:
+	jp __LABEL274
+__LABEL278:
+__LABEL276:
 	ld hl, _tmpZ
 	dec (hl)
-__LABEL203:
+__LABEL272:
 	ld a, (_tmpZ)
 	cp 1
-	jp nc, __LABEL206
-__LABEL205:
+	jp nc, __LABEL275
+__LABEL274:
 	ld hl, 5
 	push hl
 	ld a, (_enemyCount)
@@ -4579,8 +5107,8 @@ __LABEL205:
 	ld (_tmpColor), a
 	ld hl, _crab1.__DATA__
 	ld (_tmpItem), hl
-	jp __LABEL195
-__LABEL194:
+	jp __LABEL264
+__LABEL263:
 	ld a, (ix+9)
 	push af
 	ld hl, 6
@@ -4636,7 +5164,7 @@ __LABEL194:
 	call __ARRAY
 	ld a, (hl)
 	or a
-	jp z, __LABEL210
+	jp z, __LABEL279
 	ld a, (ix+7)
 	push af
 	ld hl, 5
@@ -4676,8 +5204,8 @@ __LABEL194:
 	ld hl, _enemyStates
 	call __ARRAY
 	ld (hl), 1
-	jp __LABEL211
-__LABEL210:
+	jp __LABEL280
+__LABEL279:
 	ld a, (ix+7)
 	sub 7
 	push af
@@ -4717,14 +5245,14 @@ __LABEL210:
 	ld hl, _enemyStates
 	call __ARRAY
 	ld (hl), 0
-__LABEL211:
+__LABEL280:
 	ld a, (_tmpColor)
 	ld (_snakeColor), a
-__LABEL195:
-__LABEL193:
-__LABEL191:
-__LABEL189:
-__LABEL187:
+__LABEL264:
+__LABEL262:
+__LABEL260:
+__LABEL258:
+__LABEL256:
 	ld a, (_tmpColor)
 	ld l, a
 	ld h, 0
@@ -4739,11 +5267,11 @@ __LABEL187:
 	push hl
 	ld hl, (_tmpItem)
 	call _drawColorSprite
-	jp __LABEL185
-__LABEL184:
+	jp __LABEL254
+__LABEL253:
 	ld a, (ix+5)
 	sub 7
-	jp nz, __LABEL212
+	jp nz, __LABEL281
 	ld hl, _enemyCount
 	inc (hl)
 	ld a, (ix+5)
@@ -4838,11 +5366,11 @@ __LABEL184:
 	ld a, 4
 	call _createAttrib
 	ld (_crocoColor), a
-	jp __LABEL213
-__LABEL212:
+	jp __LABEL282
+__LABEL281:
 	ld a, (ix+5)
 	sub 8
-	jp nz, __LABEL214
+	jp nz, __LABEL283
 	ld a, (ix+7)
 	ld (_lampX), a
 	ld a, (ix+9)
@@ -4867,7 +5395,7 @@ __LABEL212:
 	call __ARRAY
 	ld a, (hl)
 	or a
-	jp z, __LABEL216
+	jp z, __LABEL285
 	xor a
 	push af
 	xor a
@@ -4893,8 +5421,8 @@ __LABEL212:
 	push hl
 	ld hl, _lampl.__DATA__
 	call _drawColorSprite
-	jp __LABEL217
-__LABEL216:
+	jp __LABEL286
+__LABEL285:
 	xor a
 	push af
 	xor a
@@ -4920,12 +5448,12 @@ __LABEL216:
 	push hl
 	ld hl, _lampr.__DATA__
 	call _drawColorSprite
-__LABEL217:
-	jp __LABEL215
-__LABEL214:
+__LABEL286:
+	jp __LABEL284
+__LABEL283:
 	ld a, (ix+5)
 	sub 9
-	jp nz, __LABEL219
+	jp nz, __LABEL288
 	ld a, (ix+7)
 	ld (_personX), a
 	ld a, (ix+9)
@@ -4981,10 +5509,10 @@ __LABEL214:
 	push hl
 	ld hl, _personB.__DATA__
 	call _drawColorSprite
-__LABEL219:
-__LABEL215:
-__LABEL213:
-__LABEL185:
+__LABEL288:
+__LABEL284:
+__LABEL282:
+__LABEL254:
 _loadItem__leave:
 	ld sp, ix
 	pop ix
@@ -4996,7 +5524,7 @@ _loadItem__leave:
 	exx
 	ret
 _checkPlayerCollision:
-#line 943
+#line 1080
 		pop hl
 		ld b, a
 		pop de
@@ -5024,7 +5552,7 @@ _checkPlayerCollision:
 no_collide:
 		ld a, 0
 		ret
-#line 970
+#line 1107
 _checkPlayerCollision__leave:
 	ret
 _moveEnemy:
@@ -5119,7 +5647,7 @@ _moveEnemy:
 	sbc a, a
 	pop de
 	or d
-	jp z, __LABEL221
+	jp z, __LABEL290
 	ld a, (_tmpX)
 	push af
 	ld a, (_tmpDisplace)
@@ -5142,7 +5670,7 @@ _moveEnemy:
 	call __ARRAY
 	pop af
 	ld (hl), a
-__LABEL221:
+__LABEL290:
 	ld hl, 0
 	push hl
 	ld a, (ix+5)
@@ -5154,7 +5682,7 @@ __LABEL221:
 	call __ARRAY
 	ld a, (hl)
 	sub 6
-	jp z, __LABEL223
+	jp z, __LABEL292
 	ld hl, 10
 	push hl
 	ld a, (ix+5)
@@ -5199,7 +5727,7 @@ __LABEL221:
 	sbc a, a
 	pop de
 	or d
-	jp z, __LABEL225
+	jp z, __LABEL294
 	ld a, (_tmpY)
 	push af
 	ld a, (_tmpDisplace)
@@ -5222,8 +5750,8 @@ __LABEL221:
 	call __ARRAY
 	pop af
 	ld (hl), a
-__LABEL225:
-__LABEL223:
+__LABEL294:
+__LABEL292:
 	ld hl, 1
 	push hl
 	ld a, (ix+5)
@@ -5299,10 +5827,10 @@ _updateCrocodile:
 	dec (hl)
 	ld a, (_tmpX)
 	or a
-	jp nz, __LABEL227
+	jp nz, __LABEL296
 	ld a, (_tmpY)
 	or a
-	jp nz, __LABEL228
+	jp nz, __LABEL297
 	ld hl, _activeEnemies
 	inc (hl)
 	ld a, 1
@@ -5329,11 +5857,11 @@ _updateCrocodile:
 	ld hl, _enemyStates
 	call __ARRAY
 	ld (hl), 1
-	jp __LABEL229
-__LABEL228:
+	jp __LABEL298
+__LABEL297:
 	ld a, (_tmpY)
 	dec a
-	jp nz, __LABEL230
+	jp nz, __LABEL299
 	ld hl, 5
 	push hl
 	ld a, (ix+5)
@@ -5345,7 +5873,7 @@ __LABEL228:
 	call __ARRAY
 	ld a, (hl)
 	or a
-	jp z, __LABEL232
+	jp z, __LABEL301
 	ld a, 2
 	ld (_tmpY), a
 	ld a, 10
@@ -5360,17 +5888,17 @@ __LABEL228:
 	ld hl, _enemyStates
 	call __ARRAY
 	ld (hl), 1
-	jp __LABEL233
-__LABEL232:
+	jp __LABEL302
+__LABEL301:
 	xor a
 	ld (_tmpY), a
 	ld a, 60
 	ld (_tmpX), a
 	ld hl, _activeEnemies
 	dec (hl)
-__LABEL233:
-	jp __LABEL231
-__LABEL230:
+__LABEL302:
+	jp __LABEL300
+__LABEL299:
 	ld a, 1
 	ld (_tmpY), a
 	ld a, 30
@@ -5395,8 +5923,8 @@ __LABEL230:
 	ld hl, _enemyStates
 	call __ARRAY
 	ld (hl), 1
-__LABEL231:
-__LABEL229:
+__LABEL300:
+__LABEL298:
 	ld hl, 3
 	push hl
 	ld a, (ix+5)
@@ -5408,7 +5936,7 @@ __LABEL229:
 	call __ARRAY
 	ld a, (_tmpY)
 	ld (hl), a
-__LABEL227:
+__LABEL296:
 	ld hl, 4
 	push hl
 	ld a, (ix+5)
@@ -5422,10 +5950,10 @@ __LABEL227:
 	ld (hl), a
 	ld a, (_tmpY)
 	or a
-	jp nz, __LABEL235
+	jp nz, __LABEL304
 	xor a
 	jp _updateCrocodile__leave
-__LABEL235:
+__LABEL304:
 	ld hl, 1
 	push hl
 	ld a, (ix+5)
@@ -5449,7 +5977,7 @@ __LABEL235:
 	ld a, (hl)
 	ld (_tmpY), a
 	dec a
-	jp nz, __LABEL236
+	jp nz, __LABEL305
 	ld a, (_tmpY)
 	add a, 4
 	ld (_tmpY), a
@@ -5470,9 +5998,9 @@ __LABEL235:
 	ld h, a
 	pop af
 	or a
-	jr z, __LABEL694
+	jr z, __LABEL777
 	ld a, h
-__LABEL694:
+__LABEL777:
 	push af
 	ld a, (_tmpY)
 	add a, 4
@@ -5483,9 +6011,9 @@ __LABEL694:
 	ld h, a
 	pop af
 	or a
-	jr z, __LABEL695
+	jr z, __LABEL778
 	ld a, h
-__LABEL695:
+__LABEL778:
 	push af
 	ld a, (_playerY)
 	add a, 16
@@ -5497,22 +6025,22 @@ __LABEL695:
 	ld h, a
 	pop af
 	or a
-	jr z, __LABEL696
+	jr z, __LABEL779
 	ld a, h
-__LABEL696:
+__LABEL779:
 	or a
-	jp z, __LABEL239
+	jp z, __LABEL308
 	ld a, 1
 	jp _updateCrocodile__leave
-__LABEL239:
-	jp __LABEL237
-__LABEL236:
+__LABEL308:
+	jp __LABEL306
+__LABEL305:
 	ld a, (_tmpY)
 	push af
 	ld a, (_tmpX)
 	call _checkPlayerCollision
 	jp _updateCrocodile__leave
-__LABEL237:
+__LABEL306:
 _updateCrocodile__leave:
 	ld sp, ix
 	pop ix
@@ -5532,18 +6060,18 @@ _moveEnemies:
 	ld (_tmpResult), a
 	ld a, (_frameCounter)
 	and 1
-	jp z, __LABEL240
+	jp z, __LABEL309
 	ld a, 1
 	ld (_tmpZ), a
-	jp __LABEL241
-__LABEL240:
+	jp __LABEL310
+__LABEL309:
 	ld a, 2
 	ld (_tmpZ), a
-__LABEL241:
+__LABEL310:
 	ld a, (_tmpZ)
 	ld (ix-1), a
-	jp __LABEL242
-__LABEL245:
+	jp __LABEL311
+__LABEL314:
 	ld hl, 0
 	push hl
 	ld a, (ix-1)
@@ -5566,11 +6094,11 @@ __LABEL245:
 	ld h, a
 	pop af
 	or a
-	jr z, __LABEL697
+	jr z, __LABEL780
 	ld a, h
-__LABEL697:
+__LABEL780:
 	or a
-	jp z, __LABEL247
+	jp z, __LABEL316
 	ld a, (ix-1)
 	push af
 	call _moveEnemy
@@ -5578,11 +6106,11 @@ __LABEL697:
 	ld a, (_tmpResult)
 	or h
 	ld (_tmpResult), a
-	jp __LABEL248
-__LABEL247:
+	jp __LABEL317
+__LABEL316:
 	ld a, (_tmpX)
 	sub 7
-	jp nz, __LABEL250
+	jp nz, __LABEL319
 	ld a, (ix-1)
 	push af
 	call _updateCrocodile
@@ -5590,20 +6118,20 @@ __LABEL247:
 	ld a, (_tmpResult)
 	or h
 	ld (_tmpResult), a
-__LABEL250:
-__LABEL248:
-__LABEL246:
+__LABEL319:
+__LABEL317:
+__LABEL315:
 	ld a, (ix-1)
 	add a, 2
 	ld (ix-1), a
-__LABEL242:
+__LABEL311:
 	ld a, (ix-1)
 	push af
 	ld a, (_enemyCount)
 	pop hl
 	cp h
-	jp nc, __LABEL245
-__LABEL244:
+	jp nc, __LABEL314
+__LABEL313:
 	ld a, (_tmpResult)
 _moveEnemies__leave:
 	ld sp, ix
@@ -5615,44 +6143,44 @@ _drawEnemies:
 	add ix, sp
 	ld a, (_frameCounter)
 	and 1
-	jp z, __LABEL251
+	jp z, __LABEL320
 	ld a, 1
 	ld (_tmpZ), a
-	jp __LABEL253
-__LABEL256:
+	jp __LABEL322
+__LABEL325:
 	ld a, (_tmpZ)
 	push af
 	call _drawEnemy
-__LABEL257:
+__LABEL326:
 	ld a, (_tmpZ)
 	add a, 2
 	ld (_tmpZ), a
-__LABEL253:
+__LABEL322:
 	ld a, (_enemyCount)
 	ld hl, (_tmpZ - 1)
 	cp h
-	jp nc, __LABEL256
-__LABEL255:
-	jp __LABEL252
-__LABEL251:
+	jp nc, __LABEL325
+__LABEL324:
+	jp __LABEL321
+__LABEL320:
 	ld a, 2
 	ld (_tmpZ), a
-	jp __LABEL258
-__LABEL261:
+	jp __LABEL327
+__LABEL330:
 	ld a, (_tmpZ)
 	push af
 	call _drawEnemy
-__LABEL262:
+__LABEL331:
 	ld a, (_tmpZ)
 	add a, 2
 	ld (_tmpZ), a
-__LABEL258:
+__LABEL327:
 	ld a, (_enemyCount)
 	ld hl, (_tmpZ - 1)
 	cp h
-	jp nc, __LABEL261
-__LABEL260:
-__LABEL252:
+	jp nc, __LABEL330
+__LABEL329:
+__LABEL321:
 _drawEnemies__leave:
 	ld sp, ix
 	pop ix
@@ -5674,10 +6202,10 @@ _drawEnemy:
 	ld (_tmpX), a
 	or a
 	jp z, _drawEnemy__leave
-__LABEL264:
+__LABEL333:
 	ld a, (_tmpX)
 	dec a
-	jp nz, __LABEL265
+	jp nz, __LABEL334
 	ld hl, 2
 	push hl
 	ld a, (ix+5)
@@ -5692,36 +6220,36 @@ __LABEL264:
 	ld h, 2
 	pop af
 	and h
-	jp nz, __LABEL267
+	jp nz, __LABEL336
 	ld hl, _vampUp.__DATA__
 	ld (_tmpItem), hl
 	ld hl, _vampDown.__DATA__
 	ld (_tmpPrevItem), hl
-	jp __LABEL268
-__LABEL267:
+	jp __LABEL337
+__LABEL336:
 	ld hl, _vampDown.__DATA__
 	ld (_tmpItem), hl
 	ld hl, _vampUp.__DATA__
 	ld (_tmpPrevItem), hl
-__LABEL268:
+__LABEL337:
 	ld a, (_vampColor)
 	ld (_tmpColor), a
-	jp __LABEL266
-__LABEL265:
+	jp __LABEL335
+__LABEL334:
 	ld a, (_tmpX)
 	sub 2
-	jp nz, __LABEL269
+	jp nz, __LABEL338
 	ld hl, _spider.__DATA__
 	ld (_tmpItem), hl
 	ld hl, _spider.__DATA__
 	ld (_tmpPrevItem), hl
 	ld a, (_spiderColor)
 	ld (_tmpColor), a
-	jp __LABEL270
-__LABEL269:
+	jp __LABEL339
+__LABEL338:
 	ld a, (_tmpX)
 	sub 3
-	jp nz, __LABEL271
+	jp nz, __LABEL340
 	ld hl, 1
 	push hl
 	ld a, (ix+5)
@@ -5736,25 +6264,25 @@ __LABEL269:
 	ld h, 2
 	pop af
 	and h
-	jp nz, __LABEL273
+	jp nz, __LABEL342
 	ld hl, _fly1.__DATA__
 	ld (_tmpItem), hl
 	ld hl, _fly2.__DATA__
 	ld (_tmpPrevItem), hl
-	jp __LABEL274
-__LABEL273:
+	jp __LABEL343
+__LABEL342:
 	ld hl, _fly2.__DATA__
 	ld (_tmpItem), hl
 	ld hl, _fly1.__DATA__
 	ld (_tmpPrevItem), hl
-__LABEL274:
+__LABEL343:
 	ld a, (_flyColor)
 	ld (_tmpColor), a
-	jp __LABEL272
-__LABEL271:
+	jp __LABEL341
+__LABEL340:
 	ld a, (_tmpX)
 	sub 4
-	jp nz, __LABEL275
+	jp nz, __LABEL344
 	ld hl, 1
 	push hl
 	ld a, (ix+5)
@@ -5769,25 +6297,25 @@ __LABEL271:
 	ld h, 2
 	pop af
 	and h
-	jp nz, __LABEL277
+	jp nz, __LABEL346
 	ld hl, _bug1.__DATA__
 	ld (_tmpItem), hl
 	ld hl, _bug2.__DATA__
 	ld (_tmpPrevItem), hl
-	jp __LABEL278
-__LABEL277:
+	jp __LABEL347
+__LABEL346:
 	ld hl, _bug2.__DATA__
 	ld (_tmpItem), hl
 	ld hl, _bug1.__DATA__
 	ld (_tmpPrevItem), hl
-__LABEL278:
+__LABEL347:
 	ld a, (_bugColor)
 	ld (_tmpColor), a
-	jp __LABEL276
-__LABEL275:
+	jp __LABEL345
+__LABEL344:
 	ld a, (_tmpX)
 	sub 5
-	jp nz, __LABEL279
+	jp nz, __LABEL348
 	ld hl, 1
 	push hl
 	ld a, (ix+5)
@@ -5802,25 +6330,25 @@ __LABEL275:
 	ld h, 2
 	pop af
 	and h
-	jp nz, __LABEL281
+	jp nz, __LABEL350
 	ld hl, _crab1.__DATA__
 	ld (_tmpItem), hl
 	ld hl, _crab2.__DATA__
 	ld (_tmpPrevItem), hl
-	jp __LABEL282
-__LABEL281:
+	jp __LABEL351
+__LABEL350:
 	ld hl, _crab2.__DATA__
 	ld (_tmpItem), hl
 	ld hl, _crab1.__DATA__
 	ld (_tmpPrevItem), hl
-__LABEL282:
+__LABEL351:
 	ld a, (_crabColor)
 	ld (_tmpColor), a
-	jp __LABEL280
-__LABEL279:
+	jp __LABEL349
+__LABEL348:
 	ld a, (_tmpX)
 	sub 6
-	jp nz, __LABEL283
+	jp nz, __LABEL352
 	ld hl, 10
 	push hl
 	ld a, (ix+5)
@@ -5832,25 +6360,25 @@ __LABEL279:
 	call __ARRAY
 	ld a, (hl)
 	or a
-	jp z, __LABEL285
+	jp z, __LABEL354
 	ld hl, _skh1.__DATA__
 	ld (_tmpItem), hl
 	ld hl, _skh1.__DATA__
 	ld (_tmpPrevItem), hl
-	jp __LABEL286
-__LABEL285:
+	jp __LABEL355
+__LABEL354:
 	ld hl, _skh2.__DATA__
 	ld (_tmpItem), hl
 	ld hl, _skh2.__DATA__
 	ld (_tmpPrevItem), hl
-__LABEL286:
+__LABEL355:
 	ld a, (_snakeColor)
 	ld (_tmpColor), a
-	jp __LABEL284
-__LABEL283:
+	jp __LABEL353
+__LABEL352:
 	ld a, (_tmpX)
 	sub 7
-	jp nz, __LABEL288
+	jp nz, __LABEL357
 	ld hl, 6
 	push hl
 	ld a, (ix+5)
@@ -5862,7 +6390,7 @@ __LABEL283:
 	call __ARRAY
 	ld a, (hl)
 	or a
-	jp z, __LABEL290
+	jp z, __LABEL359
 	ld hl, 7
 	push hl
 	ld a, (ix+5)
@@ -5875,21 +6403,21 @@ __LABEL283:
 	ld a, (hl)
 	ld (_tmpY), a
 	dec a
-	jp nz, __LABEL291
+	jp nz, __LABEL360
 	ld hl, _crock1.__DATA__
 	ld (_tmpPrevItem), hl
-	jp __LABEL292
-__LABEL291:
+	jp __LABEL361
+__LABEL360:
 	ld a, (_tmpY)
 	sub 2
-	jp nz, __LABEL294
+	jp nz, __LABEL363
 	ld hl, _crock2.__DATA__
 	ld (_tmpPrevItem), hl
-__LABEL294:
-__LABEL292:
+__LABEL363:
+__LABEL361:
 	ld a, (_tmpY)
 	or a
-	jp z, __LABEL296
+	jp z, __LABEL365
 	ld a, (_emptyAttrib)
 	ld l, a
 	ld h, 0
@@ -5922,7 +6450,7 @@ __LABEL292:
 	push hl
 	ld hl, (_tmpPrevItem)
 	call _drawColorSprite
-__LABEL296:
+__LABEL365:
 	ld hl, 3
 	push hl
 	ld a, (ix+5)
@@ -5935,21 +6463,21 @@ __LABEL296:
 	ld a, (hl)
 	ld (_tmpY), a
 	dec a
-	jp nz, __LABEL297
+	jp nz, __LABEL366
 	ld hl, _crock1.__DATA__
 	ld (_tmpItem), hl
-	jp __LABEL298
-__LABEL297:
+	jp __LABEL367
+__LABEL366:
 	ld a, (_tmpY)
 	sub 2
-	jp nz, __LABEL300
+	jp nz, __LABEL369
 	ld hl, _crock2.__DATA__
 	ld (_tmpItem), hl
-__LABEL300:
-__LABEL298:
+__LABEL369:
+__LABEL367:
 	ld a, (_tmpY)
 	or a
-	jp z, __LABEL302
+	jp z, __LABEL371
 	ld a, (_crocoColor)
 	ld l, a
 	ld h, 0
@@ -5982,16 +6510,16 @@ __LABEL298:
 	push hl
 	ld hl, (_tmpItem)
 	call _drawColorSprite
-__LABEL302:
-__LABEL290:
+__LABEL371:
+__LABEL359:
 	jp _drawEnemy__leave
-__LABEL288:
-__LABEL284:
-__LABEL280:
-__LABEL276:
-__LABEL272:
-__LABEL270:
-__LABEL266:
+__LABEL357:
+__LABEL353:
+__LABEL349:
+__LABEL345:
+__LABEL341:
+__LABEL339:
+__LABEL335:
 	ld a, (_emptyAttrib)
 	ld l, a
 	ld h, 0
@@ -6026,7 +6554,7 @@ __LABEL266:
 	call _drawColorSprite
 	ld a, (_deadEnemy)
 	sub (ix+5)
-	jp nz, __LABEL303
+	jp nz, __LABEL372
 	xor a
 	ld (_deadEnemy), a
 	ld hl, 0
@@ -6044,8 +6572,8 @@ __LABEL266:
 	ld hl, 100
 	push hl
 	call _updateScore
-	jp __LABEL304
-__LABEL303:
+	jp __LABEL373
+__LABEL372:
 	ld a, (_tmpColor)
 	ld l, a
 	ld h, 0
@@ -6078,7 +6606,7 @@ __LABEL303:
 	push hl
 	ld hl, (_tmpItem)
 	call _drawColorSprite
-__LABEL304:
+__LABEL373:
 _drawEnemy__leave:
 	ld sp, ix
 	pop ix
@@ -6093,7 +6621,7 @@ _drawShot:
 	add ix, sp
 	ld a, (_prevShotX)
 	or a
-	jp z, __LABEL306
+	jp z, __LABEL375
 	ld a, (_prevShotX)
 	ld l, a
 	ld h, 0
@@ -6104,10 +6632,10 @@ _drawShot:
 	push hl
 	ld hl, _shot.__DATA__
 	call _drawSprite
-__LABEL306:
+__LABEL375:
 	ld a, (_shotX)
 	or a
-	jp z, __LABEL308
+	jp z, __LABEL377
 	ld a, (_shotX)
 	ld l, a
 	ld h, 0
@@ -6118,7 +6646,7 @@ __LABEL306:
 	push hl
 	ld hl, _shot.__DATA__
 	call _drawSprite
-__LABEL308:
+__LABEL377:
 _drawShot__leave:
 	ld sp, ix
 	pop ix
@@ -6149,22 +6677,22 @@ _movePlayer:
 	ld (ix-2), a
 	ld a, (_keyStates.__DATA__ + 0)
 	or a
-	jp z, __LABEL310
+	jp z, __LABEL379
 	ld (ix-3), 254
-__LABEL310:
+__LABEL379:
 	ld a, (_keyStates.__DATA__ + 1)
 	or a
-	jp z, __LABEL312
+	jp z, __LABEL381
 	ld (ix-3), 2
-__LABEL312:
+__LABEL381:
 	ld a, (_keyStates.__DATA__ + 2)
 	or a
-	jp z, __LABEL313
+	jp z, __LABEL382
 	ld (ix-4), 254
-	jp __LABEL314
-__LABEL313:
+	jp __LABEL383
+__LABEL382:
 	ld (ix-4), 2
-__LABEL314:
+__LABEL383:
 	ld a, (_playerY)
 	and 7
 	sub 1
@@ -6177,25 +6705,25 @@ __LABEL314:
 	ld (ix-6), a
 	ld a, (ix-5)
 	or a
-	jp z, __LABEL316
+	jp z, __LABEL385
 	ld a, (ix-6)
 	or a
-	jp z, __LABEL317
+	jp z, __LABEL386
 	ld a, (ix-4)
 	sub 254
-	jp nz, __LABEL319
+	jp nz, __LABEL388
 	ld a, (ix-2)
 	or a
-	jp nz, __LABEL321
+	jp nz, __LABEL390
 	ld (ix-10), 1
-	jp __LABEL322
-__LABEL321:
+	jp __LABEL391
+__LABEL390:
 	ld a, (ix-2)
 	push af
 	ld a, 1
 	pop hl
 	cp h
-	jp nc, __LABEL324
+	jp nc, __LABEL393
 	ld a, (ix-2)
 	dec a
 	ld l, a
@@ -6211,22 +6739,22 @@ __LABEL321:
 	call __ARRAY
 	ld a, (hl)
 	ld (ix-7), a
-__LABEL324:
-__LABEL322:
-	jp __LABEL320
-__LABEL319:
+__LABEL393:
+__LABEL391:
+	jp __LABEL389
+__LABEL388:
 	ld a, (ix-2)
 	sub 12
-	jp nz, __LABEL325
+	jp nz, __LABEL394
 	ld (ix-10), 1
-	jp __LABEL326
-__LABEL325:
+	jp __LABEL395
+__LABEL394:
 	ld a, (ix-2)
 	push af
 	ld h, 11
 	pop af
 	cp h
-	jp nc, __LABEL328
+	jp nc, __LABEL397
 	ld a, (ix-2)
 	add a, 2
 	ld l, a
@@ -6242,36 +6770,36 @@ __LABEL325:
 	call __ARRAY
 	ld a, (hl)
 	ld (ix-7), a
-__LABEL328:
-__LABEL326:
-__LABEL320:
+__LABEL397:
+__LABEL395:
+__LABEL389:
 	ld a, (ix-7)
 	or a
-	jp z, __LABEL330
+	jp z, __LABEL399
 	ld (ix-4), 0
 	ld a, (ix-7)
 	sub 2
-	jp nz, __LABEL332
+	jp nz, __LABEL401
 	ld (ix-11), 1
-__LABEL332:
-__LABEL330:
-	jp __LABEL318
-__LABEL317:
+__LABEL401:
+__LABEL399:
+	jp __LABEL387
+__LABEL386:
 	ld a, (ix-4)
 	sub 254
-	jp nz, __LABEL333
+	jp nz, __LABEL402
 	ld a, (ix-2)
 	or a
-	jp nz, __LABEL335
+	jp nz, __LABEL404
 	ld (ix-10), 1
-	jp __LABEL336
-__LABEL335:
+	jp __LABEL405
+__LABEL404:
 	ld a, (ix-2)
 	push af
 	ld a, 1
 	pop hl
 	cp h
-	jp nc, __LABEL338
+	jp nc, __LABEL407
 	ld a, (ix-2)
 	dec a
 	ld l, a
@@ -6303,22 +6831,22 @@ __LABEL335:
 	call __ARRAY
 	ld a, (hl)
 	ld (ix-8), a
-__LABEL338:
-__LABEL336:
-	jp __LABEL334
-__LABEL333:
+__LABEL407:
+__LABEL405:
+	jp __LABEL403
+__LABEL402:
 	ld a, (ix-2)
 	sub 12
-	jp nz, __LABEL339
+	jp nz, __LABEL408
 	ld (ix-10), 1
-	jp __LABEL340
-__LABEL339:
+	jp __LABEL409
+__LABEL408:
 	ld a, (ix-2)
 	push af
 	ld h, 11
 	pop af
 	cp h
-	jp nc, __LABEL342
+	jp nc, __LABEL411
 	ld a, (ix-2)
 	add a, 2
 	ld l, a
@@ -6350,12 +6878,12 @@ __LABEL339:
 	call __ARRAY
 	ld a, (hl)
 	ld (ix-8), a
-__LABEL342:
-__LABEL340:
-__LABEL334:
+__LABEL411:
+__LABEL409:
+__LABEL403:
 	ld a, (ix-7)
 	or (ix-8)
-	jp z, __LABEL344
+	jp z, __LABEL413
 	ld (ix-4), 0
 	ld a, (ix-7)
 	sub 2
@@ -6368,15 +6896,15 @@ __LABEL334:
 	sbc a, a
 	pop de
 	or d
-	jp z, __LABEL346
+	jp z, __LABEL415
 	ld (ix-11), 1
-__LABEL346:
-__LABEL344:
-__LABEL318:
-__LABEL316:
+__LABEL415:
+__LABEL413:
+__LABEL387:
+__LABEL385:
 	ld a, (ix-4)
 	or a
-	jp z, __LABEL348
+	jp z, __LABEL417
 	ld a, (_playerY)
 	add a, (ix-4)
 	push af
@@ -6392,33 +6920,33 @@ __LABEL316:
 	call __DIVI8_FAST
 	sub 5
 	ld (ix-2), a
-__LABEL348:
+__LABEL417:
 	ld a, (ix-6)
 	ld h, (ix-3)
 	or a
-	jr z, __LABEL698
+	jr z, __LABEL781
 	ld a, h
-__LABEL698:
+__LABEL781:
 	or a
-	jp z, __LABEL350
+	jp z, __LABEL419
 	ld a, (ix-5)
 	or a
-	jp z, __LABEL351
+	jp z, __LABEL420
 	ld a, (ix-3)
 	sub 254
-	jp nz, __LABEL353
+	jp nz, __LABEL422
 	ld a, (ix-1)
 	dec a
-	jp nz, __LABEL355
+	jp nz, __LABEL424
 	ld (ix-10), 1
-	jp __LABEL356
-__LABEL355:
+	jp __LABEL425
+__LABEL424:
 	ld a, (ix-2)
 	push af
 	xor a
 	pop hl
 	cp h
-	jp nc, __LABEL357
+	jp nc, __LABEL426
 	ld a, (ix-2)
 	ld l, a
 	ld h, 0
@@ -6434,16 +6962,16 @@ __LABEL355:
 	call __ARRAY
 	ld a, (hl)
 	ld (ix-7), a
-	jp __LABEL358
-__LABEL357:
+	jp __LABEL427
+__LABEL426:
 	ld (ix-7), 0
-__LABEL358:
+__LABEL427:
 	ld a, (ix-2)
 	push af
 	ld h, 12
 	pop af
 	cp h
-	jp nc, __LABEL359
+	jp nc, __LABEL428
 	ld a, (ix-2)
 	inc a
 	ld l, a
@@ -6460,25 +6988,25 @@ __LABEL358:
 	call __ARRAY
 	ld a, (hl)
 	ld (ix-8), a
-	jp __LABEL360
-__LABEL359:
+	jp __LABEL429
+__LABEL428:
 	ld (ix-8), 0
-__LABEL360:
-__LABEL356:
-	jp __LABEL354
-__LABEL353:
+__LABEL429:
+__LABEL425:
+	jp __LABEL423
+__LABEL422:
 	ld a, (ix-1)
 	sub 32
-	jp nz, __LABEL361
+	jp nz, __LABEL430
 	ld (ix-10), 1
-	jp __LABEL362
-__LABEL361:
+	jp __LABEL431
+__LABEL430:
 	ld a, (ix-2)
 	push af
 	xor a
 	pop hl
 	cp h
-	jp nc, __LABEL363
+	jp nc, __LABEL432
 	ld a, (ix-2)
 	ld l, a
 	ld h, 0
@@ -6494,16 +7022,16 @@ __LABEL361:
 	call __ARRAY
 	ld a, (hl)
 	ld (ix-7), a
-	jp __LABEL364
-__LABEL363:
+	jp __LABEL433
+__LABEL432:
 	ld (ix-7), 0
-__LABEL364:
+__LABEL433:
 	ld a, (ix-2)
 	push af
 	ld h, 12
 	pop af
 	cp h
-	jp nc, __LABEL365
+	jp nc, __LABEL434
 	ld a, (ix-2)
 	inc a
 	ld l, a
@@ -6520,15 +7048,15 @@ __LABEL364:
 	call __ARRAY
 	ld a, (hl)
 	ld (ix-8), a
-	jp __LABEL366
-__LABEL365:
+	jp __LABEL435
+__LABEL434:
 	ld (ix-8), 0
-__LABEL366:
-__LABEL362:
-__LABEL354:
+__LABEL435:
+__LABEL431:
+__LABEL423:
 	ld a, (ix-7)
 	or (ix-8)
-	jp z, __LABEL368
+	jp z, __LABEL437
 	ld (ix-3), 0
 	ld a, (ix-7)
 	sub 2
@@ -6541,27 +7069,27 @@ __LABEL354:
 	sbc a, a
 	pop de
 	or d
-	jp z, __LABEL370
+	jp z, __LABEL439
 	ld (ix-11), 1
-__LABEL370:
-__LABEL368:
-	jp __LABEL352
-__LABEL351:
+__LABEL439:
+__LABEL437:
+	jp __LABEL421
+__LABEL420:
 	ld a, (ix-3)
 	sub 254
-	jp nz, __LABEL371
+	jp nz, __LABEL440
 	ld a, (ix-1)
 	dec a
-	jp nz, __LABEL373
+	jp nz, __LABEL442
 	ld (ix-10), 1
-	jp __LABEL374
-__LABEL373:
+	jp __LABEL443
+__LABEL442:
 	ld a, (ix-2)
 	push af
 	xor a
 	pop hl
 	cp h
-	jp nc, __LABEL375
+	jp nc, __LABEL444
 	ld a, (ix-2)
 	ld l, a
 	ld h, 0
@@ -6577,16 +7105,16 @@ __LABEL373:
 	call __ARRAY
 	ld a, (hl)
 	ld (ix-7), a
-	jp __LABEL376
-__LABEL375:
+	jp __LABEL445
+__LABEL444:
 	ld (ix-7), 0
-__LABEL376:
+__LABEL445:
 	ld a, (ix-2)
 	push af
 	ld h, 12
 	pop af
 	cp h
-	jp nc, __LABEL377
+	jp nc, __LABEL446
 	ld a, (ix-2)
 	inc a
 	ld l, a
@@ -6603,16 +7131,16 @@ __LABEL376:
 	call __ARRAY
 	ld a, (hl)
 	ld (ix-8), a
-	jp __LABEL378
-__LABEL377:
+	jp __LABEL447
+__LABEL446:
 	ld (ix-8), 0
-__LABEL378:
+__LABEL447:
 	ld a, (ix-2)
 	push af
 	ld h, 11
 	pop af
 	cp h
-	jp nc, __LABEL379
+	jp nc, __LABEL448
 	ld a, (ix-2)
 	add a, 2
 	ld l, a
@@ -6629,25 +7157,25 @@ __LABEL378:
 	call __ARRAY
 	ld a, (hl)
 	ld (ix-9), a
-	jp __LABEL380
-__LABEL379:
+	jp __LABEL449
+__LABEL448:
 	ld (ix-9), 0
-__LABEL380:
-__LABEL374:
-	jp __LABEL372
-__LABEL371:
+__LABEL449:
+__LABEL443:
+	jp __LABEL441
+__LABEL440:
 	ld a, (ix-1)
 	sub 32
-	jp nz, __LABEL381
+	jp nz, __LABEL450
 	ld (ix-10), 1
-	jp __LABEL382
-__LABEL381:
+	jp __LABEL451
+__LABEL450:
 	ld a, (ix-2)
 	push af
 	xor a
 	pop hl
 	cp h
-	jp nc, __LABEL383
+	jp nc, __LABEL452
 	ld a, (ix-2)
 	ld l, a
 	ld h, 0
@@ -6663,16 +7191,16 @@ __LABEL381:
 	call __ARRAY
 	ld a, (hl)
 	ld (ix-7), a
-	jp __LABEL384
-__LABEL383:
+	jp __LABEL453
+__LABEL452:
 	ld (ix-7), 0
-__LABEL384:
+__LABEL453:
 	ld a, (ix-2)
 	push af
 	ld h, 12
 	pop af
 	cp h
-	jp nc, __LABEL385
+	jp nc, __LABEL454
 	ld a, (ix-2)
 	inc a
 	ld l, a
@@ -6689,16 +7217,16 @@ __LABEL384:
 	call __ARRAY
 	ld a, (hl)
 	ld (ix-8), a
-	jp __LABEL386
-__LABEL385:
+	jp __LABEL455
+__LABEL454:
 	ld (ix-8), 0
-__LABEL386:
+__LABEL455:
 	ld a, (ix-2)
 	push af
 	ld h, 11
 	pop af
 	cp h
-	jp nc, __LABEL387
+	jp nc, __LABEL456
 	ld a, (ix-2)
 	add a, 2
 	ld l, a
@@ -6715,16 +7243,16 @@ __LABEL386:
 	call __ARRAY
 	ld a, (hl)
 	ld (ix-9), a
-	jp __LABEL388
-__LABEL387:
+	jp __LABEL457
+__LABEL456:
 	ld (ix-9), 0
-__LABEL388:
-__LABEL382:
-__LABEL372:
+__LABEL457:
+__LABEL451:
+__LABEL441:
 	ld a, (ix-7)
 	or (ix-8)
 	or (ix-9)
-	jp z, __LABEL390
+	jp z, __LABEL459
 	ld (ix-3), 0
 	ld a, (ix-7)
 	sub 2
@@ -6744,29 +7272,29 @@ __LABEL372:
 	sbc a, a
 	pop de
 	or d
-	jp z, __LABEL392
+	jp z, __LABEL461
 	ld (ix-11), 1
-__LABEL392:
-__LABEL390:
-__LABEL352:
-__LABEL350:
+__LABEL461:
+__LABEL459:
+__LABEL421:
+__LABEL419:
 	xor a
 	ld (_playerMoved), a
 	ld a, (ix-10)
 	or a
-	jp z, __LABEL393
+	jp z, __LABEL462
 	ld a, 2
 	jp _movePlayer__leave
-__LABEL393:
+__LABEL462:
 	ld a, (ix-11)
 	or a
-	jp z, __LABEL395
+	jp z, __LABEL464
 	ld a, 1
 	jp _movePlayer__leave
-__LABEL395:
+__LABEL464:
 	ld a, (ix-3)
 	or (ix-4)
-	jp z, __LABEL398
+	jp z, __LABEL467
 	ld a, (_playerX)
 	ld (_prevPlayerX), a
 	ld a, (_playerY)
@@ -6779,21 +7307,21 @@ __LABEL395:
 	ld (_playerY), a
 	ld a, (ix-3)
 	sub 2
-	jp nz, __LABEL399
+	jp nz, __LABEL468
 	ld a, 1
 	ld (_playerDir), a
-	jp __LABEL400
-__LABEL399:
+	jp __LABEL469
+__LABEL468:
 	ld a, (ix-3)
 	sub 254
-	jp nz, __LABEL402
+	jp nz, __LABEL471
 	ld a, 255
 	ld (_playerDir), a
-__LABEL402:
-__LABEL400:
+__LABEL471:
+__LABEL469:
 	ld a, 1
 	ld (_playerMoved), a
-__LABEL398:
+__LABEL467:
 	ld a, (_personX)
 	push af
 	ld a, (_personY)
@@ -6803,18 +7331,18 @@ __LABEL398:
 	ld h, a
 	pop af
 	or a
-	jr z, __LABEL699
+	jr z, __LABEL782
 	ld a, h
-__LABEL699:
+__LABEL782:
 	or a
-	jp z, __LABEL404
+	jp z, __LABEL473
 	ld a, 3
 	jp _movePlayer__leave
-__LABEL404:
+__LABEL473:
 	xor a
 	jp _movePlayer__leave
-__LABEL396:
-__LABEL394:
+__LABEL465:
+__LABEL463:
 _movePlayer__leave:
 	ld sp, ix
 	pop ix
@@ -6825,7 +7353,7 @@ _drawPlayer:
 	add ix, sp
 	ld a, (_playerMoved)
 	or a
-	jp z, __LABEL405
+	jp z, __LABEL474
 	ld a, (_prevPlayerX)
 	ld l, a
 	ld h, 0
@@ -6849,16 +7377,16 @@ _drawPlayer:
 	call _drawSprite
 	ld a, (_playerDir)
 	dec a
-	jp nz, __LABEL407
+	jp nz, __LABEL476
 	ld hl, _body2r.__DATA__
 	ld (_lastBody), hl
-	jp __LABEL408
-__LABEL407:
+	jp __LABEL477
+__LABEL476:
 	ld hl, _body2l.__DATA__
 	ld (_lastBody), hl
-__LABEL408:
-	jp __LABEL406
-__LABEL405:
+__LABEL477:
+	jp __LABEL475
+__LABEL474:
 	ld a, (_playerX)
 	ld l, a
 	ld h, 0
@@ -6882,45 +7410,45 @@ __LABEL405:
 	call _drawSprite
 	ld a, (_playerDir)
 	dec a
-	jp nz, __LABEL409
+	jp nz, __LABEL478
 	ld hl, _body1r.__DATA__
 	ld (_lastBody), hl
-	jp __LABEL410
-__LABEL409:
+	jp __LABEL479
+__LABEL478:
 	ld hl, _body1l.__DATA__
 	ld (_lastBody), hl
-__LABEL410:
-__LABEL406:
+__LABEL479:
+__LABEL475:
 	ld a, (_playerDir)
 	dec a
-	jp nz, __LABEL411
+	jp nz, __LABEL480
 	ld de, _head1r.__DATA__
 	ld hl, (_lastHead)
 	or a
 	sbc hl, de
-	jp nz, __LABEL413
+	jp nz, __LABEL482
 	ld hl, _head2r.__DATA__
 	ld (_lastHead), hl
-	jp __LABEL414
-__LABEL413:
+	jp __LABEL483
+__LABEL482:
 	ld hl, _head1r.__DATA__
 	ld (_lastHead), hl
-__LABEL414:
-	jp __LABEL412
-__LABEL411:
+__LABEL483:
+	jp __LABEL481
+__LABEL480:
 	ld de, _head1l.__DATA__
 	ld hl, (_lastHead)
 	or a
 	sbc hl, de
-	jp nz, __LABEL415
+	jp nz, __LABEL484
 	ld hl, _head2l.__DATA__
 	ld (_lastHead), hl
-	jp __LABEL416
-__LABEL415:
+	jp __LABEL485
+__LABEL484:
 	ld hl, _head1l.__DATA__
 	ld (_lastHead), hl
-__LABEL416:
-__LABEL412:
+__LABEL485:
+__LABEL481:
 	ld a, (_playerX)
 	ld l, a
 	ld h, 0
@@ -6950,7 +7478,7 @@ _keybScan:
 	push ix
 	ld ix, 0
 	add ix, sp
-#line 1530
+#line 1667
 		push ix
 		ld ix, _keyStates.__DATA__
 		ld (ix+0), 0
@@ -6987,7 +7515,7 @@ key_test_q:
 		ld (ix + 4), a
 		end_keyscan
 		pop ix
-#line 1566
+#line 1703
 _keybScan__leave:
 	ld sp, ix
 	pop ix
@@ -6996,7 +7524,7 @@ _longPause:
 	push ix
 	ld ix, 0
 	add ix, sp
-#line 1577
+#line 1714
 		di
 		ei
 		ld a, 20
@@ -7005,7 +7533,7 @@ pause_loop:
 		dec a
 		jr nz, pause_loop
 		di
-#line 1585
+#line 1722
 _longPause__leave:
 	ld sp, ix
 	pop ix
@@ -7020,25 +7548,25 @@ _updateLifes:
 	ld a, 4
 	ld hl, (_lifes - 1)
 	cp h
-	jp nc, __LABEL418
+	jp nc, __LABEL487
 	ld a, 4
 	ld (_lifes), a
-__LABEL418:
+__LABEL487:
 	xor a
 	ld (_tmpX), a
-	jp __LABEL419
-__LABEL422:
+	jp __LABEL488
+__LABEL491:
 	ld a, (_tmpX)
 	ld hl, (_lifes - 1)
 	cp h
-	jp nc, __LABEL424
+	jp nc, __LABEL493
 	ld a, 69
 	ld (_tmpY), a
-	jp __LABEL425
-__LABEL424:
+	jp __LABEL494
+__LABEL493:
 	xor a
 	ld (_tmpY), a
-__LABEL425:
+__LABEL494:
 	ld a, (_tmpY)
 	push af
 	ld a, (_tmpX)
@@ -7055,15 +7583,15 @@ __LABEL425:
 	ld a, 22
 	push af
 	call _setattr
-__LABEL423:
+__LABEL492:
 	ld hl, _tmpX
 	inc (hl)
-__LABEL419:
+__LABEL488:
 	ld a, 3
 	ld hl, (_tmpX - 1)
 	cp h
-	jp nc, __LABEL422
-__LABEL421:
+	jp nc, __LABEL491
+__LABEL490:
 _updateLifes__leave:
 	ld sp, ix
 	pop ix
@@ -7076,12 +7604,12 @@ _processDeath:
 	push ix
 	ld ix, 0
 	add ix, sp
-#line 1611
+#line 1748
 		di
 		ei
 		halt
 		di
-#line 1615
+#line 1752
 	xor a
 	push af
 	ld a, 1
@@ -7091,7 +7619,7 @@ _processDeath:
 	xor a
 	call _createAttrib
 	call _dumpAttribCenter
-#line 1620
+#line 1757
 		di
 		ei
 		halt
@@ -7099,7 +7627,7 @@ _processDeath:
 		halt
 		halt
 		di
-#line 1627
+#line 1764
 	call _dumpAttribsCenter
 	ld a, 1
 	call _playAudio
@@ -7214,11 +7742,11 @@ _processDeath:
 	call _drawSprite
 	ld a, (_practice)
 	or a
-	jp nz, __LABEL427
+	jp nz, __LABEL496
 	ld a, 255
 	push af
 	call _updateLifes
-__LABEL427:
+__LABEL496:
 	call _dumpScreenCenter
 	call _longPause
 	xor a
@@ -7237,21 +7765,25 @@ _render:
 	call _drawShot
 	call _drawEnemies
 	call _drawDynamite
-#line 1703
+	ld a, (_activeEnemies)
+	cp 5
+	jp nc, __LABEL498
+#line 1829
 		di
 		ei
 		nop
 		halt
 		di
-#line 1708
+#line 1834
+__LABEL498:
 	ld a, (_lightOn)
 	or a
-	jp z, __LABEL428
+	jp z, __LABEL499
 	call _dumpScreenCenter
-	jp __LABEL429
-__LABEL428:
+	jp __LABEL500
+__LABEL499:
 	call _dumpPixelsCenter
-__LABEL429:
+__LABEL500:
 _render__leave:
 	ld sp, ix
 	pop ix
@@ -7273,8 +7805,8 @@ _gameOver:
 	call _createAttrib
 	ld (_tmpX), a
 	ld (ix-1), 7
-	jp __LABEL430
-__LABEL433:
+	jp __LABEL501
+__LABEL504:
 	ld a, (_tmpX)
 	ld l, a
 	ld h, 0
@@ -7299,19 +7831,19 @@ __LABEL433:
 	push hl
 	ld hl, _skull.__DATA__
 	call _printColorChar
-__LABEL434:
+__LABEL505:
 	inc (ix-1)
-__LABEL430:
+__LABEL501:
 	ld a, (ix-1)
 	push af
 	ld a, 24
 	pop hl
 	cp h
-	jp nc, __LABEL433
-__LABEL432:
+	jp nc, __LABEL504
+__LABEL503:
 	ld (ix-1), 8
-	jp __LABEL435
-__LABEL438:
+	jp __LABEL506
+__LABEL509:
 	ld a, (_tmpX)
 	ld l, a
 	ld h, 0
@@ -7336,42 +7868,42 @@ __LABEL438:
 	push hl
 	ld hl, _skull.__DATA__
 	call _printColorChar
-__LABEL439:
+__LABEL510:
 	inc (ix-1)
-__LABEL435:
+__LABEL506:
 	ld a, (ix-1)
 	push af
 	ld a, 16
 	pop hl
 	cp h
-	jp nc, __LABEL438
-__LABEL437:
+	jp nc, __LABEL509
+__LABEL508:
 	ld (ix-1), 9
-	jp __LABEL440
-__LABEL443:
+	jp __LABEL511
+__LABEL514:
 	xor a
 	push af
 	ld a, 8
 	push af
 	ld a, (ix-1)
 	push af
-	ld hl, __LABEL445
+	ld hl, __LABEL516
 	call __LOADSTR
 	push hl
 	call _printZXString
-__LABEL444:
+__LABEL515:
 	inc (ix-1)
-__LABEL440:
+__LABEL511:
 	ld a, (ix-1)
 	push af
 	ld a, 15
 	pop hl
 	cp h
-	jp nc, __LABEL443
-__LABEL442:
+	jp nc, __LABEL514
+__LABEL513:
 	ld a, (_continues)
 	or a
-	jp z, __LABEL446
+	jp z, __LABEL517
 	ld a, 11
 	ld (_tmpY), a
 	ld a, (_tmpX)
@@ -7380,15 +7912,15 @@ __LABEL442:
 	push af
 	ld a, 13
 	push af
-	ld hl, __LABEL448
+	ld hl, __LABEL519
 	call __LOADSTR
 	push hl
 	call _printZXString
-	jp __LABEL447
-__LABEL446:
+	jp __LABEL518
+__LABEL517:
 	ld a, 12
 	ld (_tmpY), a
-__LABEL447:
+__LABEL518:
 	xor a
 	push af
 	ld a, 1
@@ -7402,24 +7934,24 @@ __LABEL447:
 	push af
 	ld a, (_tmpY)
 	push af
-	ld hl, __LABEL449
+	ld hl, __LABEL520
 	call __LOADSTR
 	push hl
 	call _printZXString
-#line 1755
+#line 1891
 		di
 		ei
 		halt
 		di
-#line 1759
+#line 1895
 	call _dumpScreenCenter
 	ld a, 6
 	call _playAudio
 	ld a, (_continues)
 	or a
-	jp z, __LABEL450
-__LABEL452:
-#line 1768
+	jp z, __LABEL521
+__LABEL523:
+#line 1904
 		ld bc, 57342
 		in a, (c)
 		and 16
@@ -7428,10 +7960,10 @@ __LABEL452:
 		in a, (c)
 		and 8
 		ld (_tmpY), a
-#line 1776
+#line 1912
 	ld a, (_tmpX)
 	or a
-	jp nz, __LABEL454
+	jp nz, __LABEL525
 	ld hl, _continues
 	dec (hl)
 	ld a, 4
@@ -7442,24 +7974,41 @@ __LABEL452:
 	ld (_lifes), a
 	call _interface
 	call _dumpScreenBottom
+	ld hl, 0
+	push hl
+	call _updateScore
 	ld a, 1
 	jp _gameOver__leave
-__LABEL454:
+__LABEL525:
 	ld a, (_tmpY)
 	or a
-	jp nz, __LABEL457
+	jp nz, __LABEL528
+	ld hl, (_highScores.__DATA__ + 18)
+	ld de, (_score)
+	or a
+	sbc hl, de
+	jp nc, __LABEL530
+	call _inputHighScore
+__LABEL530:
 	xor a
 	jp _gameOver__leave
-__LABEL457:
-__LABEL455:
-	jp __LABEL452
-__LABEL453:
-	jp __LABEL451
-__LABEL450:
+__LABEL528:
+__LABEL526:
+	jp __LABEL523
+__LABEL524:
+	jp __LABEL522
+__LABEL521:
 	call _waitSpace
+	ld hl, (_highScores.__DATA__ + 18)
+	ld de, (_score)
+	or a
+	sbc hl, de
+	jp nc, __LABEL532
+	call _inputHighScore
+__LABEL532:
 	xor a
 	jp _gameOver__leave
-__LABEL451:
+__LABEL522:
 _gameOver__leave:
 	ld sp, ix
 	pop ix
@@ -7474,15 +8023,15 @@ _checkDynamite:
 	push hl
 	ld a, (_dynaCounter)
 	cp 25
-	jp nc, __LABEL458
+	jp nc, __LABEL533
 	ld hl, _dynaCounter
 	dec (hl)
 	ld a, (_dynaCounter)
 	or a
-	jp nz, __LABEL461
+	jp nz, __LABEL536
 	ld a, (_dynaX)
 	and 1
-	jp nz, __LABEL462
+	jp nz, __LABEL537
 	ld a, (_dynaX)
 	ld h, 8
 	call __DIVU8_FAST
@@ -7492,24 +8041,24 @@ _checkDynamite:
 	ld a, 4
 	ld hl, (_xEnd - 1)
 	cp h
-	jp nc, __LABEL464
+	jp nc, __LABEL539
 	ld a, (_xEnd)
 	sub 4
 	ld (_xStart), a
-	jp __LABEL465
-__LABEL464:
+	jp __LABEL540
+__LABEL539:
 	ld a, 1
 	ld (_xStart), a
-__LABEL465:
+__LABEL540:
 	ld a, 32
 	ld hl, (_xEnd - 1)
 	cp h
-	jp nc, __LABEL467
+	jp nc, __LABEL542
 	ld a, 32
 	ld (_xEnd), a
-__LABEL467:
-	jp __LABEL463
-__LABEL462:
+__LABEL542:
+	jp __LABEL538
+__LABEL537:
 	ld a, (_dynaX)
 	ld h, 8
 	call __DIVU8_FAST
@@ -7519,23 +8068,23 @@ __LABEL462:
 	ld a, 5
 	ld hl, (_xEnd - 1)
 	cp h
-	jp nc, __LABEL468
+	jp nc, __LABEL543
 	ld a, (_xEnd)
 	sub 5
 	ld (_xStart), a
-	jp __LABEL469
-__LABEL468:
+	jp __LABEL544
+__LABEL543:
 	ld a, 1
 	ld (_xStart), a
-__LABEL469:
+__LABEL544:
 	ld a, 32
 	ld hl, (_xEnd - 1)
 	cp h
-	jp nc, __LABEL471
+	jp nc, __LABEL546
 	ld a, 32
 	ld (_xEnd), a
-__LABEL471:
-__LABEL463:
+__LABEL546:
+__LABEL538:
 	ld a, (_dynaY)
 	ld h, 8
 	call __DIVU8_FAST
@@ -7545,30 +8094,30 @@ __LABEL463:
 	ld a, 4
 	ld hl, (_yEnd - 1)
 	cp h
-	jp nc, __LABEL472
+	jp nc, __LABEL547
 	ld a, (_yEnd)
 	sub 4
 	ld (_yStart), a
-	jp __LABEL473
-__LABEL472:
+	jp __LABEL548
+__LABEL547:
 	ld a, 1
 	ld (_yStart), a
-__LABEL473:
+__LABEL548:
 	ld a, 12
 	ld hl, (_yEnd - 1)
 	cp h
-	jp nc, __LABEL475
+	jp nc, __LABEL550
 	ld a, 12
 	ld (_yEnd), a
-__LABEL475:
+__LABEL550:
 	ld a, (_yStart)
 	ld (ix-2), a
-	jp __LABEL476
-__LABEL479:
+	jp __LABEL551
+__LABEL554:
 	ld a, (_xStart)
 	ld (ix-1), a
-	jp __LABEL481
-__LABEL484:
+	jp __LABEL556
+__LABEL559:
 	ld a, (ix-2)
 	ld l, a
 	ld h, 0
@@ -7583,7 +8132,7 @@ __LABEL484:
 	call __ARRAY
 	ld a, (hl)
 	sub 3
-	jp nz, __LABEL487
+	jp nz, __LABEL562
 	ld a, (ix-2)
 	ld l, a
 	ld h, 0
@@ -7613,27 +8162,27 @@ __LABEL484:
 	push hl
 	ld hl, _empty.__DATA__
 	call _printColorChar
-__LABEL487:
-__LABEL485:
+__LABEL562:
+__LABEL560:
 	inc (ix-1)
-__LABEL481:
+__LABEL556:
 	ld a, (ix-1)
 	push af
 	ld a, (_xEnd)
 	pop hl
 	cp h
-	jp nc, __LABEL484
-__LABEL483:
-__LABEL480:
+	jp nc, __LABEL559
+__LABEL558:
+__LABEL555:
 	inc (ix-2)
-__LABEL476:
+__LABEL551:
 	ld a, (ix-2)
 	push af
 	ld a, (_yEnd)
 	pop hl
 	cp h
-	jp nc, __LABEL479
-__LABEL478:
+	jp nc, __LABEL554
+__LABEL553:
 	ld a, (_playerX)
 	ld l, a
 	ld h, 0
@@ -7658,13 +8207,13 @@ __LABEL478:
 	pop hl
 	call __LTI16
 	or a
-	jp z, __LABEL489
+	jp z, __LABEL564
 	ld l, (ix-4)
 	ld h, (ix-3)
 	call __NEGHL
 	ld (ix-4), l
 	ld (ix-3), h
-__LABEL489:
+__LABEL564:
 	ld a, (_playerY)
 	ld l, a
 	ld h, 0
@@ -7690,13 +8239,13 @@ __LABEL489:
 	pop hl
 	call __LTI16
 	or a
-	jp z, __LABEL491
+	jp z, __LABEL566
 	ld l, (ix-6)
 	ld h, (ix-5)
 	call __NEGHL
 	ld (ix-6), l
 	ld (ix-5), h
-__LABEL491:
+__LABEL566:
 	ld l, (ix-6)
 	ld h, (ix-5)
 	push hl
@@ -7713,17 +8262,17 @@ __LABEL491:
 	ld h, a
 	pop af
 	or a
-	jr z, __LABEL700
+	jr z, __LABEL783
 	ld a, h
-__LABEL700:
+__LABEL783:
 	or a
-	jp z, __LABEL493
+	jp z, __LABEL568
 	ld a, 1
 	jp _checkDynamite__leave
-__LABEL493:
-__LABEL461:
-	jp __LABEL459
-__LABEL458:
+__LABEL568:
+__LABEL536:
+	jp __LABEL534
+__LABEL533:
 	ld a, (_keyStates.__DATA__ + 3)
 	push af
 	xor a
@@ -7733,9 +8282,9 @@ __LABEL458:
 	ld h, a
 	pop af
 	or a
-	jr z, __LABEL701
+	jr z, __LABEL784
 	ld a, h
-__LABEL701:
+__LABEL784:
 	push af
 	ld a, (_entryScreen)
 	sub 1
@@ -7743,14 +8292,14 @@ __LABEL701:
 	ld h, a
 	pop af
 	or a
-	jr z, __LABEL702
+	jr z, __LABEL785
 	ld a, h
-__LABEL702:
+__LABEL785:
 	or a
-	jp z, __LABEL495
+	jp z, __LABEL570
 	ld a, (_playerY)
 	and 7
-	jp nz, __LABEL497
+	jp nz, __LABEL572
 	ld a, (_playerX)
 	ld h, 8
 	call __DIVU8_FAST
@@ -7765,19 +8314,19 @@ __LABEL702:
 	ld h, a
 	pop af
 	or a
-	jr z, __LABEL703
+	jr z, __LABEL786
 	ld a, h
-__LABEL703:
+__LABEL786:
 	or a
-	jp z, __LABEL498
+	jp z, __LABEL573
 	ld a, (_xStart)
 	inc a
 	ld (_xEnd), a
-	jp __LABEL499
-__LABEL498:
+	jp __LABEL574
+__LABEL573:
 	ld a, (_xStart)
 	ld (_xEnd), a
-__LABEL499:
+__LABEL574:
 	ld a, (_playerY)
 	ld h, 8
 	call __DIVU8_FAST
@@ -7810,10 +8359,10 @@ __LABEL499:
 	call __ARRAY
 	pop af
 	or (hl)
-	jp z, __LABEL501
+	jp z, __LABEL576
 	ld a, (_practice)
 	or a
-	jp nz, __LABEL503
+	jp nz, __LABEL578
 	ld hl, _dynamites
 	dec (hl)
 	xor a
@@ -7825,7 +8374,7 @@ __LABEL499:
 	ld a, 21
 	push af
 	call _setattr
-__LABEL503:
+__LABEL578:
 	ld a, 24
 	ld (_dynaCounter), a
 	ld a, (_playerX)
@@ -7835,10 +8384,10 @@ __LABEL503:
 	ld (_dynaY), a
 	ld hl, 0
 	ld (_lastDyna), hl
-__LABEL501:
-__LABEL497:
-__LABEL495:
-__LABEL459:
+__LABEL576:
+__LABEL572:
+__LABEL570:
+__LABEL534:
 	xor a
 _checkDynamite__leave:
 	ld sp, ix
@@ -7850,10 +8399,10 @@ _drawDynamite:
 	add ix, sp
 	ld a, (_dynaCounter)
 	cp 25
-	jp nc, __LABEL505
+	jp nc, __LABEL580
 	ld a, (_dynaCounter)
 	or a
-	jp nz, __LABEL506
+	jp nz, __LABEL581
 	ld a, 255
 	ld (_dynaCounter), a
 	ld a, (_emptyAttrib)
@@ -7871,7 +8420,7 @@ _drawDynamite:
 	ld hl, (_lastDyna)
 	call _drawColorSprite
 	call _dumpScreenCenter
-#line 1891
+#line 2034
 		di
 		ei
 		halt
@@ -7879,7 +8428,7 @@ _drawDynamite:
 		halt
 		halt
 		di
-#line 1898
+#line 2041
 	xor a
 	push af
 	ld a, 1
@@ -7893,27 +8442,27 @@ _drawDynamite:
 	call _playAudio
 	ld a, (_lightOn)
 	or a
-	jp z, __LABEL508
+	jp z, __LABEL583
 	call _dumpAttribsCenter
-	jp __LABEL509
-__LABEL508:
+	jp __LABEL584
+__LABEL583:
 	call _turnLightOff
-__LABEL509:
+__LABEL584:
 	ld hl, 50
 	push hl
 	call _updateScore
-	jp __LABEL507
-__LABEL506:
+	jp __LABEL582
+__LABEL581:
 	ld a, (_dynaCounter)
 	and 7
-	jp nz, __LABEL511
+	jp nz, __LABEL586
 	ld de, 0
 	ld hl, (_lastDyna)
 	or a
 	sbc hl, de
 	ld a, h
 	or l
-	jp z, __LABEL513
+	jp z, __LABEL588
 	ld a, (_dynaX)
 	ld l, a
 	ld h, 0
@@ -7924,19 +8473,19 @@ __LABEL506:
 	push hl
 	ld hl, (_lastDyna)
 	call _drawSprite
-__LABEL513:
+__LABEL588:
 	ld de, _dynamite1.__DATA__
 	ld hl, (_lastDyna)
 	or a
 	sbc hl, de
-	jp nz, __LABEL514
+	jp nz, __LABEL589
 	ld hl, _dynamite2.__DATA__
 	ld (_lastDyna), hl
-	jp __LABEL515
-__LABEL514:
+	jp __LABEL590
+__LABEL589:
 	ld hl, _dynamite1.__DATA__
 	ld (_lastDyna), hl
-__LABEL515:
+__LABEL590:
 	ld a, (_dynaColor)
 	ld l, a
 	ld h, 0
@@ -7951,15 +8500,15 @@ __LABEL515:
 	push hl
 	ld hl, (_lastDyna)
 	call _drawColorSprite
-__LABEL511:
-__LABEL507:
-__LABEL505:
+__LABEL586:
+__LABEL582:
+__LABEL580:
 _drawDynamite__leave:
 	ld sp, ix
 	pop ix
 	ret
 _playAudio:
-#line 1926
+#line 2069
 playBasic:
 		push ix
 play:
@@ -8163,7 +8712,7 @@ SoundEffect7Data:
 		defw 10,1000,4107
 		defb 0
 end_audio:
-#line 2129
+#line 2272
 _playAudio__leave:
 	ret
 _turnLightOff:
@@ -8181,12 +8730,12 @@ _turnLightOff:
 	call _setattr
 	ld a, 1
 	ld (_xStart), a
-	jp __LABEL516
-__LABEL519:
+	jp __LABEL591
+__LABEL594:
 	ld a, 1
 	ld (_yStart), a
-	jp __LABEL521
-__LABEL524:
+	jp __LABEL596
+__LABEL599:
 	ld a, (_yStart)
 	ld l, a
 	ld h, 0
@@ -8201,7 +8750,7 @@ __LABEL524:
 	call __ARRAY
 	ld a, (hl)
 	or a
-	jp z, __LABEL526
+	jp z, __LABEL601
 	xor a
 	push af
 	ld a, (_xStart)
@@ -8211,8 +8760,8 @@ __LABEL524:
 	add a, 5
 	push af
 	call _setattr
-	jp __LABEL527
-__LABEL526:
+	jp __LABEL602
+__LABEL601:
 	ld a, 7
 	push af
 	ld a, (_xStart)
@@ -8222,25 +8771,25 @@ __LABEL526:
 	add a, 5
 	push af
 	call _setattr
-__LABEL527:
-__LABEL525:
+__LABEL602:
+__LABEL600:
 	ld hl, _yStart
 	inc (hl)
-__LABEL521:
+__LABEL596:
 	ld a, 12
 	ld hl, (_yStart - 1)
 	cp h
-	jp nc, __LABEL524
-__LABEL523:
-__LABEL520:
+	jp nc, __LABEL599
+__LABEL598:
+__LABEL595:
 	ld hl, _xStart
 	inc (hl)
-__LABEL516:
+__LABEL591:
 	ld a, 32
 	ld hl, (_xStart - 1)
 	cp h
-	jp nc, __LABEL519
-__LABEL518:
+	jp nc, __LABEL594
+__LABEL593:
 _turnLightOff__leave:
 	ld sp, ix
 	pop ix
@@ -8252,24 +8801,24 @@ _checkLight:
 	ld hl, (_lightOn - 1)
 	ld a, (_lampX)
 	or a
-	jr z, __LABEL704
+	jr z, __LABEL787
 	ld a, h
-__LABEL704:
+__LABEL787:
 	or a
-	jp z, __LABEL529
+	jp z, __LABEL604
 	ld a, (_lampY)
 	push af
 	ld a, (_lampX)
 	call _checkPlayerCollision
 	or a
-	jp z, __LABEL531
+	jp z, __LABEL606
 	ld a, 2
 	call _playAudio
 	call _turnLightOff
 	xor a
 	ld (_lightOn), a
-__LABEL531:
-__LABEL529:
+__LABEL606:
+__LABEL604:
 _checkLight__leave:
 	ld sp, ix
 	pop ix
@@ -8288,19 +8837,19 @@ _entrance:
 	inc de
 	ldir
 	ld hl, -16
-	ld de, __LABEL705
+	ld de, __LABEL788
 	ld bc, 32
 	call __ALLOC_LOCAL_ARRAY
 	ld a, 5
 	call BORDER
 	ld a, 1
 	ld (_tmpX), a
-	jp __LABEL532
-__LABEL535:
+	jp __LABEL607
+__LABEL610:
 	ld a, 1
 	ld (_tmpY), a
-	jp __LABEL537
-__LABEL540:
+	jp __LABEL612
+__LABEL615:
 	ld a, (_tmpY)
 	ld l, a
 	ld h, 0
@@ -8314,24 +8863,24 @@ __LABEL540:
 	ld hl, _enemyStates
 	call __ARRAY
 	ld (hl), 0
-__LABEL541:
+__LABEL616:
 	ld hl, _tmpY
 	inc (hl)
-__LABEL537:
+__LABEL612:
 	ld a, 11
 	ld hl, (_tmpY - 1)
 	cp h
-	jp nc, __LABEL540
-__LABEL539:
-__LABEL536:
+	jp nc, __LABEL615
+__LABEL614:
+__LABEL611:
 	ld hl, _tmpX
 	inc (hl)
-__LABEL532:
+__LABEL607:
 	ld a, 6
 	ld hl, (_tmpX - 1)
 	cp h
-	jp nc, __LABEL535
-__LABEL534:
+	jp nc, __LABEL610
+__LABEL609:
 	xor a
 	push af
 	xor a
@@ -8373,20 +8922,20 @@ __LABEL534:
 	ld a, (hl)
 	ld (ix-5), a
 	ld b, 6
-__LABEL706:
+__LABEL789:
 	srl a
-	djnz __LABEL706
+	djnz __LABEL789
 	push af
 	ld h, 3
 	pop af
 	and h
 	ld (ix-5), a
 	ld (ix-3), 1
-	jp __LABEL542
-__LABEL545:
+	jp __LABEL617
+__LABEL620:
 	ld (ix-2), 1
-	jp __LABEL547
-__LABEL550:
+	jp __LABEL622
+__LABEL625:
 	ld a, (ix-2)
 	dec a
 	sub 1
@@ -8412,7 +8961,7 @@ __LABEL550:
 	sbc a, a
 	pop de
 	or d
-	jp z, __LABEL552
+	jp z, __LABEL627
 	ld a, (ix-3)
 	ld l, a
 	ld h, 0
@@ -8426,8 +8975,8 @@ __LABEL550:
 	ld hl, _solidMap
 	call __ARRAY
 	ld (hl), 1
-	jp __LABEL553
-__LABEL552:
+	jp __LABEL628
+__LABEL627:
 	ld a, (ix-3)
 	ld l, a
 	ld h, 0
@@ -8441,33 +8990,33 @@ __LABEL552:
 	ld hl, _solidMap
 	call __ARRAY
 	ld (hl), 0
-__LABEL553:
-__LABEL551:
+__LABEL628:
+__LABEL626:
 	inc (ix-2)
-__LABEL547:
+__LABEL622:
 	ld a, (ix-2)
 	push af
 	ld a, 32
 	pop hl
 	cp h
-	jp nc, __LABEL550
-__LABEL549:
-__LABEL546:
+	jp nc, __LABEL625
+__LABEL624:
+__LABEL621:
 	inc (ix-3)
-__LABEL542:
+__LABEL617:
 	ld a, (ix-3)
 	push af
 	ld a, 12
 	pop hl
 	cp h
-	jp nc, __LABEL545
-__LABEL544:
+	jp nc, __LABEL620
+__LABEL619:
 	ld a, (ix-5)
 	or a
-	jp z, __LABEL555
+	jp z, __LABEL630
 	ld (ix-2), 0
-	jp __LABEL556
-__LABEL559:
+	jp __LABEL631
+__LABEL634:
 	ld a, (ix-2)
 	inc a
 	ld l, a
@@ -8483,8 +9032,8 @@ __LABEL559:
 	ld a, (hl)
 	ld (ix-6), a
 	ld (ix-3), 0
-	jp __LABEL561
-__LABEL564:
+	jp __LABEL636
+__LABEL639:
 	ld a, (ix-6)
 	push af
 	ld a, (ix-3)
@@ -8493,14 +9042,14 @@ __LABEL564:
 	or a
 	ld b, a
 	ld a, h
-	jr z, __LABEL708
-__LABEL707:
+	jr z, __LABEL791
+__LABEL790:
 	add a, a
-	djnz __LABEL707
-__LABEL708:
+	djnz __LABEL790
+__LABEL791:
 	pop de
 	and d
-	jp nz, __LABEL567
+	jp nz, __LABEL642
 	ld hl, 11
 	push hl
 	ld a, (ix-2)
@@ -8518,38 +9067,38 @@ __LABEL708:
 	ld (ix-7), 1
 	ld a, (ix-8)
 	or a
-	jp nz, __LABEL569
+	jp nz, __LABEL644
 	ld a, (ix-2)
 	add a, a
 	add a, a
 	add a, (ix-3)
 	inc a
 	ld (ix-8), a
-__LABEL569:
+__LABEL644:
 	ld a, 1
 	ld (_currentMapExit), a
-__LABEL567:
-__LABEL565:
+__LABEL642:
+__LABEL640:
 	inc (ix-3)
-__LABEL561:
+__LABEL636:
 	ld a, (ix-3)
 	push af
 	ld a, 3
 	pop hl
 	cp h
-	jp nc, __LABEL564
-__LABEL563:
-__LABEL560:
+	jp nc, __LABEL639
+__LABEL638:
+__LABEL635:
 	inc (ix-2)
-__LABEL556:
+__LABEL631:
 	ld a, (ix-2)
 	push af
 	ld a, 7
 	pop hl
 	cp h
-	jp nc, __LABEL559
-__LABEL558:
-__LABEL555:
+	jp nc, __LABEL634
+__LABEL633:
+__LABEL630:
 	ld a, (ix-5)
 	dec a
 	push af
@@ -8559,14 +9108,14 @@ __LABEL555:
 	ld h, a
 	pop af
 	or a
-	jr z, __LABEL709
+	jr z, __LABEL792
 	ld a, h
-__LABEL709:
+__LABEL792:
 	or a
-	jp z, __LABEL571
+	jp z, __LABEL646
 	ld (ix-2), 0
-	jp __LABEL572
-__LABEL575:
+	jp __LABEL647
+__LABEL650:
 	ld a, (ix-2)
 	add a, 89
 	ld l, a
@@ -8582,8 +9131,8 @@ __LABEL575:
 	ld a, (hl)
 	ld (ix-6), a
 	ld (ix-3), 0
-	jp __LABEL577
-__LABEL580:
+	jp __LABEL652
+__LABEL655:
 	ld a, (ix-6)
 	push af
 	ld a, (ix-3)
@@ -8592,14 +9141,14 @@ __LABEL580:
 	or a
 	ld b, a
 	ld a, h
-	jr z, __LABEL711
-__LABEL710:
+	jr z, __LABEL794
+__LABEL793:
 	add a, a
-	djnz __LABEL710
-__LABEL711:
+	djnz __LABEL793
+__LABEL794:
 	pop de
 	and d
-	jp nz, __LABEL583
+	jp nz, __LABEL658
 	ld hl, 0
 	push hl
 	ld a, (ix-2)
@@ -8617,38 +9166,38 @@ __LABEL711:
 	ld (ix-7), 2
 	ld a, (ix-8)
 	or a
-	jp nz, __LABEL585
+	jp nz, __LABEL660
 	ld a, (ix-2)
 	add a, a
 	add a, a
 	add a, (ix-3)
 	inc a
 	ld (ix-8), a
-__LABEL585:
+__LABEL660:
 	xor a
 	ld (_currentMapExit), a
-__LABEL583:
-__LABEL581:
+__LABEL658:
+__LABEL656:
 	inc (ix-3)
-__LABEL577:
+__LABEL652:
 	ld a, (ix-3)
 	push af
 	ld a, 3
 	pop hl
 	cp h
-	jp nc, __LABEL580
-__LABEL579:
-__LABEL576:
+	jp nc, __LABEL655
+__LABEL654:
+__LABEL651:
 	inc (ix-2)
-__LABEL572:
+__LABEL647:
 	ld a, (ix-2)
 	push af
 	ld a, 7
 	pop hl
 	cp h
-	jp nc, __LABEL575
-__LABEL574:
-__LABEL571:
+	jp nc, __LABEL650
+__LABEL649:
+__LABEL646:
 	ld a, (ix-5)
 	sub 2
 	push af
@@ -8658,14 +9207,14 @@ __LABEL571:
 	ld h, a
 	pop af
 	or a
-	jr z, __LABEL712
+	jr z, __LABEL795
 	ld a, h
-__LABEL712:
+__LABEL795:
 	or a
-	jp z, __LABEL587
+	jp z, __LABEL662
 	ld (ix-3), 0
-	jp __LABEL588
-__LABEL591:
+	jp __LABEL663
+__LABEL666:
 	ld a, (ix-3)
 	ld h, 8
 	call __MUL8_FAST
@@ -8686,7 +9235,7 @@ __LABEL591:
 	ld h, 3
 	pop af
 	and h
-	jp nz, __LABEL594
+	jp nz, __LABEL669
 	ld a, (ix-3)
 	inc a
 	ld l, a
@@ -8702,18 +9251,18 @@ __LABEL591:
 	ld (ix-8), 32
 	ld a, 3
 	ld (_currentMapExit), a
-__LABEL594:
-__LABEL592:
+__LABEL669:
+__LABEL667:
 	inc (ix-3)
-__LABEL588:
+__LABEL663:
 	ld a, (ix-3)
 	push af
 	ld a, 11
 	pop hl
 	cp h
-	jp nc, __LABEL591
-__LABEL590:
-__LABEL587:
+	jp nc, __LABEL666
+__LABEL665:
+__LABEL662:
 	ld a, (ix-5)
 	sub 3
 	push af
@@ -8723,14 +9272,14 @@ __LABEL587:
 	ld h, a
 	pop af
 	or a
-	jr z, __LABEL713
+	jr z, __LABEL796
 	ld a, h
-__LABEL713:
+__LABEL796:
 	or a
-	jp z, __LABEL596
+	jp z, __LABEL671
 	ld (ix-3), 0
-	jp __LABEL597
-__LABEL600:
+	jp __LABEL672
+__LABEL675:
 	ld a, (ix-3)
 	ld h, 8
 	call __MUL8_FAST
@@ -8751,7 +9300,7 @@ __LABEL600:
 	ld h, 192
 	pop af
 	and h
-	jp nz, __LABEL603
+	jp nz, __LABEL678
 	ld a, (ix-3)
 	inc a
 	ld l, a
@@ -8767,24 +9316,24 @@ __LABEL600:
 	ld (ix-8), 1
 	ld a, 2
 	ld (_currentMapExit), a
-__LABEL603:
-__LABEL601:
+__LABEL678:
+__LABEL676:
 	inc (ix-3)
-__LABEL597:
+__LABEL672:
 	ld a, (ix-3)
 	push af
 	ld a, 11
 	pop hl
 	cp h
-	jp nc, __LABEL600
-__LABEL599:
-__LABEL596:
+	jp nc, __LABEL675
+__LABEL674:
+__LABEL671:
 	ld (ix-3), 1
-	jp __LABEL604
-__LABEL607:
+	jp __LABEL679
+__LABEL682:
 	ld (ix-2), 1
-	jp __LABEL609
-__LABEL612:
+	jp __LABEL684
+__LABEL687:
 	ld a, (ix-3)
 	ld l, a
 	ld h, 0
@@ -8799,7 +9348,7 @@ __LABEL612:
 	call __ARRAY
 	ld a, (hl)
 	dec a
-	jp nz, __LABEL615
+	jp nz, __LABEL690
 	ld a, (ix-3)
 	sub 12
 	sub 1
@@ -8816,9 +9365,9 @@ __LABEL612:
 	ld h, a
 	pop af
 	or a
-	jr z, __LABEL714
+	jr z, __LABEL797
 	ld a, h
-__LABEL714:
+__LABEL797:
 	pop de
 	or d
 	push af
@@ -8834,9 +9383,9 @@ __LABEL714:
 	ld h, a
 	pop af
 	or a
-	jr z, __LABEL715
+	jr z, __LABEL798
 	ld a, h
-__LABEL715:
+__LABEL798:
 	pop de
 	or d
 	push af
@@ -8852,12 +9401,12 @@ __LABEL715:
 	ld h, a
 	pop af
 	or a
-	jr z, __LABEL716
+	jr z, __LABEL799
 	ld a, h
-__LABEL716:
+__LABEL799:
 	pop de
 	or d
-	jp z, __LABEL617
+	jp z, __LABEL692
 	ld a, (ix-4)
 	ld l, a
 	ld h, 0
@@ -8874,28 +9423,28 @@ __LABEL716:
 	push hl
 	ld hl, _outWall.__DATA__
 	call _printColorChar
-__LABEL617:
-__LABEL615:
-__LABEL613:
+__LABEL692:
+__LABEL690:
+__LABEL688:
 	inc (ix-2)
-__LABEL609:
+__LABEL684:
 	ld a, (ix-2)
 	push af
 	ld a, 32
 	pop hl
 	cp h
-	jp nc, __LABEL612
-__LABEL611:
-__LABEL608:
+	jp nc, __LABEL687
+__LABEL686:
+__LABEL683:
 	inc (ix-3)
-__LABEL604:
+__LABEL679:
 	ld a, (ix-3)
 	push af
 	ld a, 12
 	pop hl
 	cp h
-	jp nc, __LABEL607
-__LABEL606:
+	jp nc, __LABEL682
+__LABEL681:
 	ld a, (_playerX)
 	sub 1
 	sbc a, a
@@ -8906,11 +9455,11 @@ __LABEL606:
 	ld h, a
 	pop af
 	or a
-	jr z, __LABEL717
+	jr z, __LABEL800
 	ld a, h
-__LABEL717:
+__LABEL800:
 	or a
-	jp z, __LABEL619
+	jp z, __LABEL694
 	ld a, 120
 	ld (_playerY), a
 	ld a, (ix-8)
@@ -8918,7 +9467,7 @@ __LABEL717:
 	ld a, 16
 	pop hl
 	cp h
-	jp nc, __LABEL620
+	jp nc, __LABEL695
 	ld a, 8
 	ld (_playerX), a
 	ld hl, _head1r.__DATA__
@@ -8927,8 +9476,8 @@ __LABEL717:
 	ld (_lastBody), hl
 	ld a, 1
 	ld (_playerDir), a
-	jp __LABEL621
-__LABEL620:
+	jp __LABEL696
+__LABEL695:
 	ld a, 240
 	ld (_playerX), a
 	ld hl, _head1l.__DATA__
@@ -8937,8 +9486,8 @@ __LABEL620:
 	ld (_lastBody), hl
 	xor a
 	ld (_playerDir), a
-__LABEL621:
-__LABEL619:
+__LABEL696:
+__LABEL694:
 	ld a, (ix-1)
 	push af
 	ld a, 12
@@ -8949,7 +9498,7 @@ __LABEL619:
 	call __U8TOFREG
 	call __STR_FAST
 	ex de, hl
-	ld hl, __LABEL622
+	ld hl, __LABEL697
 	push de
 	call __ADDSTR
 	ex (sp), hl
@@ -8983,32 +9532,32 @@ _checkFire:
 	ld h, a
 	pop af
 	or a
-	jr z, __LABEL718
+	jr z, __LABEL801
 	ld a, h
-__LABEL718:
+__LABEL801:
 	or a
-	jp z, __LABEL623
+	jp z, __LABEL698
 	ld a, (_playerDir)
 	dec a
-	jp nz, __LABEL625
+	jp nz, __LABEL700
 	ld a, (_playerX)
 	cp 248
-	jp nc, __LABEL628
+	jp nc, __LABEL703
 	ld a, (_playerX)
 	add a, 8
 	ld (_shotX), a
-__LABEL628:
-	jp __LABEL626
-__LABEL625:
+__LABEL703:
+	jp __LABEL701
+__LABEL700:
 	ld a, 8
 	ld hl, (_playerX - 1)
 	cp h
-	jp nc, __LABEL630
+	jp nc, __LABEL705
 	ld a, (_playerX)
 	sub 8
 	ld (_shotX), a
-__LABEL630:
-__LABEL626:
+__LABEL705:
+__LABEL701:
 	ld a, (_playerY)
 	add a, 4
 	ld (_shotY), a
@@ -9016,8 +9565,8 @@ __LABEL626:
 	ld (_tmpZ), a
 	ld a, 1
 	ld (_tmpResult), a
-	jp __LABEL631
-__LABEL634:
+	jp __LABEL706
+__LABEL709:
 	ld hl, 0
 	push hl
 	ld a, (_tmpResult)
@@ -9029,7 +9578,7 @@ __LABEL634:
 	call __ARRAY
 	ld a, (hl)
 	or a
-	jp z, __LABEL637
+	jp z, __LABEL712
 	ld hl, 1
 	push hl
 	ld a, (_tmpResult)
@@ -9069,9 +9618,9 @@ __LABEL634:
 	ld h, a
 	pop af
 	or a
-	jr z, __LABEL719
+	jr z, __LABEL802
 	ld a, h
-__LABEL719:
+__LABEL802:
 	push af
 	ld hl, (_tmpZ - 1)
 	ld a, (_tmpY)
@@ -9080,9 +9629,9 @@ __LABEL719:
 	ld h, a
 	pop af
 	or a
-	jr z, __LABEL720
+	jr z, __LABEL803
 	ld a, h
-__LABEL720:
+__LABEL803:
 	push af
 	ld a, (_tmpY)
 	add a, 8
@@ -9094,36 +9643,36 @@ __LABEL720:
 	ld h, a
 	pop af
 	or a
-	jr z, __LABEL721
+	jr z, __LABEL804
 	ld a, h
-__LABEL721:
+__LABEL804:
 	or a
-	jp z, __LABEL639
+	jp z, __LABEL714
 	ld a, (_tmpResult)
 	ld (_deadEnemy), a
 	ld hl, _activeEnemies
 	dec (hl)
-	jp __LABEL633
-__LABEL639:
-__LABEL637:
-__LABEL635:
+	jp __LABEL708
+__LABEL714:
+__LABEL712:
+__LABEL710:
 	ld hl, _tmpResult
 	inc (hl)
-__LABEL631:
+__LABEL706:
 	ld a, (_enemyCount)
 	ld hl, (_tmpResult - 1)
 	cp h
-	jp nc, __LABEL634
-__LABEL633:
+	jp nc, __LABEL709
+__LABEL708:
 	ld a, 3
 	call _playAudio
-	jp __LABEL624
-__LABEL623:
+	jp __LABEL699
+__LABEL698:
 	xor a
 	ld (_shotX), a
 	xor a
 	ld (_shotY), a
-__LABEL624:
+__LABEL699:
 _checkFire__leave:
 	ld sp, ix
 	pop ix
@@ -9138,7 +9687,7 @@ _personSaved:
 	push af
 	ld a, 10
 	push af
-	ld hl, __LABEL640
+	ld hl, __LABEL715
 	call __LOADSTR
 	push hl
 	call _printZXString
@@ -9148,7 +9697,7 @@ _personSaved:
 	push af
 	ld a, 11
 	push af
-	ld hl, __LABEL641
+	ld hl, __LABEL716
 	call __LOADSTR
 	push hl
 	call _printZXString
@@ -9158,7 +9707,7 @@ _personSaved:
 	push af
 	ld a, 12
 	push af
-	ld hl, __LABEL640
+	ld hl, __LABEL715
 	call __LOADSTR
 	push hl
 	call _printZXString
@@ -9181,7 +9730,7 @@ _updateScore:
 	ld a, (_practice)
 	dec a
 	jp z, _updateScore__leave
-__LABEL643:
+__LABEL718:
 	ld de, 4095
 	ld hl, (_score)
 	call __BAND16
@@ -9241,11 +9790,11 @@ __LABEL643:
 	or a
 	sbc hl, de
 	ccf
-	jp nc, __LABEL645
+	jp nc, __LABEL720
 	ld a, 1
 	push af
 	call _updateLifes
-__LABEL645:
+__LABEL720:
 _updateScore__leave:
 	ex af, af'
 	exx
@@ -9265,6 +9814,40 @@ _presentEnd:
 	push ix
 	ld ix, 0
 	add ix, sp
+	ld hl, -9
+	add hl, sp
+	ld sp, hl
+	ld (hl), 0
+	ld bc, 8
+	ld d, h
+	ld e, l
+	inc de
+	ldir
+	ld hl, __LABEL806
+	push hl
+	ld hl, -9
+	ld de, __LABEL805
+	ld bc, 32
+	call __ALLOC_INITIALIZED_LOCAL_ARRAY
+	push ix
+	pop hl
+	ld bc, -1
+	add hl, bc
+	ex de, hl
+	ld hl, __LABEL807
+	ld bc, 1
+	ldir
+	push ix
+	pop hl
+	ld bc, -3
+	add hl, bc
+	ex de, hl
+	ld hl, __LABEL808
+	ld bc, 1
+	ldir
+	ld de, 0
+	ld hl, 0
+	call RANDOMIZE
 	ld a, 7
 	call _clearScreen
 	ld a, 7
@@ -9273,7 +9856,7 @@ _presentEnd:
 	push af
 	ld a, 5
 	push af
-	ld hl, __LABEL646
+	ld hl, __LABEL721
 	call __LOADSTR
 	push hl
 	call _printZXString
@@ -9283,7 +9866,7 @@ _presentEnd:
 	push af
 	ld a, 7
 	push af
-	ld hl, __LABEL647
+	ld hl, __LABEL722
 	call __LOADSTR
 	push hl
 	call _printZXString
@@ -9298,7 +9881,7 @@ _presentEnd:
 	call __U32TOFREG
 	call __STR_FAST
 	ex de, hl
-	ld hl, __LABEL648
+	ld hl, __LABEL723
 	push de
 	call __ADDSTR
 	ex (sp), hl
@@ -9306,24 +9889,21 @@ _presentEnd:
 	pop hl
 	push hl
 	call _printZXString
-#line 2447
-		di
-#line 2448
 	call _dumpScreen
 	ld a, 80
 	ld (_tmpColor), a
-__LABEL649:
+__LABEL724:
 	ld a, (_keyStates.__DATA__ + 4)
 	or a
-	jp nz, __LABEL650
+	jp nz, __LABEL725
 	xor a
 	ld (_tmpY), a
-	jp __LABEL651
-__LABEL654:
+	jp __LABEL726
+__LABEL729:
 	xor a
 	ld (_tmpX), a
-	jp __LABEL656
-__LABEL659:
+	jp __LABEL731
+__LABEL734:
 	ld a, (_tmpColor)
 	ld l, a
 	ld h, 0
@@ -9336,48 +9916,352 @@ __LABEL659:
 	ld l, a
 	ld h, 0
 	call _setAttrib
-__LABEL660:
+__LABEL735:
 	ld hl, _tmpX
 	inc (hl)
-__LABEL656:
+__LABEL731:
 	ld a, 31
 	ld hl, (_tmpX - 1)
 	cp h
-	jp nc, __LABEL659
-__LABEL658:
+	jp nc, __LABEL734
+__LABEL733:
 	ld a, (_tmpColor)
 	add a, 8
 	ld (_tmpColor), a
 	sub 120
-	jp nz, __LABEL662
+	jp nz, __LABEL737
 	ld a, 80
 	ld (_tmpColor), a
-__LABEL662:
-__LABEL655:
+__LABEL737:
+__LABEL730:
 	ld hl, _tmpY
 	inc (hl)
-__LABEL651:
+__LABEL726:
 	ld a, 23
 	ld hl, (_tmpY - 1)
 	cp h
-	jp nc, __LABEL654
-__LABEL653:
-#line 2467
+	jp nc, __LABEL729
+__LABEL728:
+	call RND
+	push bc
+	push de
+	push af
+	ld a, 085h
+	ld de, 00078h
+	ld bc, 00000h
+	call __MULF
+	call __FTOU32REG
+	ld a, l
+	ld (ix-4), a
+	call RND
+	push bc
+	push de
+	push af
+	ld a, 085h
+	ld de, 00038h
+	ld bc, 00000h
+	call __MULF
+	call __FTOU32REG
+	ld a, l
+	ld (ix-5), a
+__LABEL738:
+	ld a, (ix-5)
+	push af
+	ld h, 10
+	pop af
+	cp h
+	sbc a, a
+	push af
+	ld a, (ix-5)
+	push af
+	ld a, 4
+	pop hl
+	cp h
+	sbc a, a
+	ld h, a
+	pop af
+	or a
+	jr z, __LABEL809
+	ld a, h
+__LABEL809:
+	push af
+	ld a, (ix-4)
+	push af
+	ld h, 29
+	pop af
+	cp h
+	sbc a, a
+	ld h, a
+	pop af
+	or a
+	jr z, __LABEL810
+	ld a, h
+__LABEL810:
+	push af
+	ld a, (ix-4)
+	push af
+	ld a, 2
+	pop hl
+	cp h
+	sbc a, a
+	ld h, a
+	pop af
+	or a
+	jr z, __LABEL811
+	ld a, h
+__LABEL811:
+	or a
+	jp z, __LABEL739
+	call RND
+	push bc
+	push de
+	push af
+	ld a, 086h
+	ld de, 00000h
+	ld bc, 00000h
+	call __MULF
+	call __FTOU32REG
+	ld a, l
+	ld (ix-4), a
+	call RND
+	push bc
+	push de
+	push af
+	ld a, 085h
+	ld de, 00040h
+	ld bc, 00000h
+	call __MULF
+	call __FTOU32REG
+	ld a, l
+	ld (ix-5), a
+	jp __LABEL738
+__LABEL739:
+	ld a, (ix-4)
+	ld h, 8
+	call __MUL8_FAST
+	ld l, a
+	ld h, 0
+	push hl
+	ld a, (ix-5)
+	ld h, 8
+	call __MUL8_FAST
+	ld l, a
+	ld h, 0
+	push hl
+	ld hl, _heart.__DATA__
+	call _drawSprite
+#line 2630
 		ei
+		nop
 		halt
 		di
-#line 2470
+#line 2634
 	call _dumpAttribs
+	call _dumpPixels
 	call _keybScan
-	jp __LABEL649
-__LABEL650:
+	ld a, (ix-2)
+	or a
+	jp z, __LABEL740
+	ld (ix-2), 0
+	ld a, (ix-1)
+	ld l, a
+	ld h, 0
+	dec hl
+	push hl
+	push ix
+	pop hl
+	ld de, -9
+	add hl, de
+	call __ARRAY
+	ld a, (hl)
+	sub (ix-3)
+	call __U8TOFREG
+	push bc
+	push de
+	push af
+	ld a, 07Ch
+	ld de, 0CC4Ch
+	ld bc, 0CCCCh
+	call BEEP
+	inc (ix-1)
+	ld a, (ix-1)
+	push af
+	ld a, 32
+	pop hl
+	cp h
+	jp nc, __LABEL743
+	ld (ix-1), 1
+	ld a, (ix-3)
+	sub 60
+	jp nz, __LABEL744
+	ld (ix-3), 48
+	jp __LABEL745
+__LABEL744:
+	ld (ix-3), 60
+__LABEL745:
+__LABEL743:
+	jp __LABEL741
+__LABEL740:
+	ld (ix-2), 1
+__LABEL741:
+	jp __LABEL724
+__LABEL725:
 _presentEnd__leave:
+	ex af, af'
+	exx
+	ld l, (ix-7)
+	ld h, (ix-6)
+	call __MEM_FREE
+	ex af, af'
+	exx
 	ld sp, ix
 	pop ix
 	ret
 __LABEL0:
+	DEFW 0003h
+	DEFB 47h
+	DEFB 55h
+	DEFB 53h
+__LABEL1:
+	DEFW 0003h
+	DEFB 41h
+	DEFB 47h
+	DEFB 42h
+__LABEL2:
+	DEFW 0003h
+	DEFB 43h
+	DEFB 48h
+	DEFB 58h
+__LABEL3:
+	DEFW 0003h
+	DEFB 4Ah
+	DEFB 52h
+	DEFB 43h
+__LABEL4:
+	DEFW 0003h
+	DEFB 53h
+	DEFB 4Ah
+	DEFB 4Fh
+__LABEL5:
+	DEFW 0003h
+	DEFB 50h
+	DEFB 43h
+	DEFB 56h
+__LABEL6:
+	DEFW 0003h
+	DEFB 4Dh
+	DEFB 47h
+	DEFB 41h
+__LABEL7:
+	DEFW 0003h
+	DEFB 42h
+	DEFB 52h
+	DEFB 4Ch
+__LABEL8:
+	DEFW 0003h
+	DEFB 53h
+	DEFB 52h
+	DEFB 43h
+__LABEL9:
+	DEFW 0003h
+	DEFB 53h
+	DEFB 4Dh
+	DEFB 42h
+__LABEL10:
 	DEFW 0000h
+__LABEL89:
+	DEFW 0015h
+	DEFB 59h
+	DEFB 4Fh
+	DEFB 55h
+	DEFB 20h
+	DEFB 47h
+	DEFB 4Fh
+	DEFB 54h
+	DEFB 20h
+	DEFB 41h
+	DEFB 20h
+	DEFB 48h
+	DEFB 49h
+	DEFB 47h
+	DEFB 48h
+	DEFB 20h
+	DEFB 53h
+	DEFB 43h
+	DEFB 4Fh
+	DEFB 52h
+	DEFB 45h
+	DEFB 21h
 __LABEL90:
+	DEFW 0013h
+	DEFB 45h
+	DEFB 4Eh
+	DEFB 54h
+	DEFB 45h
+	DEFB 52h
+	DEFB 20h
+	DEFB 59h
+	DEFB 4Fh
+	DEFB 55h
+	DEFB 52h
+	DEFB 20h
+	DEFB 49h
+	DEFB 4Eh
+	DEFB 49h
+	DEFB 54h
+	DEFB 49h
+	DEFB 41h
+	DEFB 4Ch
+	DEFB 53h
+__LABEL91:
+	DEFW 0009h
+	DEFB 2Dh
+	DEFB 20h
+	DEFB 20h
+	DEFB 20h
+	DEFB 2Dh
+	DEFB 20h
+	DEFB 20h
+	DEFB 20h
+	DEFB 2Dh
+__LABEL108:
+	DEFW 0001h
+	DEFB 20h
+__LABEL125:
+	DEFW 000Bh
+	DEFB 48h
+	DEFB 49h
+	DEFB 47h
+	DEFB 48h
+	DEFB 20h
+	DEFB 53h
+	DEFB 43h
+	DEFB 4Fh
+	DEFB 52h
+	DEFB 45h
+	DEFB 53h
+__LABEL133:
+	DEFW 0001h
+	DEFB 30h
+__LABEL134:
+	DEFW 0010h
+	DEFB 2Eh
+	DEFB 2Eh
+	DEFB 2Eh
+	DEFB 2Eh
+	DEFB 2Eh
+	DEFB 2Eh
+	DEFB 2Eh
+	DEFB 2Eh
+	DEFB 2Eh
+	DEFB 2Eh
+	DEFB 2Eh
+	DEFB 2Eh
+	DEFB 2Eh
+	DEFB 2Eh
+	DEFB 2Eh
+	DEFB 2Eh
+__LABEL154:
 	DEFW 000Dh
 	DEFB 52h
 	DEFB 20h
@@ -9392,26 +10276,41 @@ __LABEL90:
 	DEFB 4Eh
 	DEFB 20h
 	DEFB 53h
-__LABEL96:
+__LABEL155:
+	DEFW 000Dh
+	DEFB 46h
+	DEFB 49h
+	DEFB 52h
+	DEFB 45h
+	DEFB 20h
+	DEFB 54h
+	DEFB 4Fh
+	DEFB 20h
+	DEFB 53h
+	DEFB 54h
+	DEFB 41h
+	DEFB 52h
+	DEFB 54h
+__LABEL161:
 	DEFW 0005h
 	DEFB 50h
 	DEFB 4Fh
 	DEFB 57h
 	DEFB 45h
 	DEFB 52h
-__LABEL97:
+__LABEL162:
 	DEFW 0004h
 	DEFB 4Ch
 	DEFB 49h
 	DEFB 46h
 	DEFB 45h
-__LABEL98:
+__LABEL163:
 	DEFW 0004h
 	DEFB 42h
 	DEFB 4Fh
 	DEFB 4Dh
 	DEFB 42h
-__LABEL99:
+__LABEL164:
 	DEFW 0012h
 	DEFB 28h
 	DEFB 43h
@@ -9431,7 +10330,7 @@ __LABEL99:
 	DEFB 30h
 	DEFB 32h
 	DEFB 30h
-__LABEL100:
+__LABEL165:
 	DEFW 000Ch
 	DEFB 53h
 	DEFB 43h
@@ -9445,22 +10344,7 @@ __LABEL100:
 	DEFB 30h
 	DEFB 30h
 	DEFB 30h
-__LABEL101:
-	DEFW 000Dh
-	DEFB 46h
-	DEFB 49h
-	DEFB 52h
-	DEFB 45h
-	DEFB 20h
-	DEFB 54h
-	DEFB 4Fh
-	DEFB 20h
-	DEFB 53h
-	DEFB 54h
-	DEFB 41h
-	DEFB 52h
-	DEFB 54h
-__LABEL445:
+__LABEL516:
 	DEFW 0010h
 	DEFB 20h
 	DEFB 20h
@@ -9478,7 +10362,7 @@ __LABEL445:
 	DEFB 20h
 	DEFB 20h
 	DEFB 20h
-__LABEL448:
+__LABEL519:
 	DEFW 0010h
 	DEFB 20h
 	DEFB 43h
@@ -9496,7 +10380,7 @@ __LABEL448:
 	DEFB 4Eh
 	DEFB 29h
 	DEFB 20h
-__LABEL449:
+__LABEL520:
 	DEFW 0010h
 	DEFB 20h
 	DEFB 20h
@@ -9514,7 +10398,7 @@ __LABEL449:
 	DEFB 20h
 	DEFB 20h
 	DEFB 20h
-__LABEL622:
+__LABEL697:
 	DEFW 0006h
 	DEFB 4Ch
 	DEFB 45h
@@ -9522,7 +10406,7 @@ __LABEL622:
 	DEFB 45h
 	DEFB 4Ch
 	DEFB 20h
-__LABEL640:
+__LABEL715:
 	DEFW 000Ah
 	DEFB 20h
 	DEFB 20h
@@ -9534,7 +10418,7 @@ __LABEL640:
 	DEFB 20h
 	DEFB 20h
 	DEFB 20h
-__LABEL641:
+__LABEL716:
 	DEFW 000Ah
 	DEFB 20h
 	DEFB 4Dh
@@ -9546,7 +10430,7 @@ __LABEL641:
 	DEFB 4Fh
 	DEFB 21h
 	DEFB 20h
-__LABEL646:
+__LABEL721:
 	DEFW 001Ah
 	DEFB 59h
 	DEFB 6Fh
@@ -9574,7 +10458,7 @@ __LABEL646:
 	DEFB 6Fh
 	DEFB 64h
 	DEFB 79h
-__LABEL647:
+__LABEL722:
 	DEFW 0010h
 	DEFB 59h
 	DEFB 4Fh
@@ -9592,7 +10476,7 @@ __LABEL647:
 	DEFB 45h
 	DEFB 52h
 	DEFB 4Fh
-__LABEL648:
+__LABEL723:
 	DEFW 000Ch
 	DEFB 59h
 	DEFB 6Fh
@@ -9959,7 +10843,7 @@ __MEM_SUBTRACT:
 
 	        ENDP
 
-#line 9593 "HERO.zxbas"
+#line 10477 "HERO.zxbas"
 #line 1 "array.asm"
 
 ; vim: ts=4:et:sw=4:
@@ -10129,7 +11013,7 @@ TMP_ARR_PTR:
 
 		ENDP
 
-#line 9594 "HERO.zxbas"
+#line 10478 "HERO.zxbas"
 #line 1 "arrayalloc.asm"
 
 
@@ -10252,7 +11136,7 @@ __ALLOC_INITIALIZED_LOCAL_ARRAY:
 
 
 #line 137 "C:/zxbasic/library-asm/arrayalloc.asm"
-#line 9595 "HERO.zxbas"
+#line 10479 "HERO.zxbas"
 #line 1 "asc.asm"
 
 	; Returns the ascii code for the given str
@@ -10481,7 +11365,7 @@ __ASC_END:
 
 		ret
 		ENDP
-#line 9596 "HERO.zxbas"
+#line 10480 "HERO.zxbas"
 #line 1 "attr.asm"
 
 	; Attribute routines
@@ -10688,7 +11572,7 @@ SET_PIXEL_ADDR_ATTR:
 	    ld de, (SCREEN_ADDR)
 	    add hl, de  ;; Final screen addr
 	    jp __SET_ATTR2
-#line 9597 "HERO.zxbas"
+#line 10481 "HERO.zxbas"
 #line 1 "band16.asm"
 
 ; vim:ts=4:et:
@@ -10710,7 +11594,83 @@ __BAND16:
 
 	    ret
 
-#line 9598 "HERO.zxbas"
+#line 10482 "HERO.zxbas"
+#line 1 "beep.asm"
+
+#line 1 "stackf.asm"
+
+	; -------------------------------------------------------------
+	; Functions to manage FP-Stack of the ZX Spectrum ROM CALC
+	; -------------------------------------------------------------
+
+
+	__FPSTACK_PUSH EQU 2AB6h	; Stores an FP number into the ROM FP stack (A, ED CB)
+	__FPSTACK_POP  EQU 2BF1h	; Pops an FP number out of the ROM FP stack (A, ED CB)
+
+__FPSTACK_PUSH2: ; Pushes Current A ED CB registers and top of the stack on (SP + 4)
+	                 ; Second argument to push into the stack calculator is popped out of the stack
+	                 ; Since the caller routine also receives the parameters into the top of the stack
+	                 ; four bytes must be removed from SP before pop them out
+
+	    call __FPSTACK_PUSH ; Pushes A ED CB into the FP-STACK
+	    exx
+	    pop hl       ; Caller-Caller return addr
+	    exx
+	    pop hl       ; Caller return addr
+
+	    pop af
+	    pop de
+	    pop bc
+
+	    push hl      ; Caller return addr
+	    exx
+	    push hl      ; Caller-Caller return addr
+	    exx
+
+	    jp __FPSTACK_PUSH
+
+
+__FPSTACK_I16:	; Pushes 16 bits integer in HL into the FP ROM STACK
+					; This format is specified in the ZX 48K Manual
+					; You can push a 16 bit signed integer as
+					; 0 SS LL HH 0, being SS the sign and LL HH the low
+					; and High byte respectively
+		ld a, h
+		rla			; sign to Carry
+		sbc	a, a	; 0 if positive, FF if negative
+		ld e, a
+		ld d, l
+		ld c, h
+		xor a
+		ld b, a
+		jp __FPSTACK_PUSH
+#line 2 "beep.asm"
+
+BEEP:	; The beep command, as in BASIC
+	        ; Duration in C,ED,LH (float)
+	        ; Pitch in top of the stack
+
+	        CALL __FPSTACK_PUSH
+
+	        pop hl    ; RET address
+			pop af
+	        pop de
+	        pop bc    ; Recovers PITCH from the stack
+	        push hl    ; CALLEE, now ret addr in top of the stack
+
+	        CALL __FPSTACK_PUSH  ; Pitch onto the FP stack
+
+	        push ix   ; BEEP routine modifies IX. We have to preserve it
+	        call 03F8h
+	        pop ix
+	        ret
+
+
+
+
+
+
+#line 10483 "HERO.zxbas"
 #line 1 "border.asm"
 
 	; __FASTCALL__ Routine to change de border
@@ -10720,231 +11680,119 @@ __BAND16:
 
 	; Nothing to do! (Directly from the ZX Spectrum ROM)
 
-#line 9599 "HERO.zxbas"
-#line 1 "div16.asm"
+#line 10484 "HERO.zxbas"
+#line 1 "chr.asm"
 
-	; 16 bit division and modulo functions
-	; for both signed and unsigned values
-
-#line 1 "neg16.asm"
-
-	; Negates HL value (16 bit)
-__ABS16:
-		bit 7, h
-		ret z
-
-__NEGHL:
-		ld a, l			; HL = -HL
-		cpl
-		ld l, a
-		ld a, h
-		cpl
-		ld h, a
-		inc hl
-		ret
-
-#line 5 "div16.asm"
-
-__DIVU16:    ; 16 bit unsigned division
-	             ; HL = Dividend, Stack Top = Divisor
-
-		;   -- OBSOLETE ; Now uses FASTCALL convention
-		;   ex de, hl
-	    ;	pop hl      ; Return address
-	    ;	ex (sp), hl ; CALLEE Convention
-
-__DIVU16_FAST:
-	    ld a, h
-	    ld c, l
-	    ld hl, 0
-	    ld b, 16
-
-__DIV16LOOP:
-	    sll c
-	    rla
-	    adc hl,hl
-	    sbc hl,de
-	    jr  nc, __DIV16NOADD
-	    add hl,de
-	    dec c
-
-__DIV16NOADD:
-	    djnz __DIV16LOOP
-
-	    ex de, hl
-	    ld h, a
-	    ld l, c
-
-	    ret     ; HL = quotient, DE = Mudulus
+	; CHR$(x, y, x) returns the string CHR$(x) + CHR$(y) + CHR$(z)
+	;
 
 
 
-__MODU16:    ; 16 bit modulus
-	             ; HL = Dividend, Stack Top = Divisor
+CHR:	; Returns HL = Pointer to STRING (NULL if no memory)
+			; Requires alloc.asm for dynamic memory heap.
+		; Parameters: HL = Number of bytes to insert (already push onto the stack)
+			; STACK => parameters (16 bit, only the High byte is considered)
+			; Used registers A, A', BC, DE, HL, H'L'
 
-	    ;ex de, hl
-	    ;pop hl
-	    ;ex (sp), hl ; CALLEE Convention
+			PROC
 
-	    call __DIVU16_FAST
-	    ex de, hl	; hl = reminder (modulus)
-					; de = quotient
+			LOCAL __POPOUT
+			LOCAL TMP
 
-	    ret
+	TMP		EQU 23629 ; (DEST System variable)
 
+			ld a, h
+			or l
+			ret z	; If Number of parameters is ZERO, return NULL STRING
 
-__DIVI16:	; 16 bit signed division
-		;	--- The following is OBSOLETE ---
-		;	ex de, hl
-		;	pop hl
-		;	ex (sp), hl 	; CALLEE Convention
+			ld b, h
+			ld c, l
 
-__DIVI16_FAST:
-		ld a, d
-		xor h
-		ex af, af'		; BIT 7 of a contains result
+			pop hl	; Return address
+			ld (TMP), hl
 
-		bit 7, d		; DE is negative?
-		jr z, __DIVI16A
+			push bc
+			inc bc
+			inc bc	; BC = BC + 2 => (2 bytes for the length number)
+			call __MEM_ALLOC
+			pop bc
 
-		ld a, e			; DE = -DE
-		cpl
-		ld e, a
-		ld a, d
-		cpl
-		ld d, a
-		inc de
+			ld d, h
+			ld e, l			; Saves HL in DE
 
-__DIVI16A:
-		bit 7, h		; HL is negative?
-		call nz, __NEGHL
+			ld a, h
+			or l
+			jr z, __POPOUT	; No Memory, return
 
-__DIVI16B:
-		call __DIVU16_FAST
-		ex af, af'
+			ld (hl), c
+			inc hl
+			ld (hl), b
+			inc hl
 
-		or a
-		ret p	; return if positive
-	    jp __NEGHL
+__POPOUT:	; Removes out of the stack every byte and return
+				; If Zero Flag is set, don't store bytes in memory
+			ex af, af' ; Save Zero Flag
 
+			ld a, b
+			or c
+			jr z, __CHR_END
 
-__MODI16:    ; 16 bit modulus
-	             ; HL = Dividend, Stack Top = Divisor
+			dec bc
+			pop af 	   ; Next byte
 
-	    ;ex de, hl
-	    ;pop hl
-	    ;ex (sp), hl ; CALLEE Convention
+			ex af, af' ; Recovers Zero flag
+			jr z, __POPOUT
 
-	    call __DIVI16_FAST
-	    ex de, hl	; hl = reminder (modulus)
-					; de = quotient
+			ex af, af' ; Saves Zero flag
+			ld (hl), a
+			inc hl
+	        ex af, af' ; Recovers Zero Flag
 
-	    ret
+			jp __POPOUT
 
-#line 9600 "HERO.zxbas"
-#line 1 "div8.asm"
-
-				; --------------------------------
-__DIVU8:	; 8 bit unsigned integer division
-				; Divides (Top of stack, High Byte) / A
-		pop hl	; --------------------------------
-		ex (sp), hl	; CALLEE
-
-__DIVU8_FAST:	; Does A / H
-		ld l, h
-		ld h, a		; At this point do H / L
-
-		ld b, 8
-		xor a		; A = 0, Carry Flag = 0
-
-__DIV8LOOP:
-		sla	h
-		rla
-		cp	l
-		jr	c, __DIV8NOSUB
-		sub	l
-		inc	h
-
-__DIV8NOSUB:
-		djnz __DIV8LOOP
-
-		ld	l, a		; save remainder
-		ld	a, h		;
-
-		ret			; a = Quotient,
-
-
-					; --------------------------------
-__DIVI8:		; 8 bit signed integer division Divides (Top of stack) / A
-		pop hl		; --------------------------------
-		ex (sp), hl
-
-__DIVI8_FAST:
-		ld e, a		; store operands for later
-		ld c, h
-
-		or a		; negative?
-		jp p, __DIV8A
-		neg			; Make it positive
-
-__DIV8A:
-		ex af, af'
-		ld a, h
-		or a
-		jp p, __DIV8B
-		neg
-		ld h, a		; make it positive
-
-__DIV8B:
-		ex af, af'
-
-		call __DIVU8_FAST
-
-		ld a, c
-		xor l		; bit 7 of A = 1 if result is negative
-
-		ld a, h		; Quotient
-		ret p		; return if positive
-
-		neg
-		ret
-
-
-__MODU8:		; 8 bit module. REturns A mod (Top of stack) (unsigned operands)
-		pop hl
-		ex (sp), hl	; CALLEE
-
-__MODU8_FAST:	; __FASTCALL__ entry
-		call __DIVU8_FAST
-		ld a, l		; Remainder
-
-		ret		; a = Modulus
-
-
-__MODI8:		; 8 bit module. REturns A mod (Top of stack) (For singed operands)
-		pop hl
-		ex (sp), hl	; CALLEE
-
-__MODI8_FAST:	; __FASTCALL__ entry
-		call __DIVI8_FAST
-		ld a, l		; remainder
-
-		ret		; a = Modulus
-
-#line 9601 "HERO.zxbas"
-#line 1 "eq16.asm"
-
-__EQ16:	; Test if 16bit values HL == DE
-		; Returns result in A: 0 = False, FF = True
-			xor a	; Reset carry flag
-			sbc hl, de
-			ret nz
-			inc a
+__CHR_END:
+			ld hl, (TMP)
+			push hl		; Restores return addr
+			ex de, hl	; Recovers original HL ptr
 			ret
 
-#line 9602 "HERO.zxbas"
+			ENDP
+
+#line 10485 "HERO.zxbas"
+
+#line 1 "copy_attr.asm"
 
 
+#line 1 "print.asm"
+
+; vim:ts=4:sw=4:et:
+; vim:ts=4:sw=4:et:
+	; PRINT command routine
+	; Does not print attribute. Use PRINT_STR or PRINT_NUM for that
+
+
+
+
+#line 1 "table_jump.asm"
+
+
+JUMP_HL_PLUS_2A: ; Does JP (HL + A*2) Modifies DE. Modifies A
+		add a, a
+
+JUMP_HL_PLUS_A:	 ; Does JP (HL + A) Modifies DE
+		ld e, a
+		ld d, 0
+
+JUMP_HL_PLUS_DE: ; Does JP (HL + DE)
+		add hl, de
+		ld e, (hl)
+		inc hl
+		ld d, (hl)
+		ex de, hl
+CALL_HL:
+		jp (hl)
+
+#line 10 "print.asm"
 #line 1 "ink.asm"
 
 	; Sets ink color in ATTR_P permanently
@@ -10990,420 +11838,7 @@ INK_TMP:
 
 		ENDP
 
-#line 9605 "HERO.zxbas"
-#line 1 "load.asm"
-
-
-
-
-#line 7 "C:/zxbasic/library-asm/load.asm"
-
-LOAD_CODE:
-	; This function will implement the LOAD CODE Routine
-	; Parameters in the stack are HL => String with LOAD name
-	; (only first 12 chars will be taken into account)
-	; DE = START address of CODE to save
-	; BC = Length of data in bytes
-	; A = 1 => LOAD 0 => Verify
-
-	    PROC
-
-	    LOCAL LOAD_CONT, LOAD_CONT2, LOAD_CONT3
-	    LOCAL LD_BYTES
-	    LOCAL LOAD_HEADER
-	    LOCAL LD_LOOK_H
-	    LOCAL HEAD1
-	    LOCAL TMP_HEADER
-	    LOCAL LD_NAME
-	    LOCAL LD_CH_PR
-	    LOCAL LOAD_END
-	    LOCAL VR_CONTROL, VR_CONT_1, VR_CONT_2
-	    LOCAL MEM0
-
-	MEM0  EQU 5C92h ; Temporary memory buffer
-	HEAD1 EQU MEM0 + 8 ; Uses CALC Mem for temporary storage
-	               ; Must skip first 8 bytes used by
-	               ; PRINT routine
-	TMP_HEADER EQU HEAD1 + 17 ; Temporary HEADER2 pointer storage
-
-#line 39 "C:/zxbasic/library-asm/load.asm"
-
-	TMP_FLAG EQU 23655 ; Uses BREG as a Temporary FLAG
-
-	    pop hl         ; Return address
-	    pop af         ; A = 1 => LOAD; A = 0 => VERIFY
-	    pop bc         ; data length in bytes
-	    pop de         ; address start
-	    ex (sp), hl    ; CALLE => now hl = String
-
-__LOAD_CODE: ; INLINE version
-	    push ix ; saves IX
-	    ld (TMP_FLAG), a ; Stores verify/load flag
-
-	    ; Prepares temporary 1st header descriptor
-	    ld ix, HEAD1
-	    ld (ix + 0), 3     ; ZXBASIC ALWAYS uses CODE
-	    ld (ix + 1), 0FFh  ; Wildcard for empty string
-
-	    ld (ix + 11), c
-	    ld (ix + 12), b ; Store length in bytes
-	    ld (ix + 13), e
-	    ld (ix + 14), d ; Store address in bytes
-
-	    ld a, h
-	    or l
-	    ld b, h
-	    ld c, l
-	    jr z, LOAD_HEADER ; NULL STRING => LOAD ""
-
-	    ld c, (hl)
-	    inc hl
-	    ld b, (hl)
-	    inc hl
-
-	    ld a, b
-	    or c
-	    jr z, LOAD_CONT2 ; NULL STRING => LOAD ""
-
-	    ; Fill with blanks
-	    push hl
-	    push bc
-	    ld hl, HEAD1 + 2
-	    ld de, HEAD1 + 3
-	    ld bc, 8
-	    ld (hl), ' '
-	    ldir
-	    pop bc
-	    pop hl
-
-LOAD_HEADER:
-	    ex de, hl  ; Saves HL in DE
-	    ld hl, 10
-	    or a
-	    sbc hl, bc ; Test BC > 10?
-	    ex de, hl  ; Retrieve HL
-	    jr nc, LOAD_CONT ; Ok BC <= 10
-	    ld bc, 10 ; BC at most 10 chars
-
-LOAD_CONT:
-	    ld de, HEAD1 + 1
-	    ldir     ; Copy String block NAME in header
-
-LOAD_CONT2:
-	    ld bc, 17; 2nd Header
-	    call __MEM_ALLOC
-
-	    ld a, h
-	    or l
-	    jr nz, LOAD_CONT3; there's memory
-
-	    ld a, ERROR_OutOfMemory
-	    jp __ERROR
-
-LOAD_CONT3:
-	    ld (TMP_HEADER), hl
-	    push hl
-	    pop ix
-
-	;; LD-LOOK-H --- RIPPED FROM ROM at 0x767
-LD_LOOK_H:
-	    push ix                 ; save IX
-	    ld de, 17               ; seventeen bytes
-	    xor a                   ; reset zero flag
-	    scf                     ; set carry flag
-
-	    call LD_BYTES           ; routine LD-BYTES loads a header from tape
-	                            ; to second descriptor.
-	    pop ix                  ; restore IX
-	    jr nc, LD_LOOK_H        ; loop back to LD-LOOK-H until header found.
-
-	    ld c, 80h               ; C has bit 7 set to indicate header type mismatch as
-	                            ; a default startpoint.
-
-	    ld a, (ix + 0)          ; compare loaded type
-	    cp 3		            ; with expected bytes header
-	    jr nz, LD_TYPE          ; forward to LD-TYPE with mis-match.
-
-	    ld c, -10               ; set C to minus ten - will count characters
-	                            ; up to zero.
-LD_TYPE:
-	    cp 4                    ; check if type in acceptable range 0 - 3.
-	    jr nc, LD_LOOK_H        ; back to LD-LOOK-H with 4 and over.
-	                            ; else A indicates type 0-3.
-#line 145 "C:/zxbasic/library-asm/load.asm"
-
-	    ld hl, HEAD1 + 1        ; point HL to 1st descriptor.
-	    ld de, (TMP_HEADER)     ; point DE to 2nd descriptor.
-	    ld b, 10                ; the count will be ten characters for the
-	                            ; filename.
-
-	    ld a, (hl)              ; fetch first character and test for
-	    inc a                   ; value 255.
-	    jr nz, LD_NAME          ; forward to LD-NAME if not the wildcard.
-
-	;   but if it is the wildcard, then add ten to C which is minus ten for a type
-	;   match or -128 for a type mismatch. Although characters have to be counted
-	;   bit 7 of C will not alter from state set here.
-
-	    ld a, c                 ; transfer $F6 or $80 to A
-	    add a, b                ; add 10
-	    ld c, a                 ; place result, zero or -118, in C.
-
-	;   At this point we have either a type mismatch, a wildcard match or ten
-	;   characters to be counted. The characters must be shown on the screen.
-
-	;; LD-NAME
-LD_NAME:
-	    inc de                  ; address next input character
-	    ld a, (de)              ; fetch character
-	    cp (hl)                 ; compare to expected
-	    inc hl                  ; address next expected character
-	    jr nz, LD_CH_PR         ; forward to LD-CH-PR with mismatch
-
-	    inc c                   ; increment matched character count
-
-	;; LD-CH-PR
-LD_CH_PR:
-#line 181 "C:/zxbasic/library-asm/load.asm"
-	    djnz LD_NAME            ; loop back to LD-NAME for ten characters.
-
-	    bit 7, c                ; test if all matched
-	    jr nz, LD_LOOK_H        ; back to LD-LOOK-H if not
-
-	;   else print a terminal carriage return.
-
-#line 192 "C:/zxbasic/library-asm/load.asm"
-
-	    ld a, (HEAD1)
-    cp 03                   ; Only "bytes:" header is used un ZX BASIC
-	    jr nz, LD_LOOK_H
-
-	    ; Ok, ready to check for bytes start and end
-
-VR_CONTROL:
-	    ld e, (ix + 11)         ; fetch length of new data
-	    ld d, (ix + 12)         ; to DE.
-
-	    ld hl, HEAD1 + 11
-	    ld a, (hl)              ; fetch length of old data (orig. header)
-	    inc hl
-	    ld h, (hl)              ; to HL
-	    ld l, a
-	    or h                    ; check length of old for zero. (Carry reset)
-	    jr z, VR_CONT_1         ; forward to VR-CONT-1 if length unspecified
-	                            ; e.g. LOAD "x" CODE
-	    sbc hl, de
-	    jr nz, LOAD_ERROR       ; Lengths don't match
-
-VR_CONT_1:
-	    ld hl, HEAD1 + 13       ; fetch start of old data (orig. header)
-	    ld a, (hl)
-	    inc hl
-	    ld h, (hl)
-	    ld l, a
-	    or h                    ; check start for zero (unespecified)
-	    jr nz, VR_CONT_2        ; Jump if there was a start
-
-	    ld l, (ix + 13)         ; otherwise use destination in header
-	    ld h, (ix + 14)         ; and load code at addr. saved from
-
-VR_CONT_2:
-	    push hl
-	    pop ix                  ; Transfer load addr to IX
-
-	    ld a, (TMP_FLAG)        ; load verify/load flag
-	    sra a                   ; shift bit 0 to Carry (1 => Load, 0 = Verify), A = 0
-	    dec a                   ; a = 0xFF (Data)
-	    call LD_BYTES
-	    jr c, LOAD_END         ; if carry, load/verification was ok
-
-LOAD_ERROR:
-	    ; Sets ERR_NR with Tape Loading, and returns
-	    ld a, ERROR_TapeLoadingErr
-	    ld (ERR_NR), a
-
-LOAD_END:
-	    pop ix                  ; Recovers stack frame pointer
-	    ld hl, (TMP_HEADER)     ; Recovers tmp_header pointer
-	    jp MEM_FREE             ; Returns via FREE_MEM, freeing tmp header
-
-
-	    LOCAL LD_BYTES_RET
-	    LOCAL LD_BYTES_ROM
-	    LOCAL LD_BYTES_NOINTER
-
-	LD_BYTES_ROM EQU 0562h
-
-LD_BYTES:
-
-	    inc d
-	    ex af, af'
-	    dec d
-	    ld a, r
-	    push af
-	    di
-	    call 0562h
-
-LD_BYTES_RET:
-	    ; Restores DI / EI state
-	    ex af, af'
-	    pop af
-	    jp po, LD_BYTES_NOINTER
-	    ei
-
-LD_BYTES_NOINTER:
-	    ex af, af'
-	    ret
-#line 274 "C:/zxbasic/library-asm/load.asm"
-	    ENDP
-
-
-#line 328 "C:/zxbasic/library-asm/load.asm"
-#line 9606 "HERO.zxbas"
-#line 1 "loadstr.asm"
-
-
-
-	; Loads a string (ptr) from HL
-	; and duplicates it on dynamic memory again
-	; Finally, it returns result pointer in HL
-
-__ILOADSTR:		; This is the indirect pointer entry HL = (HL)
-			ld a, h
-			or l
-			ret z
-			ld a, (hl)
-			inc hl
-			ld h, (hl)
-			ld l, a
-
-__LOADSTR:		; __FASTCALL__ entry
-			ld a, h
-			or l
-			ret z	; Return if NULL
-
-			ld c, (hl)
-			inc hl
-			ld b, (hl)
-			dec hl  ; BC = LEN(a$)
-
-			inc bc
-			inc bc	; BC = LEN(a$) + 2 (two bytes for length)
-
-			push hl
-			push bc
-			call __MEM_ALLOC
-			pop bc  ; Recover length
-			pop de  ; Recover origin
-
-			ld a, h
-			or l
-			ret z	; Return if NULL (No memory)
-
-			ex de, hl ; ldir takes HL as source, DE as destiny, so SWAP HL,DE
-			push de	; Saves destiny start
-			ldir	; Copies string (length number included)
-			pop hl	; Recovers destiny in hl as result
-			ret
-#line 9607 "HERO.zxbas"
-#line 1 "lti16.asm"
-
-#line 1 "lei8.asm"
-
-__LEI8: ; Signed <= comparison for 8bit int
-	        ; A <= H (registers)
-	    PROC
-	    LOCAL checkParity
-	    sub h
-	    jr nz, __LTI
-	    inc a
-	    ret
-
-__LTI8:  ; Test 8 bit values A < H
-	    sub h
-
-__LTI:   ; Generic signed comparison
-	    jp po, checkParity
-	    xor 0x80
-checkParity:
-	    ld a, 0     ; False
-	    ret p
-	    inc a       ; True
-	    ret
-	    ENDP
-#line 2 "lti16.asm"
-
-__LTI16: ; Test 8 bit values HL < DE
-         ; Returns result in A: 0 = False, !0 = True
-	    PROC
-	    LOCAL checkParity
-	    or a
-	    sbc hl, de
-	    jp po, checkParity
-	    ld a, h
-	    xor 0x80
-checkParity:
-	    ld a, 0     ; False
-	    ret p
-	    inc a       ; True
-	    ret
-	    ENDP
-#line 9608 "HERO.zxbas"
-#line 1 "mul8.asm"
-
-__MUL8:		; Performs 8bit x 8bit multiplication
-		PROC
-
-		;LOCAL __MUL8A
-		LOCAL __MUL8LOOP
-		LOCAL __MUL8B
-				; 1st operand (byte) in A, 2nd operand into the stack (AF)
-		pop hl	; return address
-		ex (sp), hl ; CALLE convention
-
-;;__MUL8_FAST: ; __FASTCALL__ entry
-	;;	ld e, a
-	;;	ld d, 0
-	;;	ld l, d
-	;;
-	;;	sla h
-	;;	jr nc, __MUL8A
-	;;	ld l, e
-	;;
-;;__MUL8A:
-	;;
-	;;	ld b, 7
-;;__MUL8LOOP:
-	;;	add hl, hl
-	;;	jr nc, __MUL8B
-	;;
-	;;	add hl, de
-	;;
-;;__MUL8B:
-	;;	djnz __MUL8LOOP
-	;;
-	;;	ld a, l ; result = A and HL  (Truncate to lower 8 bits)
-
-__MUL8_FAST: ; __FASTCALL__ entry, a = a * h (8 bit mul) and Carry
-
-	    ld b, 8
-	    ld l, a
-	    xor a
-
-__MUL8LOOP:
-	    add a, a ; a *= 2
-	    sla l
-	    jp nc, __MUL8B
-	    add a, h
-
-__MUL8B:
-	    djnz __MUL8LOOP
-
-		ret		; result = HL
-		ENDP
-
-#line 9609 "HERO.zxbas"
-
+#line 11 "print.asm"
 #line 1 "paper.asm"
 
 	; Sets paper color in ATTR_P permanently
@@ -11452,39 +11887,7 @@ PAPER_TMP:
 		jp __SET_PAPER
 		ENDP
 
-#line 9611 "HERO.zxbas"
-#line 1 "print.asm"
-
-; vim:ts=4:sw=4:et:
-; vim:ts=4:sw=4:et:
-	; PRINT command routine
-	; Does not print attribute. Use PRINT_STR or PRINT_NUM for that
-
-
-
-
-#line 1 "table_jump.asm"
-
-
-JUMP_HL_PLUS_2A: ; Does JP (HL + A*2) Modifies DE. Modifies A
-		add a, a
-
-JUMP_HL_PLUS_A:	 ; Does JP (HL + A) Modifies DE
-		ld e, a
-		ld d, 0
-
-JUMP_HL_PLUS_DE: ; Does JP (HL + DE)
-		add hl, de
-		ld e, (hl)
-		inc hl
-		ld d, (hl)
-		ex de, hl
-CALL_HL:
-		jp (hl)
-
-#line 10 "print.asm"
-
-
+#line 12 "print.asm"
 #line 1 "flash.asm"
 
 	; Sets flash flag in ATTR_P permanently
@@ -11580,83 +11983,7 @@ BRIGHT_TMP:
 
 	; Sets OVER flag in P_FLAG permanently
 ; Parameter: OVER flag in bit 0 of A register
-#line 1 "copy_attr.asm"
 
-
-
-#line 4 "C:/zxbasic/library-asm/copy_attr.asm"
-
-
-
-COPY_ATTR:
-		; Just copies current permanent attribs to temporal attribs
-		; and sets print mode
-		PROC
-
-		LOCAL INVERSE1
-		LOCAL __REFRESH_TMP
-
-	INVERSE1 EQU 02Fh
-
-		ld hl, (ATTR_P)
-		ld (ATTR_T), hl
-
-		ld hl, FLAGS2
-		call __REFRESH_TMP
-
-		ld hl, P_FLAG
-		call __REFRESH_TMP
-
-
-__SET_ATTR_MODE:		; Another entry to set print modes. A contains (P_FLAG)
-
-
-		LOCAL TABLE
-		LOCAL CONT2
-
-		rra					; Over bit to carry
-		ld a, (FLAGS2)
-		rla					; Over bit in bit 1, Over2 bit in bit 2
-		and 3				; Only bit 0 and 1 (OVER flag)
-
-		ld c, a
-		ld b, 0
-
-		ld hl, TABLE
-		add hl, bc
-		ld a, (hl)
-		ld (PRINT_MODE), a
-
-		ld hl, (P_FLAG)
-		xor a			; NOP -> INVERSE0
-		bit 2, l
-		jr z, CONT2
-		ld a, INVERSE1 	; CPL -> INVERSE1
-
-CONT2:
-		ld (INVERSE_MODE), a
-		ret
-
-TABLE:
-		nop				; NORMAL MODE
-		xor (hl)		; OVER 1 MODE
-		and (hl)		; OVER 2 MODE
-		or  (hl)		; OVER 3 MODE
-
-#line 65 "C:/zxbasic/library-asm/copy_attr.asm"
-
-__REFRESH_TMP:
-		ld a, (hl)
-		and 10101010b
-		ld c, a
-		rra
-		or c
-		ld (hl), a
-		ret
-
-		ENDP
-
-#line 4 "over.asm"
 
 
 OVER:
@@ -12315,7 +12642,872 @@ __PRINT_TABLE:    ; Jump table for 0 .. 22 codes
 	        ENDP
 
 
-#line 9612 "HERO.zxbas"
+#line 3 "copy_attr.asm"
+#line 4 "C:/zxbasic/library-asm/copy_attr.asm"
+
+
+
+COPY_ATTR:
+		; Just copies current permanent attribs to temporal attribs
+		; and sets print mode
+		PROC
+
+		LOCAL INVERSE1
+		LOCAL __REFRESH_TMP
+
+	INVERSE1 EQU 02Fh
+
+		ld hl, (ATTR_P)
+		ld (ATTR_T), hl
+
+		ld hl, FLAGS2
+		call __REFRESH_TMP
+
+		ld hl, P_FLAG
+		call __REFRESH_TMP
+
+
+__SET_ATTR_MODE:		; Another entry to set print modes. A contains (P_FLAG)
+
+
+		LOCAL TABLE
+		LOCAL CONT2
+
+		rra					; Over bit to carry
+		ld a, (FLAGS2)
+		rla					; Over bit in bit 1, Over2 bit in bit 2
+		and 3				; Only bit 0 and 1 (OVER flag)
+
+		ld c, a
+		ld b, 0
+
+		ld hl, TABLE
+		add hl, bc
+		ld a, (hl)
+		ld (PRINT_MODE), a
+
+		ld hl, (P_FLAG)
+		xor a			; NOP -> INVERSE0
+		bit 2, l
+		jr z, CONT2
+		ld a, INVERSE1 	; CPL -> INVERSE1
+
+CONT2:
+		ld (INVERSE_MODE), a
+		ret
+
+TABLE:
+		nop				; NORMAL MODE
+		xor (hl)		; OVER 1 MODE
+		and (hl)		; OVER 2 MODE
+		or  (hl)		; OVER 3 MODE
+
+#line 65 "C:/zxbasic/library-asm/copy_attr.asm"
+
+__REFRESH_TMP:
+		ld a, (hl)
+		and 10101010b
+		ld c, a
+		rra
+		or c
+		ld (hl), a
+		ret
+
+		ENDP
+
+#line 10487 "HERO.zxbas"
+#line 1 "div16.asm"
+
+	; 16 bit division and modulo functions
+	; for both signed and unsigned values
+
+#line 1 "neg16.asm"
+
+	; Negates HL value (16 bit)
+__ABS16:
+		bit 7, h
+		ret z
+
+__NEGHL:
+		ld a, l			; HL = -HL
+		cpl
+		ld l, a
+		ld a, h
+		cpl
+		ld h, a
+		inc hl
+		ret
+
+#line 5 "div16.asm"
+
+__DIVU16:    ; 16 bit unsigned division
+	             ; HL = Dividend, Stack Top = Divisor
+
+		;   -- OBSOLETE ; Now uses FASTCALL convention
+		;   ex de, hl
+	    ;	pop hl      ; Return address
+	    ;	ex (sp), hl ; CALLEE Convention
+
+__DIVU16_FAST:
+	    ld a, h
+	    ld c, l
+	    ld hl, 0
+	    ld b, 16
+
+__DIV16LOOP:
+	    sll c
+	    rla
+	    adc hl,hl
+	    sbc hl,de
+	    jr  nc, __DIV16NOADD
+	    add hl,de
+	    dec c
+
+__DIV16NOADD:
+	    djnz __DIV16LOOP
+
+	    ex de, hl
+	    ld h, a
+	    ld l, c
+
+	    ret     ; HL = quotient, DE = Mudulus
+
+
+
+__MODU16:    ; 16 bit modulus
+	             ; HL = Dividend, Stack Top = Divisor
+
+	    ;ex de, hl
+	    ;pop hl
+	    ;ex (sp), hl ; CALLEE Convention
+
+	    call __DIVU16_FAST
+	    ex de, hl	; hl = reminder (modulus)
+					; de = quotient
+
+	    ret
+
+
+__DIVI16:	; 16 bit signed division
+		;	--- The following is OBSOLETE ---
+		;	ex de, hl
+		;	pop hl
+		;	ex (sp), hl 	; CALLEE Convention
+
+__DIVI16_FAST:
+		ld a, d
+		xor h
+		ex af, af'		; BIT 7 of a contains result
+
+		bit 7, d		; DE is negative?
+		jr z, __DIVI16A
+
+		ld a, e			; DE = -DE
+		cpl
+		ld e, a
+		ld a, d
+		cpl
+		ld d, a
+		inc de
+
+__DIVI16A:
+		bit 7, h		; HL is negative?
+		call nz, __NEGHL
+
+__DIVI16B:
+		call __DIVU16_FAST
+		ex af, af'
+
+		or a
+		ret p	; return if positive
+	    jp __NEGHL
+
+
+__MODI16:    ; 16 bit modulus
+	             ; HL = Dividend, Stack Top = Divisor
+
+	    ;ex de, hl
+	    ;pop hl
+	    ;ex (sp), hl ; CALLEE Convention
+
+	    call __DIVI16_FAST
+	    ex de, hl	; hl = reminder (modulus)
+					; de = quotient
+
+	    ret
+
+#line 10488 "HERO.zxbas"
+#line 1 "div8.asm"
+
+				; --------------------------------
+__DIVU8:	; 8 bit unsigned integer division
+				; Divides (Top of stack, High Byte) / A
+		pop hl	; --------------------------------
+		ex (sp), hl	; CALLEE
+
+__DIVU8_FAST:	; Does A / H
+		ld l, h
+		ld h, a		; At this point do H / L
+
+		ld b, 8
+		xor a		; A = 0, Carry Flag = 0
+
+__DIV8LOOP:
+		sla	h
+		rla
+		cp	l
+		jr	c, __DIV8NOSUB
+		sub	l
+		inc	h
+
+__DIV8NOSUB:
+		djnz __DIV8LOOP
+
+		ld	l, a		; save remainder
+		ld	a, h		;
+
+		ret			; a = Quotient,
+
+
+					; --------------------------------
+__DIVI8:		; 8 bit signed integer division Divides (Top of stack) / A
+		pop hl		; --------------------------------
+		ex (sp), hl
+
+__DIVI8_FAST:
+		ld e, a		; store operands for later
+		ld c, h
+
+		or a		; negative?
+		jp p, __DIV8A
+		neg			; Make it positive
+
+__DIV8A:
+		ex af, af'
+		ld a, h
+		or a
+		jp p, __DIV8B
+		neg
+		ld h, a		; make it positive
+
+__DIV8B:
+		ex af, af'
+
+		call __DIVU8_FAST
+
+		ld a, c
+		xor l		; bit 7 of A = 1 if result is negative
+
+		ld a, h		; Quotient
+		ret p		; return if positive
+
+		neg
+		ret
+
+
+__MODU8:		; 8 bit module. REturns A mod (Top of stack) (unsigned operands)
+		pop hl
+		ex (sp), hl	; CALLEE
+
+__MODU8_FAST:	; __FASTCALL__ entry
+		call __DIVU8_FAST
+		ld a, l		; Remainder
+
+		ret		; a = Modulus
+
+
+__MODI8:		; 8 bit module. REturns A mod (Top of stack) (For singed operands)
+		pop hl
+		ex (sp), hl	; CALLEE
+
+__MODI8_FAST:	; __FASTCALL__ entry
+		call __DIVI8_FAST
+		ld a, l		; remainder
+
+		ret		; a = Modulus
+
+#line 10489 "HERO.zxbas"
+#line 1 "eq16.asm"
+
+__EQ16:	; Test if 16bit values HL == DE
+		; Returns result in A: 0 = False, FF = True
+			xor a	; Reset carry flag
+			sbc hl, de
+			ret nz
+			inc a
+			ret
+
+#line 10490 "HERO.zxbas"
+
+#line 1 "ftou32reg.asm"
+
+#line 1 "neg32.asm"
+
+__ABS32:
+		bit 7, d
+		ret z
+
+__NEG32: ; Negates DEHL (Two's complement)
+		ld a, l
+		cpl
+		ld l, a
+
+		ld a, h
+		cpl
+		ld h, a
+
+		ld a, e
+		cpl
+		ld e, a
+
+		ld a, d
+		cpl
+		ld d, a
+
+		inc l
+		ret nz
+
+		inc h
+		ret nz
+
+		inc de
+		ret
+
+#line 2 "ftou32reg.asm"
+
+__FTOU32REG:	; Converts a Float to (un)signed 32 bit integer (NOTE: It's ALWAYS 32 bit signed)
+					; Input FP number in A EDCB (A exponent, EDCB mantissa)
+				; Output: DEHL 32 bit number (signed)
+		PROC
+
+		LOCAL __IS_FLOAT
+		LOCAL __NEGATE
+
+		or a
+		jr nz, __IS_FLOAT
+		; Here if it is a ZX ROM Integer
+
+		ld h, c
+		ld l, d
+	ld a, e	 ; Takes sign: FF = -, 0 = +
+		ld de, 0
+		inc a
+		jp z, __NEG32	; Negates if negative
+		ret
+
+__IS_FLOAT:  ; Jumps here if it is a true floating point number
+		ld h, e
+		push hl  ; Stores it for later (Contains Sign in H)
+
+		push de
+		push bc
+
+		exx
+		pop de   ; Loads mantissa into C'B' E'D'
+		pop bc	 ;
+
+		set 7, c ; Highest mantissa bit is always 1
+		exx
+
+		ld hl, 0 ; DEHL = 0
+		ld d, h
+		ld e, l
+
+		;ld a, c  ; Get exponent
+		sub 128  ; Exponent -= 128
+		jr z, __FTOU32REG_END	; If it was <= 128, we are done (Integers must be > 128)
+		jr c, __FTOU32REG_END	; It was decimal (0.xxx). We are done (return 0)
+
+		ld b, a  ; Loop counter = exponent - 128
+
+__FTOU32REG_LOOP:
+		exx 	 ; Shift C'B' E'D' << 1, output bit stays in Carry
+		sla d
+		rl e
+		rl b
+		rl c
+
+	    exx		 ; Shift DEHL << 1, inserting the carry on the right
+		rl l
+		rl h
+		rl e
+		rl d
+
+		djnz __FTOU32REG_LOOP
+
+__FTOU32REG_END:
+		pop af   ; Take the sign bit
+		or a	 ; Sets SGN bit to 1 if negative
+		jp m, __NEGATE ; Negates DEHL
+
+		ret
+
+__NEGATE:
+	    exx
+	    ld a, d
+	    or e
+	    or b
+	    or c
+	    exx
+	    jr z, __END
+	    inc l
+	    jr nz, __END
+	    inc h
+	    jr nz, __END
+	    inc de
+	LOCAL __END
+__END:
+	    jp __NEG32
+		ENDP
+
+
+__FTOU8:	; Converts float in C ED LH to Unsigned byte in A
+		call __FTOU32REG
+		ld a, l
+		ret
+
+#line 10492 "HERO.zxbas"
+
+
+#line 1 "load.asm"
+
+
+
+
+#line 7 "C:/zxbasic/library-asm/load.asm"
+
+LOAD_CODE:
+	; This function will implement the LOAD CODE Routine
+	; Parameters in the stack are HL => String with LOAD name
+	; (only first 12 chars will be taken into account)
+	; DE = START address of CODE to save
+	; BC = Length of data in bytes
+	; A = 1 => LOAD 0 => Verify
+
+	    PROC
+
+	    LOCAL LOAD_CONT, LOAD_CONT2, LOAD_CONT3
+	    LOCAL LD_BYTES
+	    LOCAL LOAD_HEADER
+	    LOCAL LD_LOOK_H
+	    LOCAL HEAD1
+	    LOCAL TMP_HEADER
+	    LOCAL LD_NAME
+	    LOCAL LD_CH_PR
+	    LOCAL LOAD_END
+	    LOCAL VR_CONTROL, VR_CONT_1, VR_CONT_2
+	    LOCAL MEM0
+
+	MEM0  EQU 5C92h ; Temporary memory buffer
+	HEAD1 EQU MEM0 + 8 ; Uses CALC Mem for temporary storage
+	               ; Must skip first 8 bytes used by
+	               ; PRINT routine
+	TMP_HEADER EQU HEAD1 + 17 ; Temporary HEADER2 pointer storage
+
+#line 39 "C:/zxbasic/library-asm/load.asm"
+
+	TMP_FLAG EQU 23655 ; Uses BREG as a Temporary FLAG
+
+	    pop hl         ; Return address
+	    pop af         ; A = 1 => LOAD; A = 0 => VERIFY
+	    pop bc         ; data length in bytes
+	    pop de         ; address start
+	    ex (sp), hl    ; CALLE => now hl = String
+
+__LOAD_CODE: ; INLINE version
+	    push ix ; saves IX
+	    ld (TMP_FLAG), a ; Stores verify/load flag
+
+	    ; Prepares temporary 1st header descriptor
+	    ld ix, HEAD1
+	    ld (ix + 0), 3     ; ZXBASIC ALWAYS uses CODE
+	    ld (ix + 1), 0FFh  ; Wildcard for empty string
+
+	    ld (ix + 11), c
+	    ld (ix + 12), b ; Store length in bytes
+	    ld (ix + 13), e
+	    ld (ix + 14), d ; Store address in bytes
+
+	    ld a, h
+	    or l
+	    ld b, h
+	    ld c, l
+	    jr z, LOAD_HEADER ; NULL STRING => LOAD ""
+
+	    ld c, (hl)
+	    inc hl
+	    ld b, (hl)
+	    inc hl
+
+	    ld a, b
+	    or c
+	    jr z, LOAD_CONT2 ; NULL STRING => LOAD ""
+
+	    ; Fill with blanks
+	    push hl
+	    push bc
+	    ld hl, HEAD1 + 2
+	    ld de, HEAD1 + 3
+	    ld bc, 8
+	    ld (hl), ' '
+	    ldir
+	    pop bc
+	    pop hl
+
+LOAD_HEADER:
+	    ex de, hl  ; Saves HL in DE
+	    ld hl, 10
+	    or a
+	    sbc hl, bc ; Test BC > 10?
+	    ex de, hl  ; Retrieve HL
+	    jr nc, LOAD_CONT ; Ok BC <= 10
+	    ld bc, 10 ; BC at most 10 chars
+
+LOAD_CONT:
+	    ld de, HEAD1 + 1
+	    ldir     ; Copy String block NAME in header
+
+LOAD_CONT2:
+	    ld bc, 17; 2nd Header
+	    call __MEM_ALLOC
+
+	    ld a, h
+	    or l
+	    jr nz, LOAD_CONT3; there's memory
+
+	    ld a, ERROR_OutOfMemory
+	    jp __ERROR
+
+LOAD_CONT3:
+	    ld (TMP_HEADER), hl
+	    push hl
+	    pop ix
+
+	;; LD-LOOK-H --- RIPPED FROM ROM at 0x767
+LD_LOOK_H:
+	    push ix                 ; save IX
+	    ld de, 17               ; seventeen bytes
+	    xor a                   ; reset zero flag
+	    scf                     ; set carry flag
+
+	    call LD_BYTES           ; routine LD-BYTES loads a header from tape
+	                            ; to second descriptor.
+	    pop ix                  ; restore IX
+	    jr nc, LD_LOOK_H        ; loop back to LD-LOOK-H until header found.
+
+	    ld c, 80h               ; C has bit 7 set to indicate header type mismatch as
+	                            ; a default startpoint.
+
+	    ld a, (ix + 0)          ; compare loaded type
+	    cp 3		            ; with expected bytes header
+	    jr nz, LD_TYPE          ; forward to LD-TYPE with mis-match.
+
+	    ld c, -10               ; set C to minus ten - will count characters
+	                            ; up to zero.
+LD_TYPE:
+	    cp 4                    ; check if type in acceptable range 0 - 3.
+	    jr nc, LD_LOOK_H        ; back to LD-LOOK-H with 4 and over.
+	                            ; else A indicates type 0-3.
+#line 145 "C:/zxbasic/library-asm/load.asm"
+
+	    ld hl, HEAD1 + 1        ; point HL to 1st descriptor.
+	    ld de, (TMP_HEADER)     ; point DE to 2nd descriptor.
+	    ld b, 10                ; the count will be ten characters for the
+	                            ; filename.
+
+	    ld a, (hl)              ; fetch first character and test for
+	    inc a                   ; value 255.
+	    jr nz, LD_NAME          ; forward to LD-NAME if not the wildcard.
+
+	;   but if it is the wildcard, then add ten to C which is minus ten for a type
+	;   match or -128 for a type mismatch. Although characters have to be counted
+	;   bit 7 of C will not alter from state set here.
+
+	    ld a, c                 ; transfer $F6 or $80 to A
+	    add a, b                ; add 10
+	    ld c, a                 ; place result, zero or -118, in C.
+
+	;   At this point we have either a type mismatch, a wildcard match or ten
+	;   characters to be counted. The characters must be shown on the screen.
+
+	;; LD-NAME
+LD_NAME:
+	    inc de                  ; address next input character
+	    ld a, (de)              ; fetch character
+	    cp (hl)                 ; compare to expected
+	    inc hl                  ; address next expected character
+	    jr nz, LD_CH_PR         ; forward to LD-CH-PR with mismatch
+
+	    inc c                   ; increment matched character count
+
+	;; LD-CH-PR
+LD_CH_PR:
+#line 181 "C:/zxbasic/library-asm/load.asm"
+	    djnz LD_NAME            ; loop back to LD-NAME for ten characters.
+
+	    bit 7, c                ; test if all matched
+	    jr nz, LD_LOOK_H        ; back to LD-LOOK-H if not
+
+	;   else print a terminal carriage return.
+
+#line 192 "C:/zxbasic/library-asm/load.asm"
+
+	    ld a, (HEAD1)
+    cp 03                   ; Only "bytes:" header is used un ZX BASIC
+	    jr nz, LD_LOOK_H
+
+	    ; Ok, ready to check for bytes start and end
+
+VR_CONTROL:
+	    ld e, (ix + 11)         ; fetch length of new data
+	    ld d, (ix + 12)         ; to DE.
+
+	    ld hl, HEAD1 + 11
+	    ld a, (hl)              ; fetch length of old data (orig. header)
+	    inc hl
+	    ld h, (hl)              ; to HL
+	    ld l, a
+	    or h                    ; check length of old for zero. (Carry reset)
+	    jr z, VR_CONT_1         ; forward to VR-CONT-1 if length unspecified
+	                            ; e.g. LOAD "x" CODE
+	    sbc hl, de
+	    jr nz, LOAD_ERROR       ; Lengths don't match
+
+VR_CONT_1:
+	    ld hl, HEAD1 + 13       ; fetch start of old data (orig. header)
+	    ld a, (hl)
+	    inc hl
+	    ld h, (hl)
+	    ld l, a
+	    or h                    ; check start for zero (unespecified)
+	    jr nz, VR_CONT_2        ; Jump if there was a start
+
+	    ld l, (ix + 13)         ; otherwise use destination in header
+	    ld h, (ix + 14)         ; and load code at addr. saved from
+
+VR_CONT_2:
+	    push hl
+	    pop ix                  ; Transfer load addr to IX
+
+	    ld a, (TMP_FLAG)        ; load verify/load flag
+	    sra a                   ; shift bit 0 to Carry (1 => Load, 0 = Verify), A = 0
+	    dec a                   ; a = 0xFF (Data)
+	    call LD_BYTES
+	    jr c, LOAD_END         ; if carry, load/verification was ok
+
+LOAD_ERROR:
+	    ; Sets ERR_NR with Tape Loading, and returns
+	    ld a, ERROR_TapeLoadingErr
+	    ld (ERR_NR), a
+
+LOAD_END:
+	    pop ix                  ; Recovers stack frame pointer
+	    ld hl, (TMP_HEADER)     ; Recovers tmp_header pointer
+	    jp MEM_FREE             ; Returns via FREE_MEM, freeing tmp header
+
+
+	    LOCAL LD_BYTES_RET
+	    LOCAL LD_BYTES_ROM
+	    LOCAL LD_BYTES_NOINTER
+
+	LD_BYTES_ROM EQU 0562h
+
+LD_BYTES:
+
+	    inc d
+	    ex af, af'
+	    dec d
+	    ld a, r
+	    push af
+	    di
+	    call 0562h
+
+LD_BYTES_RET:
+	    ; Restores DI / EI state
+	    ex af, af'
+	    pop af
+	    jp po, LD_BYTES_NOINTER
+	    ei
+
+LD_BYTES_NOINTER:
+	    ex af, af'
+	    ret
+#line 274 "C:/zxbasic/library-asm/load.asm"
+	    ENDP
+
+
+#line 328 "C:/zxbasic/library-asm/load.asm"
+#line 10495 "HERO.zxbas"
+#line 1 "loadstr.asm"
+
+
+
+	; Loads a string (ptr) from HL
+	; and duplicates it on dynamic memory again
+	; Finally, it returns result pointer in HL
+
+__ILOADSTR:		; This is the indirect pointer entry HL = (HL)
+			ld a, h
+			or l
+			ret z
+			ld a, (hl)
+			inc hl
+			ld h, (hl)
+			ld l, a
+
+__LOADSTR:		; __FASTCALL__ entry
+			ld a, h
+			or l
+			ret z	; Return if NULL
+
+			ld c, (hl)
+			inc hl
+			ld b, (hl)
+			dec hl  ; BC = LEN(a$)
+
+			inc bc
+			inc bc	; BC = LEN(a$) + 2 (two bytes for length)
+
+			push hl
+			push bc
+			call __MEM_ALLOC
+			pop bc  ; Recover length
+			pop de  ; Recover origin
+
+			ld a, h
+			or l
+			ret z	; Return if NULL (No memory)
+
+			ex de, hl ; ldir takes HL as source, DE as destiny, so SWAP HL,DE
+			push de	; Saves destiny start
+			ldir	; Copies string (length number included)
+			pop hl	; Recovers destiny in hl as result
+			ret
+#line 10496 "HERO.zxbas"
+#line 1 "lti16.asm"
+
+#line 1 "lei8.asm"
+
+__LEI8: ; Signed <= comparison for 8bit int
+	        ; A <= H (registers)
+	    PROC
+	    LOCAL checkParity
+	    sub h
+	    jr nz, __LTI
+	    inc a
+	    ret
+
+__LTI8:  ; Test 8 bit values A < H
+	    sub h
+
+__LTI:   ; Generic signed comparison
+	    jp po, checkParity
+	    xor 0x80
+checkParity:
+	    ld a, 0     ; False
+	    ret p
+	    inc a       ; True
+	    ret
+	    ENDP
+#line 2 "lti16.asm"
+
+__LTI16: ; Test 8 bit values HL < DE
+         ; Returns result in A: 0 = False, !0 = True
+	    PROC
+	    LOCAL checkParity
+	    or a
+	    sbc hl, de
+	    jp po, checkParity
+	    ld a, h
+	    xor 0x80
+checkParity:
+	    ld a, 0     ; False
+	    ret p
+	    inc a       ; True
+	    ret
+	    ENDP
+#line 10497 "HERO.zxbas"
+#line 1 "mul8.asm"
+
+__MUL8:		; Performs 8bit x 8bit multiplication
+		PROC
+
+		;LOCAL __MUL8A
+		LOCAL __MUL8LOOP
+		LOCAL __MUL8B
+				; 1st operand (byte) in A, 2nd operand into the stack (AF)
+		pop hl	; return address
+		ex (sp), hl ; CALLE convention
+
+;;__MUL8_FAST: ; __FASTCALL__ entry
+	;;	ld e, a
+	;;	ld d, 0
+	;;	ld l, d
+	;;
+	;;	sla h
+	;;	jr nc, __MUL8A
+	;;	ld l, e
+	;;
+;;__MUL8A:
+	;;
+	;;	ld b, 7
+;;__MUL8LOOP:
+	;;	add hl, hl
+	;;	jr nc, __MUL8B
+	;;
+	;;	add hl, de
+	;;
+;;__MUL8B:
+	;;	djnz __MUL8LOOP
+	;;
+	;;	ld a, l ; result = A and HL  (Truncate to lower 8 bits)
+
+__MUL8_FAST: ; __FASTCALL__ entry, a = a * h (8 bit mul) and Carry
+
+	    ld b, 8
+	    ld l, a
+	    xor a
+
+__MUL8LOOP:
+	    add a, a ; a *= 2
+	    sla l
+	    jp nc, __MUL8B
+	    add a, h
+
+__MUL8B:
+	    djnz __MUL8LOOP
+
+		ret		; result = HL
+		ENDP
+
+#line 10498 "HERO.zxbas"
+#line 1 "mulf.asm"
+
+
+
+	; -------------------------------------------------------------
+	; Floating point library using the FP ROM Calculator (ZX 48K)
+	; All of them uses A EDCB registers as 1st paramter.
+	; For binary operators, the 2n operator must be pushed into the
+	; stack, in the order A DE BC.
+	;
+	; Uses CALLEE convention
+	; -------------------------------------------------------------
+
+__MULF:	; Multiplication
+		call __FPSTACK_PUSH2
+
+		; ------------- ROM MUL
+		rst 28h
+		defb 04h	;
+		defb 38h;   ; END CALC
+
+		jp __FPSTACK_POP
+
+#line 10499 "HERO.zxbas"
+
+
+
 #line 1 "print_eol_attr.asm"
 
 	; Calls PRINT_EOL and then COPY_ATTR, so saves
@@ -12327,7 +13519,7 @@ __PRINT_TABLE:    ; Jump table for 0 .. 22 codes
 PRINT_EOL_ATTR:
 		call PRINT_EOL
 		jp COPY_ATTR
-#line 9613 "HERO.zxbas"
+#line 10503 "HERO.zxbas"
 #line 1 "printstr.asm"
 
 
@@ -12386,7 +13578,328 @@ __PRINT_STR:
 
 			ENDP
 
-#line 9614 "HERO.zxbas"
+#line 10504 "HERO.zxbas"
+#line 1 "pstorestr.asm"
+
+; vim:ts=4:et:sw=4
+	;
+	; Stores an string (pointer to the HEAP by DE) into the address pointed
+	; by (IX + BC). A new copy of the string is created into the HEAP
+	;
+
+#line 1 "storestr.asm"
+
+; vim:ts=4:et:sw=4
+	; Stores value of current string pointed by DE register into address pointed by HL
+	; Returns DE = Address pointer  (&a$)
+	; Returns HL = HL               (b$ => might be needed later to free it from the heap)
+	;
+	; e.g. => HL = _variableName    (DIM _variableName$)
+	;         DE = Address into the HEAP
+	;
+	; This function will resize (REALLOC) the space pointed by HL
+	; before copying the content of b$ into a$
+
+
+#line 1 "strcpy.asm"
+
+#line 1 "realloc.asm"
+
+; vim: ts=4:et:sw=4:
+	; Copyleft (K) by Jose M. Rodriguez de la Rosa
+	;  (a.k.a. Boriel)
+;  http://www.boriel.com
+	;
+	; This ASM library is licensed under the BSD license
+	; you can use it for any purpose (even for commercial
+	; closed source programs).
+	;
+	; Please read the BSD license on the internet
+
+	; ----- IMPLEMENTATION NOTES ------
+	; The heap is implemented as a linked list of free blocks.
+
+; Each free block contains this info:
+	;
+	; +----------------+ <-- HEAP START
+	; | Size (2 bytes) |
+	; |        0       | <-- Size = 0 => DUMMY HEADER BLOCK
+	; +----------------+
+	; | Next (2 bytes) |---+
+	; +----------------+ <-+
+	; | Size (2 bytes) |
+	; +----------------+
+	; | Next (2 bytes) |---+
+	; +----------------+   |
+	; | <free bytes...>|   | <-- If Size > 4, then this contains (size - 4) bytes
+	; | (0 if Size = 4)|   |
+	; +----------------+ <-+
+	; | Size (2 bytes) |
+	; +----------------+
+	; | Next (2 bytes) |---+
+	; +----------------+   |
+	; | <free bytes...>|   |
+	; | (0 if Size = 4)|   |
+	; +----------------+   |
+	;   <Allocated>        | <-- This zone is in use (Already allocated)
+	; +----------------+ <-+
+	; | Size (2 bytes) |
+	; +----------------+
+	; | Next (2 bytes) |---+
+	; +----------------+   |
+	; | <free bytes...>|   |
+	; | (0 if Size = 4)|   |
+	; +----------------+ <-+
+	; | Next (2 bytes) |--> NULL => END OF LIST
+	; |    0 = NULL    |
+	; +----------------+
+	; | <free bytes...>|
+	; | (0 if Size = 4)|
+	; +----------------+
+
+
+	; When a block is FREED, the previous and next pointers are examined to see
+	; if we can defragment the heap. If the block to be breed is just next to the
+	; previous, or to the next (or both) they will be converted into a single
+	; block (so defragmented).
+
+
+	;   MEMORY MANAGER
+	;
+	; This library must be initialized calling __MEM_INIT with
+	; HL = BLOCK Start & DE = Length.
+
+	; An init directive is useful for initialization routines.
+	; They will be added automatically if needed.
+
+
+
+
+
+
+
+	; ---------------------------------------------------------------------
+	; MEM_REALLOC
+	;  Reallocates a block of memory in the heap.
+	;
+	; Parameters
+	;  HL = Pointer to the original block
+	;  BC = New Length of requested memory block
+	;
+; Returns:
+	;  HL = Pointer to the allocated block in memory. Returns 0 (NULL)
+	;       if the block could not be allocated (out of memory)
+	;
+; Notes:
+	;  If BC = 0, the block is freed, otherwise
+	;  the content of the original block is copied to the new one, and
+	;  the new size is adjusted. If BC < original length, the content
+	;  will be truncated. Otherwise, extra block content might contain
+	;  memory garbage.
+	;
+	; ---------------------------------------------------------------------
+__REALLOC:    ; Reallocates block pointed by HL, with new length BC
+	        PROC
+
+	        LOCAL __REALLOC_END
+
+	        ld a, h
+	        or l
+	        jp z, __MEM_ALLOC    ; If HL == NULL, just do a malloc
+
+	        ld e, (hl)
+	        inc hl
+	        ld d, (hl)    ; DE = First 2 bytes of HL block
+
+	        push hl
+	        exx
+	        pop de
+	        inc de        ; DE' <- HL + 2
+	        exx            ; DE' <- HL (Saves current pointer into DE')
+
+	        dec hl        ; HL = Block start
+
+	        push de
+	        push bc
+	        call __MEM_FREE        ; Frees current block
+	        pop bc
+	        push bc
+	        call __MEM_ALLOC    ; Gets a new block of length BC
+	        pop bc
+	        pop de
+
+	        ld a, h
+	        or l
+	        ret z        ; Return if HL == NULL (No memory)
+
+	        ld (hl), e
+	        inc hl
+	        ld (hl), d
+	        inc hl        ; Recovers first 2 bytes in HL
+
+	        dec bc
+	        dec bc        ; BC = BC - 2 (Two bytes copied)
+
+	        ld a, b
+	        or c
+	        jp z, __REALLOC_END        ; Ret if nothing to copy (BC == 0)
+
+	        exx
+	        push de
+	        exx
+	        pop de        ; DE <- DE' ; Start of remaining block
+
+	        push hl        ; Saves current Block + 2 start
+        ex de, hl    ; Exchanges them: DE is destiny block
+	        ldir        ; Copies BC Bytes
+	        pop hl        ; Recovers Block + 2 start
+
+__REALLOC_END:
+
+	        dec hl        ; Set HL
+	        dec hl        ; To begin of block
+	        ret
+
+	        ENDP
+
+#line 2 "strcpy.asm"
+
+	; String library
+
+
+__STRASSIGN: ; Performs a$ = b$ (HL = address of a$; DE = Address of b$)
+			PROC
+
+			LOCAL __STRREALLOC
+			LOCAL __STRCONTINUE
+			LOCAL __B_IS_NULL
+			LOCAL __NOTHING_TO_COPY
+
+			ld b, d
+			ld c, e
+			ld a, b
+			or c
+			jr z, __B_IS_NULL
+
+			ex de, hl
+			ld c, (hl)
+			inc hl
+			ld b, (hl)
+			dec hl		; BC = LEN(b$)
+			ex de, hl	; DE = &b$
+
+__B_IS_NULL:		; Jumps here if B$ pointer is NULL
+			inc bc
+			inc bc		; BC = BC + 2  ; (LEN(b$) + 2 bytes for storing length)
+
+			push de
+			push hl
+
+			ld a, h
+			or l
+			jr z, __STRREALLOC
+
+			dec hl
+			ld d, (hl)
+			dec hl
+			ld e, (hl)	; DE = MEMBLOCKSIZE(a$)
+			dec de
+			dec de		; DE = DE - 2  ; (Membloksize takes 2 bytes for memblock length)
+
+			ld h, b
+			ld l, c		; HL = LEN(b$) + 2  => Minimum block size required
+			ex de, hl	; Now HL = BLOCKSIZE(a$), DE = LEN(b$) + 2
+
+			or a		; Prepare to subtract BLOCKSIZE(a$) - LEN(b$)
+			sbc hl, de  ; Carry if len(b$) > Blocklen(a$)
+			jr c, __STRREALLOC ; No need to realloc
+			; Need to reallocate at least to len(b$) + 2
+			ex de, hl	; DE = Remaining bytes in a$ mem block.
+			ld hl, 4
+			sbc hl, de  ; if remaining bytes < 4 we can continue
+			jr nc,__STRCONTINUE ; Otherwise, we realloc, to free some bytes
+
+__STRREALLOC:
+			pop hl
+			call __REALLOC	; Returns in HL a new pointer with BC bytes allocated
+			push hl
+
+__STRCONTINUE:	;   Pops hl and de SWAPPED
+			pop de	;	DE = &a$
+			pop hl	; 	HL = &b$
+
+			ld a, d		; Return if not enough memory for new length
+			or e
+			ret z		; Return if DE == NULL (0)
+
+__STRCPY:	; Copies string pointed by HL into string pointed by DE
+				; Returns DE as HL (new pointer)
+			ld a, h
+			or l
+			jr z, __NOTHING_TO_COPY
+			ld c, (hl)
+			inc hl
+			ld b, (hl)
+			dec hl
+			inc bc
+			inc bc
+			push de
+			ldir
+			pop hl
+			ret
+
+__NOTHING_TO_COPY:
+			ex de, hl
+			ld (hl), e
+			inc hl
+			ld (hl), d
+			dec hl
+			ret
+
+			ENDP
+
+#line 14 "storestr.asm"
+
+__PISTORE_STR:          ; Indirect assignement at (IX + BC)
+	    push ix
+	    pop hl
+	    add hl, bc
+
+__ISTORE_STR:           ; Indirect assignement, hl point to a pointer to a pointer to the heap!
+	    ld c, (hl)
+	    inc hl
+	    ld h, (hl)
+	    ld l, c             ; HL = (HL)
+
+__STORE_STR:
+	    push de             ; Pointer to b$
+	    push hl             ; Array pointer to variable memory address
+
+	    ld c, (hl)
+	    inc hl
+	    ld h, (hl)
+	    ld l, c             ; HL = (HL)
+
+	    call __STRASSIGN    ; HL (a$) = DE (b$); HL changed to a new dynamic memory allocation
+	    ex de, hl           ; DE = new address of a$
+	    pop hl              ; Recover variable memory address pointer
+
+	    ld (hl), e
+	    inc hl
+	    ld (hl), d          ; Stores a$ ptr into elemem ptr
+
+	    pop hl              ; Returns ptr to b$ in HL (Caller might needed to free it from memory)
+	    ret
+
+#line 8 "pstorestr.asm"
+
+__PSTORE_STR:
+	    push ix
+	    pop hl
+	    add hl, bc
+	    jp __STORE_STR
+
+#line 10505 "HERO.zxbas"
 #line 1 "pstorestr2.asm"
 
 ; vim:ts=4:et:sw=4
@@ -12445,7 +13958,129 @@ __PSTORE_STR2:
 	    add hl, bc
 	    jp __STORE_STR2
 
-#line 9615 "HERO.zxbas"
+#line 10506 "HERO.zxbas"
+#line 1 "random.asm"
+
+	; RANDOM functions
+
+RANDOMIZE:
+	    ; Randomize with 32 bit seed in DE HL
+	    ; if SEED = 0, calls ROM to take frames as seed
+	    PROC
+
+	    LOCAL TAKE_FRAMES
+	    LOCAL FRAMES
+
+	    ld a, h
+	    or l
+	    or d
+	    or e
+	    jr z, TAKE_FRAMES
+
+	    ld (RANDOM_SEED_LOW), hl
+	    ld (RANDOM_SEED_HIGH), de
+	    ret
+
+TAKE_FRAMES:
+	    ; Takes the seed from frames
+	    ld hl, (FRAMES)
+	    ld (RANDOM_SEED_LOW), hl
+	    ld hl, (FRAMES + 2)
+	    ld (RANDOM_SEED_HIGH), hl
+	    ret
+
+	FRAMES EQU    23672
+	    ENDP
+
+	RANDOM_SEED_HIGH EQU RAND+6    ; RANDOM seed, 16 higher bits
+	RANDOM_SEED_LOW     EQU 23670  ; RANDOM seed, 16 lower bits
+
+
+RAND:
+	    PROC
+	    LOCAL RAND_LOOP
+	    ld b, 4
+RAND_LOOP:
+	    ld  hl,(RANDOM_SEED_LOW)   ; xz -> yw
+	    ld  de,0C0DEh   ; yw -> zt
+	    ld  (RANDOM_SEED_LOW),de  ; x = y, z = w
+	    ld  a,e         ; w = w ^ ( w << 3 )
+	    add a,a
+	    add a,a
+	    add a,a
+	    xor e
+	    ld  e,a
+	    ld  a,h         ; t = x ^ (x << 1)
+	    add a,a
+	    xor h
+	    ld  d,a
+	    rra             ; t = t ^ (t >> 1) ^ w
+	    xor d
+	    xor e
+	    ld  h,l         ; y = z
+	    ld  l,a         ; w = t
+	    ld  (RANDOM_SEED_HIGH),hl
+	    push af
+	    djnz RAND_LOOP
+	    pop af
+	    pop af
+	    ld d, a
+	    pop af
+	    ld e, a
+	    pop af
+	    ld h, a
+	    ret
+	    ENDP
+
+RND:
+	    ; Returns a FLOATING point integer
+	    ; using RAND as a mantissa
+	    PROC
+	    LOCAL RND_LOOP
+
+	    call RAND
+	    ; BC = HL since ZX BASIC uses ED CB A registers for FP
+	    ld b, h
+	    ld c, l
+
+	    ld a, e
+	    or d
+	    or c
+	    or b
+	    ret z   ; Returns 0 if BC=DE=0
+
+	    ; We already have a random 32 bit mantissa in ED CB
+	    ; From 0001h to FFFFh
+
+	    ld l, 81h	; Exponent
+	    ; At this point we have [0 .. 1) FP number;
+
+	    ; Now we must shift mantissa left until highest bit goes into carry
+	    ld a, e ; Use A register for rotating E faster (using RLA instead of RL E)
+RND_LOOP:
+	    dec l
+	    sla b
+	    rl c
+	    rl d
+	    rla
+	    jp nc, RND_LOOP
+
+	    ; Now undo last mantissa left-shift once
+	    ccf ; Clears carry to insert a 0 bit back into mantissa -> positive FP number
+	    rra
+	    rr d
+	    rr c
+	    rr b
+
+	    ld e, a     ; E must have the highest byte
+	    ld a, l     ; exponent in A
+	    ret
+
+	    ENDP
+
+#line 10507 "HERO.zxbas"
+
+
 #line 1 "str.asm"
 
 	; The STR$( ) BASIC function implementation
@@ -12455,54 +14090,7 @@ __PSTORE_STR2:
 	; containing the FP number string representation
 
 
-#line 1 "stackf.asm"
 
-	; -------------------------------------------------------------
-	; Functions to manage FP-Stack of the ZX Spectrum ROM CALC
-	; -------------------------------------------------------------
-
-
-	__FPSTACK_PUSH EQU 2AB6h	; Stores an FP number into the ROM FP stack (A, ED CB)
-	__FPSTACK_POP  EQU 2BF1h	; Pops an FP number out of the ROM FP stack (A, ED CB)
-
-__FPSTACK_PUSH2: ; Pushes Current A ED CB registers and top of the stack on (SP + 4)
-	                 ; Second argument to push into the stack calculator is popped out of the stack
-	                 ; Since the caller routine also receives the parameters into the top of the stack
-	                 ; four bytes must be removed from SP before pop them out
-
-	    call __FPSTACK_PUSH ; Pushes A ED CB into the FP-STACK
-	    exx
-	    pop hl       ; Caller-Caller return addr
-	    exx
-	    pop hl       ; Caller return addr
-
-	    pop af
-	    pop de
-	    pop bc
-
-	    push hl      ; Caller return addr
-	    exx
-	    push hl      ; Caller-Caller return addr
-	    exx
-
-	    jp __FPSTACK_PUSH
-
-
-__FPSTACK_I16:	; Pushes 16 bits integer in HL into the FP ROM STACK
-					; This format is specified in the ZX 48K Manual
-					; You can push a 16 bit signed integer as
-					; 0 SS LL HH 0, being SS the sign and LL HH the low
-					; and High byte respectively
-		ld a, h
-		rla			; sign to Carry
-		sbc	a, a	; 0 if positive, FF if negative
-		ld e, a
-		ld d, l
-		ld c, h
-		xor a
-		ld b, a
-		jp __FPSTACK_PUSH
-#line 9 "str.asm"
 
 
 __STR:
@@ -12572,7 +14160,7 @@ __STR_END:
 
 		ENDP
 
-#line 9616 "HERO.zxbas"
+#line 10510 "HERO.zxbas"
 #line 1 "strcat.asm"
 
 
@@ -12719,7 +14307,7 @@ __STRCATEND:
 
 			ENDP
 
-#line 9617 "HERO.zxbas"
+#line 10511 "HERO.zxbas"
 
 #line 1 "strslice.asm"
 
@@ -12829,42 +14417,10 @@ __FREE_ON_EXIT:
 
 		ENDP
 
-#line 9619 "HERO.zxbas"
+#line 10513 "HERO.zxbas"
 #line 1 "u32tofreg.asm"
 
-#line 1 "neg32.asm"
 
-__ABS32:
-		bit 7, d
-		ret z
-
-__NEG32: ; Negates DEHL (Two's complement)
-		ld a, l
-		cpl
-		ld l, a
-
-		ld a, h
-		cpl
-		ld h, a
-
-		ld a, e
-		cpl
-		ld e, a
-
-		ld a, d
-		cpl
-		ld d, a
-
-		inc l
-		ret nz
-
-		inc h
-		ret nz
-
-		inc de
-		ret
-
-#line 2 "u32tofreg.asm"
 __I8TOFREG:
 		ld l, a
 		rlca
@@ -12953,7 +14509,7 @@ __U32TOFREG_END:
 		ret
 	    ENDP
 
-#line 9620 "HERO.zxbas"
+#line 10514 "HERO.zxbas"
 
 ZXBASIC_USER_DATA:
 _currentEnemies:
@@ -13053,6 +14609,8 @@ _continues:
 	DEFB 00
 _practice:
 	DEFB 00
+_showHighScore:
+	DEFB 00h
 _vampColor:
 	DEFB 00
 _spiderColor:
@@ -13092,7 +14650,7 @@ _updateResult:
 _exitResult:
 	DEFB 00
 _bitmapBuffer:
-	DEFW __LABEL722
+	DEFW __LABEL812
 _bitmapBuffer.__DATA__.__PTR__:
 	DEFW _bitmapBuffer.__DATA__
 _bitmapBuffer.__DATA__:
@@ -19240,11 +20798,11 @@ _bitmapBuffer.__DATA__:
 	DEFB 00h
 	DEFB 00h
 	DEFB 00h
-__LABEL722:
+__LABEL812:
 	DEFW 0000h
 	DEFB 01h
 _attribBuffer:
-	DEFW __LABEL723
+	DEFW __LABEL813
 _attribBuffer.__DATA__.__PTR__:
 	DEFW _attribBuffer.__DATA__
 _attribBuffer.__DATA__:
@@ -20016,11 +21574,11 @@ _attribBuffer.__DATA__:
 	DEFB 00h
 	DEFB 00h
 	DEFB 00h
-__LABEL723:
+__LABEL813:
 	DEFW 0000h
 	DEFB 01h
 _tableCP:
-	DEFW __LABEL724
+	DEFW __LABEL814
 _tableCP.__DATA__.__PTR__:
 	DEFW _tableCP.__DATA__
 _tableCP.__DATA__:
@@ -20792,11 +22350,11 @@ _tableCP.__DATA__:
 	DEFB 00h
 	DEFB 00h
 	DEFB 00h
-__LABEL724:
+__LABEL814:
 	DEFW 0000h
 	DEFB 02h
 _tlc:
-	DEFW __LABEL725
+	DEFW __LABEL815
 _tlc.__DATA__.__PTR__:
 	DEFW _tlc.__DATA__
 _tlc.__DATA__:
@@ -20808,11 +22366,11 @@ _tlc.__DATA__:
 	DEFB 0A1h
 	DEFB 0A1h
 	DEFB 0A1h
-__LABEL725:
+__LABEL815:
 	DEFW 0000h
 	DEFB 01h
 _blc:
-	DEFW __LABEL726
+	DEFW __LABEL816
 _blc.__DATA__.__PTR__:
 	DEFW _blc.__DATA__
 _blc.__DATA__:
@@ -20824,11 +22382,11 @@ _blc.__DATA__:
 	DEFB 0A1h
 	DEFB 42h
 	DEFB 3Ch
-__LABEL726:
+__LABEL816:
 	DEFW 0000h
 	DEFB 01h
 _mlor:
-	DEFW __LABEL727
+	DEFW __LABEL817
 _mlor.__DATA__.__PTR__:
 	DEFW _mlor.__DATA__
 _mlor.__DATA__:
@@ -20840,11 +22398,11 @@ _mlor.__DATA__:
 	DEFB 0A0h
 	DEFB 0A0h
 	DEFB 0A1h
-__LABEL727:
+__LABEL817:
 	DEFW 0000h
 	DEFB 01h
 _mlol:
-	DEFW __LABEL728
+	DEFW __LABEL818
 _mlol.__DATA__.__PTR__:
 	DEFW _mlol.__DATA__
 _mlol.__DATA__:
@@ -20856,11 +22414,11 @@ _mlol.__DATA__:
 	DEFB 21h
 	DEFB 21h
 	DEFB 0A1h
-__LABEL728:
+__LABEL818:
 	DEFW 0000h
 	DEFB 01h
 _mlo:
-	DEFW __LABEL729
+	DEFW __LABEL819
 _mlo.__DATA__.__PTR__:
 	DEFW _mlo.__DATA__
 _mlo.__DATA__:
@@ -20872,11 +22430,11 @@ _mlo.__DATA__:
 	DEFB 00h
 	DEFB 00h
 	DEFB 0FFh
-__LABEL729:
+__LABEL819:
 	DEFW 0000h
 	DEFB 01h
 _dot:
-	DEFW __LABEL730
+	DEFW __LABEL820
 _dot.__DATA__.__PTR__:
 	DEFW _dot.__DATA__
 _dot.__DATA__:
@@ -20888,11 +22446,11 @@ _dot.__DATA__:
 	DEFB 52h
 	DEFB 24h
 	DEFB 18h
-__LABEL730:
+__LABEL820:
 	DEFW 0000h
 	DEFB 01h
 _tlcc:
-	DEFW __LABEL731
+	DEFW __LABEL821
 _tlcc.__DATA__.__PTR__:
 	DEFW _tlcc.__DATA__
 _tlcc.__DATA__:
@@ -20904,11 +22462,11 @@ _tlcc.__DATA__:
 	DEFB 0A0h
 	DEFB 0A0h
 	DEFB 0A1h
-__LABEL731:
+__LABEL821:
 	DEFW 0000h
 	DEFB 01h
 _blcc:
-	DEFW __LABEL732
+	DEFW __LABEL822
 _blcc.__DATA__.__PTR__:
 	DEFW _blcc.__DATA__
 _blcc.__DATA__:
@@ -20920,11 +22478,11 @@ _blcc.__DATA__:
 	DEFB 80h
 	DEFB 40h
 	DEFB 3Fh
-__LABEL732:
+__LABEL822:
 	DEFW 0000h
 	DEFB 01h
 _rec:
-	DEFW __LABEL733
+	DEFW __LABEL823
 _rec.__DATA__.__PTR__:
 	DEFW _rec.__DATA__
 _rec.__DATA__:
@@ -20936,11 +22494,11 @@ _rec.__DATA__:
 	DEFB 01h
 	DEFB 02h
 	DEFB 0FCh
-__LABEL733:
+__LABEL823:
 	DEFW 0000h
 	DEFB 01h
 _rct:
-	DEFW __LABEL734
+	DEFW __LABEL824
 _rct.__DATA__.__PTR__:
 	DEFW _rct.__DATA__
 _rct.__DATA__:
@@ -20952,11 +22510,11 @@ _rct.__DATA__:
 	DEFB 01h
 	DEFB 01h
 	DEFB 81h
-__LABEL734:
+__LABEL824:
 	DEFW 0000h
 	DEFB 01h
 _rcbs:
-	DEFW __LABEL735
+	DEFW __LABEL825
 _rcbs.__DATA__.__PTR__:
 	DEFW _rcbs.__DATA__
 _rcbs.__DATA__:
@@ -20968,11 +22526,11 @@ _rcbs.__DATA__:
 	DEFB 01h
 	DEFB 02h
 	DEFB 1Ch
-__LABEL735:
+__LABEL825:
 	DEFW 0000h
 	DEFB 01h
 _mlob:
-	DEFW __LABEL736
+	DEFW __LABEL826
 _mlob.__DATA__.__PTR__:
 	DEFW _mlob.__DATA__
 _mlob.__DATA__:
@@ -20984,11 +22542,11 @@ _mlob.__DATA__:
 	DEFB 00h
 	DEFB 00h
 	DEFB 80h
-__LABEL736:
+__LABEL826:
 	DEFW 0000h
 	DEFB 01h
 _dgl:
-	DEFW __LABEL737
+	DEFW __LABEL827
 _dgl.__DATA__.__PTR__:
 	DEFW _dgl.__DATA__
 _dgl.__DATA__:
@@ -21000,11 +22558,11 @@ _dgl.__DATA__:
 	DEFB 01h
 	DEFB 00h
 	DEFB 00h
-__LABEL737:
+__LABEL827:
 	DEFW 0000h
 	DEFB 01h
 _dglc:
-	DEFW __LABEL738
+	DEFW __LABEL828
 _dglc.__DATA__.__PTR__:
 	DEFW _dglc.__DATA__
 _dglc.__DATA__:
@@ -21016,11 +22574,11 @@ _dglc.__DATA__:
 	DEFB 01h
 	DEFB 82h
 	DEFB 7Ch
-__LABEL738:
+__LABEL828:
 	DEFW 0000h
 	DEFB 01h
 _mlc:
-	DEFW __LABEL739
+	DEFW __LABEL829
 _mlc.__DATA__.__PTR__:
 	DEFW _mlc.__DATA__
 _mlc.__DATA__:
@@ -21032,11 +22590,11 @@ _mlc.__DATA__:
 	DEFB 0A1h
 	DEFB 0A1h
 	DEFB 0A1h
-__LABEL739:
+__LABEL829:
 	DEFW 0000h
 	DEFB 01h
 _rcb:
-	DEFW __LABEL740
+	DEFW __LABEL830
 _rcb.__DATA__.__PTR__:
 	DEFW _rcb.__DATA__
 _rcb.__DATA__:
@@ -21048,11 +22606,11 @@ _rcb.__DATA__:
 	DEFB 01h
 	DEFB 02h
 	DEFB 0FCh
-__LABEL740:
+__LABEL830:
 	DEFW 0000h
 	DEFB 01h
 _energy:
-	DEFW __LABEL741
+	DEFW __LABEL831
 _energy.__DATA__.__PTR__:
 	DEFW _energy.__DATA__
 _energy.__DATA__:
@@ -21064,11 +22622,11 @@ _energy.__DATA__:
 	DEFB 0D5h
 	DEFB 0ABh
 	DEFB 7Eh
-__LABEL741:
+__LABEL831:
 	DEFW 0000h
 	DEFB 01h
 _vampUp:
-	DEFW __LABEL742
+	DEFW __LABEL832
 _vampUp.__DATA__.__PTR__:
 	DEFW _vampUp.__DATA__
 _vampUp.__DATA__:
@@ -21080,11 +22638,11 @@ _vampUp.__DATA__:
 	DEFB 7Eh
 	DEFB 18h
 	DEFB 00h
-__LABEL742:
+__LABEL832:
 	DEFW 0000h
 	DEFB 01h
 _vampDown:
-	DEFW __LABEL743
+	DEFW __LABEL833
 _vampDown.__DATA__.__PTR__:
 	DEFW _vampDown.__DATA__
 _vampDown.__DATA__:
@@ -21096,11 +22654,11 @@ _vampDown.__DATA__:
 	DEFB 0FFh
 	DEFB 99h
 	DEFB 00h
-__LABEL743:
+__LABEL833:
 	DEFW 0000h
 	DEFB 01h
 _lampl:
-	DEFW __LABEL744
+	DEFW __LABEL834
 _lampl.__DATA__.__PTR__:
 	DEFW _lampl.__DATA__
 _lampl.__DATA__:
@@ -21112,11 +22670,11 @@ _lampl.__DATA__:
 	DEFB 7Eh
 	DEFB 24h
 	DEFB 18h
-__LABEL744:
+__LABEL834:
 	DEFW 0000h
 	DEFB 01h
 _lampr:
-	DEFW __LABEL745
+	DEFW __LABEL835
 _lampr.__DATA__.__PTR__:
 	DEFW _lampr.__DATA__
 _lampr.__DATA__:
@@ -21128,11 +22686,11 @@ _lampr.__DATA__:
 	DEFB 7Eh
 	DEFB 24h
 	DEFB 18h
-__LABEL745:
+__LABEL835:
 	DEFW 0000h
 	DEFB 01h
 _spider:
-	DEFW __LABEL746
+	DEFW __LABEL836
 _spider.__DATA__.__PTR__:
 	DEFW _spider.__DATA__
 _spider.__DATA__:
@@ -21144,11 +22702,11 @@ _spider.__DATA__:
 	DEFB 5Ah
 	DEFB 42h
 	DEFB 00h
-__LABEL746:
+__LABEL836:
 	DEFW 0000h
 	DEFB 01h
 _dynamite1:
-	DEFW __LABEL747
+	DEFW __LABEL837
 _dynamite1.__DATA__.__PTR__:
 	DEFW _dynamite1.__DATA__
 _dynamite1.__DATA__:
@@ -21160,11 +22718,11 @@ _dynamite1.__DATA__:
 	DEFB 3Ch
 	DEFB 3Ch
 	DEFB 3Ch
-__LABEL747:
+__LABEL837:
 	DEFW 0000h
 	DEFB 01h
 _dynamite2:
-	DEFW __LABEL748
+	DEFW __LABEL838
 _dynamite2.__DATA__.__PTR__:
 	DEFW _dynamite2.__DATA__
 _dynamite2.__DATA__:
@@ -21176,11 +22734,11 @@ _dynamite2.__DATA__:
 	DEFB 3Ch
 	DEFB 3Ch
 	DEFB 3Ch
-__LABEL748:
+__LABEL838:
 	DEFW 0000h
 	DEFB 01h
 _skh1:
-	DEFW __LABEL749
+	DEFW __LABEL839
 _skh1.__DATA__.__PTR__:
 	DEFW _skh1.__DATA__
 _skh1.__DATA__:
@@ -21192,11 +22750,11 @@ _skh1.__DATA__:
 	DEFB 06h
 	DEFB 00h
 	DEFB 00h
-__LABEL749:
+__LABEL839:
 	DEFW 0000h
 	DEFB 01h
 _skh2:
-	DEFW __LABEL750
+	DEFW __LABEL840
 _skh2.__DATA__.__PTR__:
 	DEFW _skh2.__DATA__
 _skh2.__DATA__:
@@ -21208,11 +22766,11 @@ _skh2.__DATA__:
 	DEFB 60h
 	DEFB 00h
 	DEFB 00h
-__LABEL750:
+__LABEL840:
 	DEFW 0000h
 	DEFB 01h
 _skb:
-	DEFW __LABEL751
+	DEFW __LABEL841
 _skb.__DATA__.__PTR__:
 	DEFW _skb.__DATA__
 _skb.__DATA__:
@@ -21224,11 +22782,11 @@ _skb.__DATA__:
 	DEFB 00h
 	DEFB 00h
 	DEFB 00h
-__LABEL751:
+__LABEL841:
 	DEFW 0000h
 	DEFB 01h
 _bug1:
-	DEFW __LABEL752
+	DEFW __LABEL842
 _bug1.__DATA__.__PTR__:
 	DEFW _bug1.__DATA__
 _bug1.__DATA__:
@@ -21240,11 +22798,11 @@ _bug1.__DATA__:
 	DEFB 3Ch
 	DEFB 24h
 	DEFB 24h
-__LABEL752:
+__LABEL842:
 	DEFW 0000h
 	DEFB 01h
 _bug2:
-	DEFW __LABEL753
+	DEFW __LABEL843
 _bug2.__DATA__.__PTR__:
 	DEFW _bug2.__DATA__
 _bug2.__DATA__:
@@ -21256,11 +22814,11 @@ _bug2.__DATA__:
 	DEFB 3Ch
 	DEFB 0C3h
 	DEFB 00h
-__LABEL753:
+__LABEL843:
 	DEFW 0000h
 	DEFB 01h
 _crock1:
-	DEFW __LABEL754
+	DEFW __LABEL844
 _crock1.__DATA__.__PTR__:
 	DEFW _crock1.__DATA__
 _crock1.__DATA__:
@@ -21272,11 +22830,11 @@ _crock1.__DATA__:
 	DEFB 60h
 	DEFB 0D0h
 	DEFB 0FEh
-__LABEL754:
+__LABEL844:
 	DEFW 0000h
 	DEFB 01h
 _crock2:
-	DEFW __LABEL755
+	DEFW __LABEL845
 _crock2.__DATA__.__PTR__:
 	DEFW _crock2.__DATA__
 _crock2.__DATA__:
@@ -21288,11 +22846,11 @@ _crock2.__DATA__:
 	DEFB 0F8h
 	DEFB 0F0h
 	DEFB 7Fh
-__LABEL755:
+__LABEL845:
 	DEFW 0000h
 	DEFB 01h
 _walll:
-	DEFW __LABEL756
+	DEFW __LABEL846
 _walll.__DATA__.__PTR__:
 	DEFW _walll.__DATA__
 _walll.__DATA__:
@@ -21304,11 +22862,11 @@ _walll.__DATA__:
 	DEFB 0FDh
 	DEFB 0FAh
 	DEFB 0FEh
-__LABEL756:
+__LABEL846:
 	DEFW 0000h
 	DEFB 01h
 _wallr:
-	DEFW __LABEL757
+	DEFW __LABEL847
 _wallr.__DATA__.__PTR__:
 	DEFW _wallr.__DATA__
 _wallr.__DATA__:
@@ -21320,11 +22878,11 @@ _wallr.__DATA__:
 	DEFB 0BFh
 	DEFB 5Fh
 	DEFB 7Fh
-__LABEL757:
+__LABEL847:
 	DEFW 0000h
 	DEFB 01h
 _wallb:
-	DEFW __LABEL758
+	DEFW __LABEL848
 _wallb.__DATA__.__PTR__:
 	DEFW _wallb.__DATA__
 _wallb.__DATA__:
@@ -21336,11 +22894,11 @@ _wallb.__DATA__:
 	DEFB 0FFh
 	DEFB 0FFh
 	DEFB 0FFh
-__LABEL758:
+__LABEL848:
 	DEFW 0000h
 	DEFB 01h
 _wallt:
-	DEFW __LABEL759
+	DEFW __LABEL849
 _wallt.__DATA__.__PTR__:
 	DEFW _wallt.__DATA__
 _wallt.__DATA__:
@@ -21352,11 +22910,11 @@ _wallt.__DATA__:
 	DEFB 0B5h
 	DEFB 0D2h
 	DEFB 2Dh
-__LABEL759:
+__LABEL849:
 	DEFW 0000h
 	DEFB 01h
 _walltr:
-	DEFW __LABEL760
+	DEFW __LABEL850
 _walltr.__DATA__.__PTR__:
 	DEFW _walltr.__DATA__
 _walltr.__DATA__:
@@ -21368,11 +22926,11 @@ _walltr.__DATA__:
 	DEFB 0FDh
 	DEFB 0FAh
 	DEFB 0FDh
-__LABEL760:
+__LABEL850:
 	DEFW 0000h
 	DEFB 01h
 _walltl:
-	DEFW __LABEL761
+	DEFW __LABEL851
 _walltl.__DATA__.__PTR__:
 	DEFW _walltl.__DATA__
 _walltl.__DATA__:
@@ -21384,11 +22942,11 @@ _walltl.__DATA__:
 	DEFB 0BFh
 	DEFB 5Fh
 	DEFB 0BFh
-__LABEL761:
+__LABEL851:
 	DEFW 0000h
 	DEFB 01h
 _wallbr:
-	DEFW __LABEL762
+	DEFW __LABEL852
 _wallbr.__DATA__.__PTR__:
 	DEFW _wallbr.__DATA__
 _wallbr.__DATA__:
@@ -21400,11 +22958,11 @@ _wallbr.__DATA__:
 	DEFB 0AFh
 	DEFB 4Ah
 	DEFB 0B5h
-__LABEL762:
+__LABEL852:
 	DEFW 0000h
 	DEFB 01h
 _wallbl:
-	DEFW __LABEL763
+	DEFW __LABEL853
 _wallbl.__DATA__.__PTR__:
 	DEFW _wallbl.__DATA__
 _wallbl.__DATA__:
@@ -21416,11 +22974,11 @@ _wallbl.__DATA__:
 	DEFB 0F5h
 	DEFB 52h
 	DEFB 0ADh
-__LABEL763:
+__LABEL853:
 	DEFW 0000h
 	DEFB 01h
 _singleWallV:
-	DEFW __LABEL764
+	DEFW __LABEL854
 _singleWallV.__DATA__.__PTR__:
 	DEFW _singleWallV.__DATA__
 _singleWallV.__DATA__:
@@ -21432,11 +22990,11 @@ _singleWallV.__DATA__:
 	DEFB 0BDh
 	DEFB 5Eh
 	DEFB 0BDh
-__LABEL764:
+__LABEL854:
 	DEFW 0000h
 	DEFB 01h
 _singleWallH:
-	DEFW __LABEL765
+	DEFW __LABEL855
 _singleWallH.__DATA__.__PTR__:
 	DEFW _singleWallH.__DATA__
 _singleWallH.__DATA__:
@@ -21448,11 +23006,11 @@ _singleWallH.__DATA__:
 	DEFB 0FFh
 	DEFB 59h
 	DEFB 0A6h
-__LABEL765:
+__LABEL855:
 	DEFW 0000h
 	DEFB 01h
 _destructibleWallV:
-	DEFW __LABEL766
+	DEFW __LABEL856
 _destructibleWallV.__DATA__.__PTR__:
 	DEFW _destructibleWallV.__DATA__
 _destructibleWallV.__DATA__:
@@ -21464,11 +23022,11 @@ _destructibleWallV.__DATA__:
 	DEFB 0BDh
 	DEFB 0DBh
 	DEFB 0BDh
-__LABEL766:
+__LABEL856:
 	DEFW 0000h
 	DEFB 01h
 _destructibleWallH:
-	DEFW __LABEL767
+	DEFW __LABEL857
 _destructibleWallH.__DATA__.__PTR__:
 	DEFW _destructibleWallH.__DATA__
 _destructibleWallH.__DATA__:
@@ -21480,11 +23038,11 @@ _destructibleWallH.__DATA__:
 	DEFB 0AAh
 	DEFB 55h
 	DEFB 0FFh
-__LABEL767:
+__LABEL857:
 	DEFW 0000h
 	DEFB 01h
 _rockT:
-	DEFW __LABEL768
+	DEFW __LABEL858
 _rockT.__DATA__.__PTR__:
 	DEFW _rockT.__DATA__
 _rockT.__DATA__:
@@ -21496,11 +23054,11 @@ _rockT.__DATA__:
 	DEFB 0BDh
 	DEFB 0FFh
 	DEFB 0FFh
-__LABEL768:
+__LABEL858:
 	DEFW 0000h
 	DEFB 01h
 _rockB:
-	DEFW __LABEL769
+	DEFW __LABEL859
 _rockB.__DATA__.__PTR__:
 	DEFW _rockB.__DATA__
 _rockB.__DATA__:
@@ -21512,11 +23070,11 @@ _rockB.__DATA__:
 	DEFB 0BDh
 	DEFB 56h
 	DEFB 0ADh
-__LABEL769:
+__LABEL859:
 	DEFW 0000h
 	DEFB 01h
 _rockL:
-	DEFW __LABEL770
+	DEFW __LABEL860
 _rockL.__DATA__.__PTR__:
 	DEFW _rockL.__DATA__
 _rockL.__DATA__:
@@ -21528,11 +23086,11 @@ _rockL.__DATA__:
 	DEFB 0FFh
 	DEFB 5Bh
 	DEFB 0A7h
-__LABEL770:
+__LABEL860:
 	DEFW 0000h
 	DEFB 01h
 _rockR:
-	DEFW __LABEL771
+	DEFW __LABEL861
 _rockR.__DATA__.__PTR__:
 	DEFW _rockR.__DATA__
 _rockR.__DATA__:
@@ -21544,11 +23102,11 @@ _rockR.__DATA__:
 	DEFB 0F5h
 	DEFB 0D2h
 	DEFB 0EDh
-__LABEL771:
+__LABEL861:
 	DEFW 0000h
 	DEFB 01h
 _fly1:
-	DEFW __LABEL772
+	DEFW __LABEL862
 _fly1.__DATA__.__PTR__:
 	DEFW _fly1.__DATA__
 _fly1.__DATA__:
@@ -21560,11 +23118,11 @@ _fly1.__DATA__:
 	DEFB 5Ah
 	DEFB 00h
 	DEFB 00h
-__LABEL772:
+__LABEL862:
 	DEFW 0000h
 	DEFB 01h
 _fly2:
-	DEFW __LABEL773
+	DEFW __LABEL863
 _fly2.__DATA__.__PTR__:
 	DEFW _fly2.__DATA__
 _fly2.__DATA__:
@@ -21576,11 +23134,11 @@ _fly2.__DATA__:
 	DEFB 0BDh
 	DEFB 42h
 	DEFB 00h
-__LABEL773:
+__LABEL863:
 	DEFW 0000h
 	DEFB 01h
 _crab1:
-	DEFW __LABEL774
+	DEFW __LABEL864
 _crab1.__DATA__.__PTR__:
 	DEFW _crab1.__DATA__
 _crab1.__DATA__:
@@ -21592,11 +23150,11 @@ _crab1.__DATA__:
 	DEFB 5Ah
 	DEFB 3Ch
 	DEFB 5Ah
-__LABEL774:
+__LABEL864:
 	DEFW 0000h
 	DEFB 01h
 _crab2:
-	DEFW __LABEL775
+	DEFW __LABEL865
 _crab2.__DATA__.__PTR__:
 	DEFW _crab2.__DATA__
 _crab2.__DATA__:
@@ -21608,11 +23166,11 @@ _crab2.__DATA__:
 	DEFB 5Ah
 	DEFB 3Ch
 	DEFB 24h
-__LABEL775:
+__LABEL865:
 	DEFW 0000h
 	DEFB 01h
 _solid:
-	DEFW __LABEL776
+	DEFW __LABEL866
 _solid.__DATA__.__PTR__:
 	DEFW _solid.__DATA__
 _solid.__DATA__:
@@ -21624,11 +23182,11 @@ _solid.__DATA__:
 	DEFB 0FFh
 	DEFB 0FFh
 	DEFB 0FFh
-__LABEL776:
+__LABEL866:
 	DEFW 0000h
 	DEFB 01h
 _empty:
-	DEFW __LABEL777
+	DEFW __LABEL867
 _empty.__DATA__.__PTR__:
 	DEFW _empty.__DATA__
 _empty.__DATA__:
@@ -21640,11 +23198,11 @@ _empty.__DATA__:
 	DEFB 00h
 	DEFB 00h
 	DEFB 00h
-__LABEL777:
+__LABEL867:
 	DEFW 0000h
 	DEFB 01h
 _water:
-	DEFW __LABEL778
+	DEFW __LABEL868
 _water.__DATA__.__PTR__:
 	DEFW _water.__DATA__
 _water.__DATA__:
@@ -21656,11 +23214,11 @@ _water.__DATA__:
 	DEFB 0CCh
 	DEFB 33h
 	DEFB 0CCh
-__LABEL778:
+__LABEL868:
 	DEFW 0000h
 	DEFB 01h
 _head1r:
-	DEFW __LABEL779
+	DEFW __LABEL869
 _head1r.__DATA__.__PTR__:
 	DEFW _head1r.__DATA__
 _head1r.__DATA__:
@@ -21672,11 +23230,11 @@ _head1r.__DATA__:
 	DEFB 3Ch
 	DEFB 98h
 	DEFB 0BCh
-__LABEL779:
+__LABEL869:
 	DEFW 0000h
 	DEFB 01h
 _head2r:
-	DEFW __LABEL780
+	DEFW __LABEL870
 _head2r.__DATA__.__PTR__:
 	DEFW _head2r.__DATA__
 _head2r.__DATA__:
@@ -21688,11 +23246,11 @@ _head2r.__DATA__:
 	DEFB 3Ch
 	DEFB 98h
 	DEFB 0BCh
-__LABEL780:
+__LABEL870:
 	DEFW 0000h
 	DEFB 01h
 _body1r:
-	DEFW __LABEL781
+	DEFW __LABEL871
 _body1r.__DATA__.__PTR__:
 	DEFW _body1r.__DATA__
 _body1r.__DATA__:
@@ -21704,11 +23262,11 @@ _body1r.__DATA__:
 	DEFB 18h
 	DEFB 18h
 	DEFB 1Ch
-__LABEL781:
+__LABEL871:
 	DEFW 0000h
 	DEFB 01h
 _body2r:
-	DEFW __LABEL782
+	DEFW __LABEL872
 _body2r.__DATA__.__PTR__:
 	DEFW _body2r.__DATA__
 _body2r.__DATA__:
@@ -21720,11 +23278,11 @@ _body2r.__DATA__:
 	DEFB 78h
 	DEFB 40h
 	DEFB 00h
-__LABEL782:
+__LABEL872:
 	DEFW 0000h
 	DEFB 01h
 _head1l:
-	DEFW __LABEL783
+	DEFW __LABEL873
 _head1l.__DATA__.__PTR__:
 	DEFW _head1l.__DATA__
 _head1l.__DATA__:
@@ -21736,11 +23294,11 @@ _head1l.__DATA__:
 	DEFB 3Ch
 	DEFB 19h
 	DEFB 3Dh
-__LABEL783:
+__LABEL873:
 	DEFW 0000h
 	DEFB 01h
 _head2l:
-	DEFW __LABEL784
+	DEFW __LABEL874
 _head2l.__DATA__.__PTR__:
 	DEFW _head2l.__DATA__
 _head2l.__DATA__:
@@ -21752,11 +23310,11 @@ _head2l.__DATA__:
 	DEFB 3Ch
 	DEFB 19h
 	DEFB 3Dh
-__LABEL784:
+__LABEL874:
 	DEFW 0000h
 	DEFB 01h
 _body1l:
-	DEFW __LABEL785
+	DEFW __LABEL875
 _body1l.__DATA__.__PTR__:
 	DEFW _body1l.__DATA__
 _body1l.__DATA__:
@@ -21768,11 +23326,11 @@ _body1l.__DATA__:
 	DEFB 18h
 	DEFB 18h
 	DEFB 38h
-__LABEL785:
+__LABEL875:
 	DEFW 0000h
 	DEFB 01h
 _body2l:
-	DEFW __LABEL786
+	DEFW __LABEL876
 _body2l.__DATA__.__PTR__:
 	DEFW _body2l.__DATA__
 _body2l.__DATA__:
@@ -21784,11 +23342,11 @@ _body2l.__DATA__:
 	DEFB 1Eh
 	DEFB 02h
 	DEFB 00h
-__LABEL786:
+__LABEL876:
 	DEFW 0000h
 	DEFB 01h
 _death1u:
-	DEFW __LABEL787
+	DEFW __LABEL877
 _death1u.__DATA__.__PTR__:
 	DEFW _death1u.__DATA__
 _death1u.__DATA__:
@@ -21800,11 +23358,11 @@ _death1u.__DATA__:
 	DEFB 3Ch
 	DEFB 0FFh
 	DEFB 7Eh
-__LABEL787:
+__LABEL877:
 	DEFW 0000h
 	DEFB 01h
 _death1d:
-	DEFW __LABEL788
+	DEFW __LABEL878
 _death1d.__DATA__.__PTR__:
 	DEFW _death1d.__DATA__
 _death1d.__DATA__:
@@ -21816,11 +23374,11 @@ _death1d.__DATA__:
 	DEFB 24h
 	DEFB 42h
 	DEFB 81h
-__LABEL788:
+__LABEL878:
 	DEFW 0000h
 	DEFB 01h
 _death2u:
-	DEFW __LABEL789
+	DEFW __LABEL879
 _death2u.__DATA__.__PTR__:
 	DEFW _death2u.__DATA__
 _death2u.__DATA__:
@@ -21832,11 +23390,11 @@ _death2u.__DATA__:
 	DEFB 24h
 	DEFB 00h
 	DEFB 66h
-__LABEL789:
+__LABEL879:
 	DEFW 0000h
 	DEFB 01h
 _death2d:
-	DEFW __LABEL790
+	DEFW __LABEL880
 _death2d.__DATA__.__PTR__:
 	DEFW _death2d.__DATA__
 _death2d.__DATA__:
@@ -21848,11 +23406,11 @@ _death2d.__DATA__:
 	DEFB 24h
 	DEFB 42h
 	DEFB 00h
-__LABEL790:
+__LABEL880:
 	DEFW 0000h
 	DEFB 01h
 _skull:
-	DEFW __LABEL791
+	DEFW __LABEL881
 _skull.__DATA__.__PTR__:
 	DEFW _skull.__DATA__
 _skull.__DATA__:
@@ -21864,11 +23422,11 @@ _skull.__DATA__:
 	DEFB 7Eh
 	DEFB 42h
 	DEFB 3Ch
-__LABEL791:
+__LABEL881:
 	DEFW 0000h
 	DEFB 01h
 _outWall:
-	DEFW __LABEL792
+	DEFW __LABEL882
 _outWall.__DATA__.__PTR__:
 	DEFW _outWall.__DATA__
 _outWall.__DATA__:
@@ -21880,11 +23438,11 @@ _outWall.__DATA__:
 	DEFB 55h
 	DEFB 0AAh
 	DEFB 33h
-__LABEL792:
+__LABEL882:
 	DEFW 0000h
 	DEFB 01h
 _personT:
-	DEFW __LABEL793
+	DEFW __LABEL883
 _personT.__DATA__.__PTR__:
 	DEFW _personT.__DATA__
 _personT.__DATA__:
@@ -21896,11 +23454,11 @@ _personT.__DATA__:
 	DEFB 0Ch
 	DEFB 68h
 	DEFB 0F0h
-__LABEL793:
+__LABEL883:
 	DEFW 0000h
 	DEFB 01h
 _personB:
-	DEFW __LABEL794
+	DEFW __LABEL884
 _personB.__DATA__.__PTR__:
 	DEFW _personB.__DATA__
 _personB.__DATA__:
@@ -21912,11 +23470,11 @@ _personB.__DATA__:
 	DEFB 0BCh
 	DEFB 0D6h
 	DEFB 63h
-__LABEL794:
+__LABEL884:
 	DEFW 0000h
 	DEFB 01h
 _shot:
-	DEFW __LABEL795
+	DEFW __LABEL885
 _shot.__DATA__.__PTR__:
 	DEFW _shot.__DATA__
 _shot.__DATA__:
@@ -21928,11 +23486,11 @@ _shot.__DATA__:
 	DEFB 00h
 	DEFB 00h
 	DEFB 00h
-__LABEL795:
+__LABEL885:
 	DEFW 0000h
 	DEFB 01h
 _solidMap:
-	DEFW __LABEL796
+	DEFW __LABEL886
 _solidMap.__DATA__.__PTR__:
 	DEFW _solidMap.__DATA__
 _solidMap.__DATA__:
@@ -22320,12 +23878,12 @@ _solidMap.__DATA__:
 	DEFB 00h
 	DEFB 00h
 	DEFB 00h
-__LABEL796:
+__LABEL886:
 	DEFW 0001h
 	DEFW 000Ch
 	DEFB 01h
 _rLt:
-	DEFW __LABEL797
+	DEFW __LABEL887
 _rLt.__DATA__.__PTR__:
 	DEFW _rLt.__DATA__
 _rLt.__DATA__:
@@ -22337,11 +23895,11 @@ _rLt.__DATA__:
 	DEFB 22h
 	DEFB 00h
 	DEFB 00h
-__LABEL797:
+__LABEL887:
 	DEFW 0000h
 	DEFB 01h
 _etLt:
-	DEFW __LABEL798
+	DEFW __LABEL888
 _etLt.__DATA__.__PTR__:
 	DEFW _etLt.__DATA__
 _etLt.__DATA__:
@@ -22353,11 +23911,11 @@ _etLt.__DATA__:
 	DEFB 73h
 	DEFB 00h
 	DEFB 00h
-__LABEL798:
+__LABEL888:
 	DEFW 0000h
 	DEFB 01h
 _urLt:
-	DEFW __LABEL799
+	DEFW __LABEL889
 _urLt.__DATA__.__PTR__:
 	DEFW _urLt.__DATA__
 _urLt.__DATA__:
@@ -22369,11 +23927,11 @@ _urLt.__DATA__:
 	DEFB 74h
 	DEFB 00h
 	DEFB 00h
-__LABEL799:
+__LABEL889:
 	DEFW 0000h
 	DEFB 01h
 _nsLt:
-	DEFW __LABEL800
+	DEFW __LABEL890
 _nsLt.__DATA__.__PTR__:
 	DEFW _nsLt.__DATA__
 _nsLt.__DATA__:
@@ -22385,11 +23943,11 @@ _nsLt.__DATA__:
 	DEFB 96h
 	DEFB 00h
 	DEFB 00h
-__LABEL800:
+__LABEL890:
 	DEFW 0000h
 	DEFB 01h
 _pattern1:
-	DEFW __LABEL801
+	DEFW __LABEL891
 _pattern1.__DATA__.__PTR__:
 	DEFW _pattern1.__DATA__
 _pattern1.__DATA__:
@@ -22401,11 +23959,11 @@ _pattern1.__DATA__:
 	DEFB 50h
 	DEFB 22h
 	DEFB 00h
-__LABEL801:
+__LABEL891:
 	DEFW 0000h
 	DEFB 01h
 _pattern2:
-	DEFW __LABEL802
+	DEFW __LABEL892
 _pattern2.__DATA__.__PTR__:
 	DEFW _pattern2.__DATA__
 _pattern2.__DATA__:
@@ -22417,11 +23975,11 @@ _pattern2.__DATA__:
 	DEFB 0Ah
 	DEFB 24h
 	DEFB 00h
-__LABEL802:
+__LABEL892:
 	DEFW 0000h
 	DEFB 01h
 _pattern3:
-	DEFW __LABEL803
+	DEFW __LABEL893
 _pattern3.__DATA__.__PTR__:
 	DEFW _pattern3.__DATA__
 _pattern3.__DATA__:
@@ -22433,11 +23991,27 @@ _pattern3.__DATA__:
 	DEFB 40h
 	DEFB 12h
 	DEFB 00h
-__LABEL803:
+__LABEL893:
+	DEFW 0000h
+	DEFB 01h
+_heart:
+	DEFW __LABEL894
+_heart.__DATA__.__PTR__:
+	DEFW _heart.__DATA__
+_heart.__DATA__:
+	DEFB 00h
+	DEFB 24h
+	DEFB 5Ah
+	DEFB 42h
+	DEFB 42h
+	DEFB 24h
+	DEFB 18h
+	DEFB 00h
+__LABEL894:
 	DEFW 0000h
 	DEFB 01h
 _enemyStates:
-	DEFW __LABEL804
+	DEFW __LABEL895
 _enemyStates.__DATA__.__PTR__:
 	DEFW _enemyStates.__DATA__
 _enemyStates.__DATA__:
@@ -22507,12 +24081,12 @@ _enemyStates.__DATA__:
 	DEFB 00h
 	DEFB 00h
 	DEFB 00h
-__LABEL804:
+__LABEL895:
 	DEFW 0001h
 	DEFW 000Bh
 	DEFB 01h
 _keyStates:
-	DEFW __LABEL805
+	DEFW __LABEL896
 _keyStates.__DATA__.__PTR__:
 	DEFW _keyStates.__DATA__
 _keyStates.__DATA__:
@@ -22521,32 +24095,129 @@ _keyStates.__DATA__:
 	DEFB 00h
 	DEFB 00h
 	DEFB 00h
-__LABEL805:
+__LABEL896:
 	DEFW 0000h
 	DEFB 01h
 	_screens.__DATA__ EQU 24200
 _screens:
-	DEFW __LABEL806
+	DEFW __LABEL897
 _screens.__DATA__.__PTR__:
 	DEFW 24200
-__LABEL806:
+__LABEL897:
 	DEFW 0001h
 	DEFW 0074h
 	DEFB 01h
 	_maps.__DATA__ EQU 32320
 _maps:
-	DEFW __LABEL807
+	DEFW __LABEL898
 _maps.__DATA__.__PTR__:
 	DEFW 32320
-__LABEL807:
+__LABEL898:
 	DEFW 0000h
 	DEFB 01h
-__LABEL667:
+_highScores:
+	DEFW __LABEL899
+_highScores.__DATA__.__PTR__:
+	DEFW _highScores.__DATA__
+_highScores.__DATA__:
+	DEFB 00h
 	DEFB 10h
-__LABEL705:
+	DEFB 0A0h
+	DEFB 0Fh
+	DEFB 0ACh
+	DEFB 0Dh
+	DEFB 0B8h
+	DEFB 0Bh
+	DEFB 0C4h
+	DEFB 09h
+	DEFB 0D0h
+	DEFB 07h
+	DEFB 0DCh
+	DEFB 05h
+	DEFB 0E8h
+	DEFB 03h
+	DEFB 0F4h
+	DEFB 01h
+	DEFB 0FAh
+	DEFB 00h
+__LABEL899:
+	DEFW 0000h
+	DEFB 02h
+_initials:
+	DEFW __LABEL900
+_initials.__DATA__.__PTR__:
+	DEFW _initials.__DATA__
+_initials.__DATA__:
+	DEFB 00h
+	DEFB 00h
+	DEFB 00h
+	DEFB 00h
+	DEFB 00h
+	DEFB 00h
+	DEFB 00h
+	DEFB 00h
+	DEFB 00h
+	DEFB 00h
+	DEFB 00h
+	DEFB 00h
+	DEFB 00h
+	DEFB 00h
+	DEFB 00h
+	DEFB 00h
+	DEFB 00h
+	DEFB 00h
+	DEFB 00h
+	DEFB 00h
+__LABEL900:
+	DEFW 0000h
+	DEFB 02h
+__LABEL750:
+	DEFB 10h
+__LABEL788:
 	DEFB 00h
 	DEFB 00h
 	DEFB 01h
+__LABEL805:
+	DEFB 00h
+	DEFB 00h
+	DEFB 01h
+__LABEL806:
+	DEFB 5Bh
+	DEFB 4Fh
+	DEFB 54h
+	DEFB 58h
+	DEFB 57h
+	DEFB 4Fh
+	DEFB 5Fh
+	DEFB 53h
+	DEFB 5Dh
+	DEFB 54h
+	DEFB 58h
+	DEFB 5Dh
+	DEFB 5Bh
+	DEFB 54h
+	DEFB 56h
+	DEFB 58h
+	DEFB 5Dh
+	DEFB 54h
+	DEFB 59h
+	DEFB 5Dh
+	DEFB 5Ch
+	DEFB 54h
+	DEFB 56h
+	DEFB 59h
+	DEFB 58h
+	DEFB 4Fh
+	DEFB 54h
+	DEFB 58h
+	DEFB 56h
+	DEFB 51h
+	DEFB 54h
+	DEFB 56h
+__LABEL807:
+	DEFB 01h
+__LABEL808:
+	DEFB 3Ch
 ZXBASIC_MEM_HEAP:
 	; Defines DATA END
 ZXBASIC_USER_DATA_END EQU ZXBASIC_MEM_HEAP + ZXBASIC_HEAP_SIZE

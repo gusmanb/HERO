@@ -88,6 +88,8 @@ dim pattern1(8) as uByte => { 0,12,18,10,36,80,34,0 }
 dim pattern2(8) as uByte => { 0,32,82,32,4,10,36,0 }
 dim pattern3(8) as uByte => { 0,82,0,8,16,64,18,0  }
 
+dim heart(8) as uByte  => { 0,36,90,66,66,36,24,0 }
+
 dim currentEnemies as uByte
 dim currentMapIndex as uInteger
 dim currentMap as uByte
@@ -156,13 +158,28 @@ dim practice as uByte
 dim screens(70,116) as uByte at 24200
 dim maps(300) as uByte at 32320
 
+Dim highScores(10) as uInteger => { 4096, 4000, 3500, 3000, 2500, 2000, 1500, 1000, 500, 250 }
+Dim initials(10) as string ' => { "GUS", "AGB", "CHX", "JRC", "SJO", "PCV", "MGA", "BRL", "SRC", "SMB" }
+
+Dim showHighScore as uByte = 0
+
+initials(1) = "GUS"
+initials(2) = "AGB"
+initials(3) = "CHX"
+initials(4) = "JRC"
+initials(5) = "SJO"
+initials(6) = "PCV"
+initials(7) = "MGA"
+initials(8) = "BRL"
+initials(9) = "SRC"
+initials(10) = "SMB"
 
 'TEMPORAL PARA TEST
 
 /'
 dim screens(1, 116) as uByte => { _
                                     { 85, 85, 85, 5, 0, 85, 85, 85, 1, 0, 0, 0, 0, 0, 0, 64, 1, 0, 0, 64, 21, 0, 0, 64, 145, 170, 26, 0, 0, 144, 170, 70, 81, 85, 149, 170, 170, 90, 85, 69, 1, 0, 80, 85, 85, 21, 0, 64, 1, 0, 0, 80, 85, 0, 0, 64, 1, 84, 0, 0, 0, 0, 84, 64, 1, 4, 0, 0, 0, 0, 64, 64, 1, 4, 0, 0, 0, 0, 64, 64, 85, 5, 169, 170, 170, 170, 65, 85, 85, 5, 85, 85, 85, 85, 65, 85, 1, 4, 7, 1, 29, 7, 1, 10, 8, 1, 23, 8, 1, 16, 9, 1, 19, 9, 121, 227 } _
-}                  
+}                 
 dim maps(2) as ubyte = { 1, 0 }
 '/
 
@@ -220,6 +237,98 @@ dim crabColor as uByte
 dim flyColor as uByte
 dim dynaColor as ubyte
 
+
+sub inputHighScore()
+
+    ink 7
+    paper 0
+    border 0
+    cls
+
+    tmpX = 65
+    tmpY = 0
+    Dim ints as string = ""
+
+    print at 1, 6;  "YOU GOT A HIGH SCORE!"
+    print at 10, 7; "ENTER YOUR INITIALS"
+    print at 14, 12; "-   -   -"
+
+    while tmpY < 3
+
+        print at 13, tmpY * 4 + 12; CHR$(tmpX)
+
+        keybScan()
+
+        if keyStates(3) then
+            tmpX = tmpX - 1
+            if tmpX < 65 then tmpX = 122
+        else if keyStates(4) then
+            tmpX = tmpX + 1
+            if tmpX > 122 then tmpX = 65
+        else if keyStates(5) = 1 then
+            tmpY = tmpY + 1
+            ints = ints + CHR$(tmpX)
+            tmpX = 65
+        else if keyStates(5) = 2 then
+            if tmpY > 0 then 
+                print at 13, tmpY * 4 + 12; " "
+                tmpX = 65
+                tmpY = tmpY - 1
+                ints = ints(0 to tmpY)
+            end if
+        end if
+
+        while keyStates(3) or keyStates(4) or keyStates(5)
+            keybScan()
+        end while
+                
+    end while
+    
+    tmpX = 10
+
+    for tmpY = 9 to 1 step -1
+        if score > highScores(tmpY) then
+            tmpX = tmpY
+        else
+            exit for
+        end if
+    next tmpY
+
+    if tmpX < 10 then
+        for tmpY = 9 to tmpX step -1
+            highScores(tmpY + 1) = highScores(tmpY)
+            initials(tmpY + 1) = initials(tmpY)
+        next tmpY
+    end if
+
+    highScores(tmpX) = score
+    initials(tmpX) = ints
+
+end sub
+
+sub showScores()
+
+    ink 7
+    paper 0
+    border 0
+    cls
+
+    print at 1, 10; "HIGH SCORES"
+    Dim tmpString as string
+
+    for tmpX = 1 to 10
+
+        tmpString = STR$(highScores(tmpX))
+        while len(tmpString) < 5
+            tmpString = "0" + tmpString
+        end while
+
+        print at tmpX * 2 + 2, 4; initials(tmpX);"................"; tmpString
+
+    next tmpX
+
+end sub
+
 sub waitSpace()
 
 asm
@@ -242,6 +351,41 @@ di
 end asm
 
 end sub
+
+function waitSpaceUntil(cycles as uInteger) as uByte
+
+    asm
+    ei
+    end asm
+
+    keyStates(5) = 0
+
+    while keyStates(5) = 0
+        keybScan() 
+        if keyStates(5) = 1 then
+            practice = 0
+        else if keyStates(5) = 17 then
+            practice = 1
+        else
+            keyStates(5) = 0
+            cycles = cycles - 1
+
+            if cycles = 0 then
+                asm
+                di
+                end asm
+                return 0
+            end if
+        end if
+    end while
+
+    asm
+    di
+    end asm
+
+    return 1
+
+end function
 
 sub title()
 
@@ -341,19 +485,9 @@ sub title()
 
     next tmpX
 
-    /'
-    tmpColor = createAttrib(4, 0, 1, 0)
+    printZXString("FIRE TO START", 11, 9, createAttrib(0, 5, 1, 1))
 
-    drawColorSprite(@rLt, 40, 109, tmpColor)
-    drawColorSprite(@etLt, 40, 118, tmpColor)
-    drawColorSprite(@urLt, 40, 127, tmpColor)
-    drawColorSprite(@nsLt, 40, 136, tmpColor)
-
-    dumpScreenTop()
-    asm
-    di
-    end asm
-    '/
+    dumpScreenCenter()
 
 end sub
 
@@ -369,15 +503,6 @@ sub interface()
         printColorChar(@head1r, 21, tmpX, tmpColor)
         printColorChar(@body1r, 22, tmpX, tmpColor)
     next tmpX
-
-    'printColorChar(@head1r, 21, 2, tmpColor)
-    'printColorChar(@body1r, 22, 2, tmpColor)
-
-    'printColorChar(@head1r, 21, 4, tmpColor)
-    'printColorChar(@body1r, 22, 4, tmpColor)
-
-    'printColorChar(@head1r, 21, 6, tmpColor)
-    'printColorChar(@body1r, 22, 6, tmpColor)
 
     tmpColor = createAttrib(2, 0, 1, 0)
     printColorChar(@dynamite1, 21, 25, tmpColor)
@@ -407,15 +532,27 @@ halt
 di
 end asm
 
-clearScreen(0)
-dumpScreen()
 
-title()
+do
 
-printZXString("FIRE TO START", 11, 9, createAttrib(0, 5, 1, 1))
+    if showHighScore then 
+
+        showScores()
+        waitSpaceUntil(30000)
+
+    end if
+
+    showHighScore = 1
+
+    clearScreen(0)
+    dumpScreen()
+    title()
+
+loop while not waitSpaceUntil(60000)
 
 asm
 ei
+nop
 halt
 di
 end asm
@@ -1688,26 +1825,25 @@ sub render()
     drawEnemies()
     drawDynamite()
 
-    /'
+    
     if activeEnemies < 5 then
-        'print at 0,0;"HALT"
-    asm
-    di
-    ei
-    nop
-    halt
-    di
-    end asm
+        asm
+        di
+        ei
+        nop
+        halt
+        di
+        end asm
     end if
-    '/
+    
 
-    asm
-    di
-    ei
-    nop
-    halt
-    di
-    end asm
+    'asm
+    'di
+    'ei
+    'nop
+    'halt
+    'di
+    'end asm
 
     
 
@@ -1783,15 +1919,22 @@ function gameOver() as uByte
                 power = 5120
                 lifes = 4
                 interface()
-                dumpScreenBottom()                
+                dumpScreenBottom()
+                updateScore(0)
                 return 1
             else if not tmpY then
+
+                if score > highScores(10) then inputHighScore()
+
                 return 0
             end if
 
         loop
     else
         waitSpace()
+
+        if score > highScores(10) then inputHighScore()
+
         return 0
     end if
 
@@ -2439,18 +2582,28 @@ end sub
 
 sub presentEnd()
 
+    Dim notes(32) as uByte => { 91,79,84,88,87,79,95,83,93,84,88,93,91,84,86,88,93,84,89,93,92,84,86,89,88,79,84,88,86,81,84,86 }
+    dim posNotes as uByte = 1
+    Dim fCounter as uByte = 0
+    Dim scale as uByte = 60
+
+    randomize
     clearScreen(7)
 
     printZXString("You have rescued everybody", 5,3,7)
     printZXString("YOU ARE THE HERO", 7,8,7)
     printZXString("Your score: " + str(score), 9,8,7)
 
-    asm
-    di
-    end asm
+    'asm
+    'di
+    'im 1
+    'end asm
     dumpScreen()
     
     tmpColor = 80
+
+    Dim rndX as uByte
+    Dim rndY as uByte
 
     while keyStates(5) = 0
 
@@ -2465,16 +2618,54 @@ sub presentEnd()
 
         next tmpY        
 
+        rndX = INT(RND * 31)
+        rndY = INT(RND * 23)
+
+        while rndY < 10 and rndY > 4 and rndX < 29 and rndX > 2
+            rndX = INT(RND * 32)
+            rndY = INT(RND * 24)
+        end while
+
+        drawSprite(@heart, rndY * 8, rndX * 8)
+
         asm
         ei
+        nop
         halt
         di
         end asm
 
         dumpAttribs()
+        dumpPixels()
         keybScan()
 
+        if fCounter then
+
+            fCounter = 0
+
+            beep 0.05, notes(posNotes) - scale
+
+            posNotes = posNotes + 1
+
+            if posNotes > 32 then 
+
+                posNotes = 1
+                if scale = 60 then scale = 48 else scale = 60
+
+            end if
+
+        else
+
+            fCounter = 1
+
+        end if
+
     end while
+
+    'asm
+    'di
+    'im 0
+    'end asm
 
     'waitSpace()
 
@@ -2493,7 +2684,7 @@ initTable()
 
 asm
 di
-IM 0
+IM 1
 ei
 di
 end asm

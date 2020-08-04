@@ -32,9 +32,9 @@
     <Tap Include="TapeFiles\hero24200.tap" />
     <Tap Include="TapeFiles\HERO_NOSCR.tap" />
     <Tap Include="TapeFiles\mapdata.tap" />
-    <Tap Include="TapeFiles\nivel_prueba.tap" />
     <Tap Include="TapeFiles\Program45.tap" />
     <Tap Include="TapeFiles\ProgramComplete.tap" />
+    <Tap Include="TapeFiles\testoutro.tap" />
   </ItemGroup>
   <ItemGroup>
     <Tzx Include="TapeFiles\Program.zxbas.tzx" />
