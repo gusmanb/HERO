@@ -13,10 +13,10 @@ Hope you enjoy it!
 
 Thanks to:
 
-MrChuxman
-Jesusrcm
-El spectrumero Javi Ortiz
-PacoVespa
-Miguel Angel
-Boriel
-And everybody in the wonderful spanish retro community!
+- MrChuxman
+- Jesusrcm
+- El spectrumero Javi Ortiz
+- PacoVespa
+- Miguel Angel
+- Boriel
+- And everybody in the wonderful spanish retro community!
