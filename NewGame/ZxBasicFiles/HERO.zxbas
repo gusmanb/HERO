@@ -1,7 +1,8 @@
-﻿REM @options --asm --array-base 1 --string-base 1 --optimize 1 --org 32768 --heap-size 128 --explicit --strict -D HIDE_LOAD_MSG
+﻿REM @options --asm --array-base 1 --string-base 1 --optimize 1 --org 32768 --heap-size 256 --explicit --strict -D HIDE_LOAD_MSG
 
 #include "GSprites.zxbas"
 #include <attr.bas>
+
 Dim tlc(8) as uByte => { 60,66,161,161,161,161,161,161 }
 Dim blc(8) as uByte => { 161,161,161,161,161,161,66,60 }
 dim mlor(8) as uByte => { 161,160,160,160,160,160,160,161 }
@@ -76,7 +77,6 @@ dim personT(8) as uByte => {62,73,93,73,50,12,104,240}
 dim personB(8) as uByte => {208,240,96,240,176,188,214,99}
 dim shot(8) as uByte => { 0,0,0,0,106,0,0,0 }
 dim solidMap(32, 12) as uByte 'cada celda es un byte
-
 
 Dim rLt(8) as uByte => {14,9,9,30,18,34,0,0}
 Dim etLt(8) as uByte => {4,103,148,244,132,115,0,0}
@@ -178,7 +178,7 @@ initials(10) = "SMB"
 
 /'
 dim screens(1, 116) as uByte => { _
-                                    { 85, 85, 85, 5, 0, 85, 85, 85, 1, 0, 0, 0, 0, 0, 0, 64, 1, 0, 0, 64, 21, 0, 0, 64, 145, 170, 26, 0, 0, 144, 170, 70, 81, 85, 149, 170, 170, 90, 85, 69, 1, 0, 80, 85, 85, 21, 0, 64, 1, 0, 0, 80, 85, 0, 0, 64, 1, 84, 0, 0, 0, 0, 84, 64, 1, 4, 0, 0, 0, 0, 64, 64, 1, 4, 0, 0, 0, 0, 64, 64, 85, 5, 169, 170, 170, 170, 65, 85, 85, 5, 85, 85, 85, 85, 65, 85, 1, 4, 7, 1, 29, 7, 1, 10, 8, 1, 23, 8, 1, 16, 9, 1, 19, 9, 121, 227 } _
+                                    { 85, 85, 85, 85, 85, 85, 85, 85, 129, 170, 2, 0, 0, 160, 170, 64, 1, 0, 0, 0, 0, 0, 0, 64, 1, 0, 0, 0, 0, 0, 0, 64, 1, 0, 0, 0, 0, 0, 0, 64, 1, 0, 128, 170, 170, 0, 0, 64, 1, 0, 128, 170, 170, 0, 0, 64, 129, 170, 130, 170, 170, 160, 170, 64, 128, 170, 130, 170, 170, 160, 170, 0, 128, 170, 130, 170, 170, 160, 170, 0, 128, 170, 130, 170, 170, 160, 170, 0, 85, 85, 85, 85, 85, 85, 85, 85, 3, 10, 4, 2, 16, 4, 3, 22, 4, 1, 6, 5, 1, 26, 5, 0, 0, 0, 240, 138 } _
 }                 
 dim maps(2) as ubyte = { 1, 0 }
 '/
@@ -252,6 +252,10 @@ sub inputHighScore()
     print at 1, 6;  "YOU GOT A HIGH SCORE!"
     print at 10, 7; "ENTER YOUR INITIALS"
     print at 14, 12; "-   -   -"
+
+     while keyStates(3) or keyStates(4) or keyStates(5)
+        keybScan()
+    end while
 
     while tmpY < 3
 
@@ -538,7 +542,7 @@ do
     if showHighScore then 
 
         showScores()
-        waitSpaceUntil(30000)
+        waitSpaceUntil(40000)
 
     end if
 
@@ -548,7 +552,7 @@ do
     dumpScreen()
     title()
 
-loop while not waitSpaceUntil(60000)
+loop while not waitSpaceUntil(65000)
 
 asm
 ei
@@ -668,8 +672,6 @@ sub decodeCurrentScreen()
 
     '/
 
-    
-
     Dim currentScreen as uInteger = maps(currentMapIndex)
     
     Dim currentY as uInteger
@@ -683,7 +685,6 @@ sub decodeCurrentScreen()
     border (currentType & 7)
     clearScreenCenter(emptyAttrib)
 
-
     currentType = screens(currentScreen, 116)
 
     Dim solidColor as uByte = createAttrib((currentType >> 3) band 7, currentType band 7, 0, 0)
@@ -692,13 +693,10 @@ sub decodeCurrentScreen()
     Dim lavaColor as uByte = createAttrib(2, 6, 0, 0)
     Dim waterColor as uByte = createAttrib(1, 5, 0, 1)
 
-    
-
     tmpX = (currentType >> 6) band 3
 
     if tmpX then transformSolids(tmpX)
     
-
     for scanIndex = 1 to 96
 
         currentY = (scanIndex - 1) / 8
@@ -711,8 +709,6 @@ sub decodeCurrentScreen()
         solidMap(currentX + 4, currentY + 1) = (currentType >> 6) band 3
 
     next scanIndex
-
-    
 
     dim u as uByte
     dim d as uByte
@@ -1124,9 +1120,6 @@ function fastcall checkPlayerCollision(itemX as uByte, itemY as uByte) as uByte
 
 
 end function
-
-
-
 
 function moveEnemy(index as uByte) as uByte
 
@@ -1826,7 +1819,7 @@ sub render()
     drawDynamite()
 
     
-    if activeEnemies < 5 then
+    'if activeEnemies < 5 then
         asm
         di
         ei
@@ -1834,7 +1827,7 @@ sub render()
         halt
         di
         end asm
-    end if
+    'end if
     
 
     'asm
@@ -2662,13 +2655,6 @@ sub presentEnd()
 
     end while
 
-    'asm
-    'di
-    'im 0
-    'end asm
-
-    'waitSpace()
-
 end sub
 
 
@@ -2684,7 +2670,7 @@ initTable()
 
 asm
 di
-IM 1
+IM 0
 ei
 di
 end asm
@@ -2761,9 +2747,6 @@ do
 
                 if power = 0 then
 
-                    'state = gameOver()
-                    'continue do
-                    'updateResult = 0
                     goto forceDeath
 
                 end if

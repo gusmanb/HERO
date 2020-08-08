@@ -476,7 +476,6 @@ asm
     exx
     ex de, hl
 
-    ;Orden de los registros (optimizado para menor nº de cargas)
     ;de = direccionChar
     ;hl = posicionY
     ;bc = posicionH
@@ -512,66 +511,51 @@ dcs_print_simple:
     add hl, bc; videoAddress = videoAddress + addrInc
     ld bc, 32
 
-    ld a, (hl); cValue = peek(videoAddress)
-    ex de, hl
-    xor (hl)  ; cValue = peek(charAddress) xor cValue
-    ex de, hl
+    ld a, (de); cValue = peek(charAddress)
+    xor (hl)  ; cValue = peek(videoAddress) xor cValue
     ld (hl), a ; poke videoAddress, cValue
 
     inc de      ;charAddress = charAddress + 1
     add hl, bc  ;videoAddress = videoAddress + 32
-    ld a, (hl)  ; cValue = peek(videoAddress)
-    ex de, hl
-    xor (hl)    ; cValue = peek(charAddress) xor cValue
-    ex de, hl
-    ld (hl), a  ; poke videoAddress, cValue
+    ld a, (de)
+    xor (hl)
+    ld (hl), a
+    
     
     inc de
     add hl, bc
-    ld a, (hl)
-    ex de, hl
+    ld a, (de)
     xor (hl)
-    ex de, hl
     ld (hl), a
 
     inc de
     add hl, bc
-    ld a, (hl)
-    ex de, hl
+    ld a, (de)
     xor (hl)
-    ex de, hl
     ld (hl), a
 
     inc de
     add hl, bc
-    ld a, (hl)
-    ex de, hl
+    ld a, (de)
     xor (hl)
-    ex de, hl
     ld (hl), a
 
     inc de
     add hl, bc
-    ld a, (hl)
-    ex de, hl
+    ld a, (de)
     xor (hl)
-    ex de, hl
     ld (hl), a
 
     inc de
     add hl, bc
-    ld a, (hl)
-    ex de, hl
+    ld a, (de)
     xor (hl)
-    ex de, hl
     ld (hl), a
 
     inc de
     add hl, bc
-    ld a, (hl)
-    ex de, hl
+    ld a, (de)
     xor (hl)
-    ex de, hl
     ld (hl), a
 
     ;poner attrib
@@ -657,44 +641,42 @@ dcs_print_ext:
     pop bc
     add hl, bc; videoAddress = videoAddress + addrInc
 
-    ;stack: shift
-    ex de, hl   
+     ;stack: shift
+    ;ex de, hl   
     pop bc
     push bc
-    push hl
+    ;push hl
     
 dcs_ext_loop:
 
-    ld a, (hl) 
+    ld a, (de) 
 
     ;stack: charAddress
     ;       shift
-    ;       de = videoAddress
+    ;       de = charAddress
     ;        c = shift
-    ;       hl = charAddress
+    ;       hl = videoAddress
     ;        a = valor del char
 
     
-    call dcs_rshift ; rotamos (shift) bytes a la derecha
+dcs_rshift:
 
-    push de   ;xor con video
-    pop hl
+    srl a
+    dec c
+    jr nz, dcs_rshift
+
     xor (hl)
     ld (hl), a
 
-    pop hl
     pop bc
     push bc
-    push hl
 
-    
-
-    inc de     ;videoAddress = videoAddress + 1
+    inc hl     ;videoAddress = videoAddress + 1
 
     ld a, 8    ;shift = 8 - shift
     sub c
     ld c, a
-    ld a, (hl) ;a = char value
+    ld a, (de) ;a = char value
     
     ;stack: charAddress
     ;       shift
@@ -703,22 +685,22 @@ dcs_ext_loop:
     ;       hl = charAddress
     ;        a = valor del char
 
-    call dcs_lshift ; rotamos (8 - shift) bytes a la izquierda
-    push de   ;xor con video
-    pop hl
+    dcs_lshift:
+
+    sla a
+    dec c
+    jr nz, dcs_lshift
+
     xor (hl)
     ld (hl), a
 
     ld bc, 31   ;videoAddress = videoAddress + 31
     add hl, bc
-    push hl
-    pop de
 
-    pop hl
+    inc de
+
     pop bc
-    inc hl
     push bc
-    push hl
 
     ;stack: charAddress
     ;       shift
@@ -733,7 +715,6 @@ dcs_ext_loop:
     jp nz, dcs_ext_loop
 
 
-    pop hl
     pop hl
 
     ;poner attrib
@@ -771,24 +752,6 @@ dcs_ext_loop:
     ld (hl), e      ;escribe atributo
     inc hl          ;siguiente char
     ld (hl), e      ;escribe atributo
-
-    jp dcs_print_exit
-
-dcs_rshift:
-
-    srl a
-    dec c
-    jr nz, dcs_rshift
-
-    ret
-
-dcs_lshift:
-
-    sla a
-    dec c
-    jr nz, dcs_lshift
-
-    ret
 
 dcs_print_exit:
 
@@ -925,66 +888,51 @@ ds_print_simple:
     add hl, bc; videoAddress = videoAddress + addrInc
     ld bc, 32
 
-    ld a, (hl); cValue = peek(videoAddress)
-    ex de, hl
-    xor (hl)  ; cValue = peek(charAddress) xor cValue
-    ex de, hl
+    ld a, (de); cValue = peek(charAddress)
+    xor (hl)  ; cValue = peek(videoAddress) xor cValue
     ld (hl), a ; poke videoAddress, cValue
 
     inc de      ;charAddress = charAddress + 1
     add hl, bc  ;videoAddress = videoAddress + 32
-    ld a, (hl)  ; cValue = peek(videoAddress)
-    ex de, hl
-    xor (hl)    ; cValue = peek(charAddress) xor cValue
-    ex de, hl
-    ld (hl), a  ; poke videoAddress, cValue
+    ld a, (de)
+    xor (hl)
+    ld (hl), a
+    
     
     inc de
     add hl, bc
-    ld a, (hl)
-    ex de, hl
+    ld a, (de)
     xor (hl)
-    ex de, hl
     ld (hl), a
 
     inc de
     add hl, bc
-    ld a, (hl)
-    ex de, hl
+    ld a, (de)
     xor (hl)
-    ex de, hl
     ld (hl), a
 
     inc de
     add hl, bc
-    ld a, (hl)
-    ex de, hl
+    ld a, (de)
     xor (hl)
-    ex de, hl
     ld (hl), a
 
     inc de
     add hl, bc
-    ld a, (hl)
-    ex de, hl
+    ld a, (de)
     xor (hl)
-    ex de, hl
     ld (hl), a
 
     inc de
     add hl, bc
-    ld a, (hl)
-    ex de, hl
+    ld a, (de)
     xor (hl)
-    ex de, hl
     ld (hl), a
 
     inc de
     add hl, bc
-    ld a, (hl)
-    ex de, hl
+    ld a, (de)
     xor (hl)
-    ex de, hl
     ld (hl), a
 
     jp ds_print_exit
@@ -1037,43 +985,41 @@ ds_print_ext:
     add hl, bc; videoAddress = videoAddress + addrInc
 
     ;stack: shift
-    ex de, hl   
+    ;ex de, hl   
     pop bc
     push bc
-    push hl
+    ;push hl
     
 ds_ext_loop:
 
-    ld a, (hl) 
+    ld a, (de) 
 
     ;stack: charAddress
     ;       shift
-    ;       de = videoAddress
+    ;       de = charAddress
     ;        c = shift
-    ;       hl = charAddress
+    ;       hl = videoAddress
     ;        a = valor del char
 
     
-    call ds_rshift ; rotamos (shift) bytes a la derecha
+ds_rshift:
 
-    push de   ;xor con video
-    pop hl
+    srl a
+    dec c
+    jr nz, ds_rshift
+
     xor (hl)
     ld (hl), a
 
-    pop hl
     pop bc
     push bc
-    push hl
 
-    
-
-    inc de     ;videoAddress = videoAddress + 1
+    inc hl     ;videoAddress = videoAddress + 1
 
     ld a, 8    ;shift = 8 - shift
     sub c
     ld c, a
-    ld a, (hl) ;a = char value
+    ld a, (de) ;a = char value
     
     ;stack: charAddress
     ;       shift
@@ -1082,22 +1028,22 @@ ds_ext_loop:
     ;       hl = charAddress
     ;        a = valor del char
 
-    call ds_lshift ; rotamos (8 - shift) bytes a la izquierda
-    push de   ;xor con video
-    pop hl
+    ds_lshift:
+
+    sla a
+    dec c
+    jr nz, ds_lshift
+
     xor (hl)
     ld (hl), a
 
     ld bc, 31   ;videoAddress = videoAddress + 31
     add hl, bc
-    push hl
-    pop de
 
-    pop hl
+    inc de
+
     pop bc
-    inc hl
     push bc
-    push hl
 
     ;stack: charAddress
     ;       shift
@@ -1113,25 +1059,6 @@ ds_ext_loop:
 
 
     pop hl
-    pop hl
-
-    jp ds_print_exit
-
-ds_rshift:
-
-    srl a
-    dec c
-    jr nz, ds_rshift
-
-    ret
-
-ds_lshift:
-
-    sla a
-    dec c
-    jr nz, ds_lshift
-
-    ret
 
 ds_print_exit:
 
@@ -1151,7 +1078,6 @@ asm
     push ix
     push iy
     ld (dsc_restore_stack + 1), sp
-
     ld de, 384
     ld (dsc_counter), de
     ld hl, _bitmapBuffer.__DATA__
@@ -1175,10 +1101,11 @@ dsc_copy:
 
 dsc_target:
 
-    ld sp, 0
-    pop hl
-    ld (dsc_target + 1), sp
-    ld sp, hl
+    ld sp, 0                    ;10
+    pop hl                      ;10
+    ld (dsc_target + 1), sp     ;20
+    ld sp, hl                   ;6
+
     push af
     push de
     push bc
@@ -1191,16 +1118,61 @@ dsc_target:
     
     ld hl, (dsc_counter)
     ld de, 1
-    xor a
+    ;xor a
     sbc hl, de
     ld (dsc_counter), hl
     jp nz, dsc_copy
-    jp dsc_restore_stack
+    jp dsc_copy_attribs
 
 dsc_counter:
 
     defw 0
     
+dsc_copy_attribs:
+
+    ld a, 12
+    ld hl, _attribBuffer.__DATA__ + 576
+    ld (dsc_attrib_copy + 1), hl
+    ld hl, 22528 + 576 + 16
+    ld (dsc_attrib_target + 1), hl
+
+dsc_attrib_copy:
+
+    ld sp, 0                    ;6
+    ex af, af'                  ;4
+    pop bc                      ;10
+    pop de                      ;10
+    pop hl                      ;10
+    pop ix                      ;14
+    pop iy                      ;14
+    exx                         ;4
+    pop bc                      ;10
+    pop de                      ;10
+    pop af                      ;10
+    ld (dsc_attrib_copy+1), sp  ;20
+
+dsc_attrib_target:
+
+    ld sp, 0                    ;6
+
+    push af                     ;11
+    push de                     ;11
+    push bc                     ;11
+    exx                         ;4
+    push iy                     ;15
+    push ix                     ;15
+    push hl                     ;11
+    push de                     ;11
+    push bc                     ;11
+    
+    ld hl, 32                           ;10
+    add hl, sp                          ;11
+    ld (dsc_attrib_target + 1), hl      ;20
+
+    ex af, af'                          ;4
+    dec a                               ;4
+    jp nz, dsc_attrib_copy              ;10
+
 dsc_restore_stack:
 
     ld sp, 0
@@ -1292,7 +1264,6 @@ asm
     push ix
     push iy
     ld a, 96
-    ld (dpt_counter), a
     ld (dpt_restore_stack + 1), sp
     ld hl, _bitmapBuffer.__DATA__
     ld (dpt_copy + 1), hl
@@ -1302,6 +1273,7 @@ asm
 dpt_copy:
 
     ld sp, 0
+    ex af, af'
     pop bc
     pop de
     pop hl
@@ -1329,16 +1301,9 @@ dpt_target:
     push de
     push bc
     
-    ld a, (dpt_counter)
+    ex af, af'
     dec a
-    ld (dpt_counter), a
     jp nz, dpt_copy
-    jp dpt_restore_stack
-
-dpt_counter:
-
-    defb 0
-    
 
 dpt_restore_stack:
 
@@ -1359,7 +1324,6 @@ asm
     push ix
     push iy
     ld a, 192
-    ld (dph_counter), a
     ld (dph_restore_stack + 1), sp
     ld hl, _bitmapBuffer.__DATA__ + 1536
     ld (dph_copy + 1), hl
@@ -1369,6 +1333,7 @@ asm
 dph_copy:
 
     ld sp, 0
+    ex af, af'
     pop bc
     pop de
     pop hl
@@ -1396,16 +1361,9 @@ dph_target:
     push de
     push bc
     
-    ld a, (dph_counter)
+    ex af, af'
     dec a
-    ld (dph_counter), a
     jp nz, dph_copy
-    jp dph_restore_stack
-
-dph_counter:
-
-    defb 0
-    
 
 dph_restore_stack:
 
@@ -1424,7 +1382,6 @@ asm
     push ix
     push iy
     ld a, 96
-    ld (dpb_counter), a
     ld (dpb_restore_stack + 1), sp
     ld hl, _bitmapBuffer.__DATA__ + 4096
     ld (dpb_copy + 1), hl
@@ -1434,6 +1391,7 @@ asm
 dpb_copy:
 
     ld sp, 0
+    ex af, af'
     pop bc
     pop de
     pop hl
@@ -1461,16 +1419,54 @@ dpb_target:
     push de
     push bc
     
-    ld a, (dpb_counter)
+    ex af, af'
     dec a
-    ld (dpb_counter), a
     jp nz, dpb_copy
-    jp dpb_restore_stack
 
-dpb_counter:
 
-    defb 0
+    ld (dpb_restore_stack + 1), sp
+    ld a, 12
+    ld hl, _attribBuffer.__DATA__
+    ld (dpb_attrib_copy + 1), hl
+    ld hl, 22528 + 16
+    ld (dpb_attrib_target + 1), hl
+
+dpb_attrib_copy:
+
+    ld sp, 0                    ;6
+    ex af, af'                  ;4
+    pop bc                      ;10
+    pop de                      ;10
+    pop hl                      ;10
+    pop ix                      ;14
+    pop iy                      ;14
+    exx                         ;4
+    pop bc                      ;10
+    pop de                      ;10
+    pop af                      ;10
+    ld (dpb_attrib_copy+1), sp  ;20
+
+dpb_attrib_target:
+
+    ld sp, 0                    ;6
+
+    push af                     ;11
+    push de                     ;11
+    push bc                     ;11
+    exx                         ;4
+    push iy                     ;15
+    push ix                     ;15
+    push hl                     ;11
+    push de                     ;11
+    push bc                     ;11
     
+    ld hl, 32                           ;10
+    add hl, sp                          ;11
+    ld (dpb_attrib_target + 1), hl      ;20
+
+    ex af, af'                          ;4
+    dec a                               ;4
+    jp nz, dpb_attrib_copy              ;10
 
 dpb_restore_stack:
 
@@ -1489,7 +1485,6 @@ asm
     push ix
     push iy
     ld a, 96
-    ld (dst_counter), a
     ld (dst_restore_stack + 1), sp
     ld hl, _bitmapBuffer.__DATA__
     ld (dst_copy + 1), hl
@@ -1499,6 +1494,7 @@ asm
 dst_copy:
 
     ld sp, 0
+    ex af, af'
     pop bc
     pop de
     pop hl
@@ -1526,25 +1522,56 @@ dst_target:
     push de
     push bc
     
-    ld a, (dst_counter)
+    ex af, af'
     dec a
-    ld (dst_counter), a
     jp nz, dst_copy
-    jp dst_restore_stack
 
-dst_counter:
+    ld a, 12
+    ld hl, _attribBuffer.__DATA__
+    ld (dst_attrib_copy + 1), hl
+    ld hl, 22528 + 16
+    ld (dst_attrib_target + 1), hl
 
-    defb 0
+dst_attrib_copy:
+
+    ld sp, 0                    ;6
+    ex af, af'                  ;4
+    pop bc                      ;10
+    pop de                      ;10
+    pop hl                      ;10
+    pop ix                      ;14
+    pop iy                      ;14
+    exx                         ;4
+    pop bc                      ;10
+    pop de                      ;10
+    pop af                      ;10
+    ld (dst_attrib_copy+1), sp  ;20
+
+dst_attrib_target:
+
+    ld sp, 0                    ;6
+
+    push af                     ;11
+    push de                     ;11
+    push bc                     ;11
+    exx                         ;4
+    push iy                     ;15
+    push ix                     ;15
+    push hl                     ;11
+    push de                     ;11
+    push bc                     ;11
     
+    ld hl, 32                           ;10
+    add hl, sp                          ;11
+    ld (dst_attrib_target + 1), hl      ;20
+
+    ex af, af'                          ;4
+    dec a                               ;4
+    jp nz, dst_attrib_copy              ;10
 
 dst_restore_stack:
 
     ld sp, 0
-
-    ld hl, _attribBuffer.__DATA__
-    ld de, 22528
-    ld bc, 192
-    ldir
 
     pop iy
     pop ix
@@ -1561,7 +1588,6 @@ asm
     push ix
     push iy
     ld a, 192
-    ld (dsh_counter), a
     ld (dsh_restore_stack + 1), sp
     ld hl, _bitmapBuffer.__DATA__ + 1536
     ld (dsh_copy + 1), hl
@@ -1571,6 +1597,7 @@ asm
 dsh_copy:
 
     ld sp, 0
+    ex af, af'
     pop bc
     pop de
     pop hl
@@ -1586,7 +1613,7 @@ dsh_target:
 
     ld sp, 0
     pop hl
-    ld (dsh_target + 1), sp
+    ld (dsh_target + 1), sp 
     ld sp, hl
     push af
     push de
@@ -1598,25 +1625,56 @@ dsh_target:
     push de
     push bc
     
-    ld a, (dsh_counter)
+    ex af, af'
     dec a
-    ld (dsh_counter), a
     jp nz, dsh_copy
-    jp dsh_restore_stack
 
-dsh_counter:
+    ld a, 24
+    ld hl, _attribBuffer.__DATA__ + 192
+    ld (dsh_attrib_copy + 1), hl
+    ld hl, 22528 + 192 + 16
+    ld (dsh_attrib_target + 1), hl
 
-    defb 0
+dsh_attrib_copy:
+
+    ld sp, 0                    ;6
+    ex af, af'                  ;4
+    pop bc                      ;10
+    pop de                      ;10
+    pop hl                      ;10
+    pop ix                      ;14
+    pop iy                      ;14
+    exx                         ;4
+    pop bc                      ;10
+    pop de                      ;10
+    pop af                      ;10
+    ld (dsh_attrib_copy+1), sp  ;20
+
+dsh_attrib_target:
+
+    ld sp, 0                    ;6
+
+    push af                     ;11
+    push de                     ;11
+    push bc                     ;11
+    exx                         ;4
+    push iy                     ;15
+    push ix                     ;15
+    push hl                     ;11
+    push de                     ;11
+    push bc                     ;11
     
+    ld hl, 32                           ;10
+    add hl, sp                          ;11
+    ld (dsh_attrib_target + 1), hl      ;20
+
+    ex af, af'                          ;4
+    dec a                               ;4
+    jp nz, dsh_attrib_copy              ;10
 
 dsh_restore_stack:
 
     ld sp, 0
-
-    ld hl, _attribBuffer.__DATA__ + 192
-    ld de, 22528 + 192
-    ld bc, 384
-    ldir
 
     pop iy
     pop ix
@@ -1633,7 +1691,6 @@ asm
     push ix
     push iy
     ld a, 96
-    ld (dsb_counter), a
     ld (dsb_restore_stack + 1), sp
     ld hl, _bitmapBuffer.__DATA__ + 4608
     ld (dsb_copy + 1), hl
@@ -1643,6 +1700,7 @@ asm
 dsb_copy:
 
     ld sp, 0
+    ex af, af'
     pop bc
     pop de
     pop hl
@@ -1670,25 +1728,56 @@ dsb_target:
     push de
     push bc
     
-    ld a, (dsb_counter)
+    ex af, af'
     dec a
-    ld (dsb_counter), a
     jp nz, dsb_copy
-    jp dsb_restore_stack
+   
+    ld a, 12
+    ld hl, _attribBuffer.__DATA__ + 576
+    ld (dsb_attrib_copy + 1), hl
+    ld hl, 22528 + 576 + 16
+    ld (dsb_attrib_target + 1), hl
 
-dsb_counter:
+dsb_attrib_copy:
 
-    defb 0
+    ld sp, 0                    ;6
+    ex af, af'                  ;4
+    pop bc                      ;10
+    pop de                      ;10
+    pop hl                      ;10
+    pop ix                      ;14
+    pop iy                      ;14
+    exx                         ;4
+    pop bc                      ;10
+    pop de                      ;10
+    pop af                      ;10
+    ld (dsb_attrib_copy+1), sp  ;20
+
+dsb_attrib_target:
+
+    ld sp, 0                    ;6
+
+    push af                     ;11
+    push de                     ;11
+    push bc                     ;11
+    exx                         ;4
+    push iy                     ;15
+    push ix                     ;15
+    push hl                     ;11
+    push de                     ;11
+    push bc                     ;11
     
+    ld hl, 32                           ;10
+    add hl, sp                          ;11
+    ld (dsb_attrib_target + 1), hl      ;20
+
+    ex af, af'                          ;4
+    dec a                               ;4
+    jp nz, dsb_attrib_copy              ;10
 
 dsb_restore_stack:
 
     ld sp, 0
-
-    ld hl, _attribBuffer.__DATA__ + 576
-    ld de, 22528 + 576
-    ld bc, 192
-    ldir
 
     pop iy
     pop ix
@@ -1703,11 +1792,57 @@ sub dumpAttribs()
 
 asm
 
-    xor a
-    ld de, 22528
+    push ix
+    push iy
+    ld (da_restore_stack + 1), sp
+    ld a, 48
     ld hl, _attribBuffer.__DATA__
-    ld bc, 768
-    ldir
+    ld (da_attrib_copy + 1), hl
+    ld hl, 22528 + 16
+    ld (da_attrib_target + 1), hl
+
+da_attrib_copy:
+
+    ld sp, 0                    ;6
+    ex af, af'                  ;4
+    pop bc                      ;10
+    pop de                      ;10
+    pop hl                      ;10
+    pop ix                      ;14
+    pop iy                      ;14
+    exx                         ;4
+    pop bc                      ;10
+    pop de                      ;10
+    pop af                      ;10
+    ld (da_attrib_copy+1), sp  ;20
+
+da_attrib_target:
+
+    ld sp, 0                    ;6
+
+    push af                     ;11
+    push de                     ;11
+    push bc                     ;11
+    exx                         ;4
+    push iy                     ;15
+    push ix                     ;15
+    push hl                     ;11
+    push de                     ;11
+    push bc                     ;11
+    
+    ld hl, 32                           ;10
+    add hl, sp                          ;11
+    ld (da_attrib_target + 1), hl      ;20
+
+    ex af, af'                          ;4
+    dec a                               ;4
+    jp nz, da_attrib_copy              ;10
+
+da_restore_stack:
+
+    ld sp, 0
+    pop iy
+    pop ix
 
 end asm
 
@@ -1717,11 +1852,57 @@ sub dumpAttribsTop()
 
 asm
 
-    xor a
-    ld de, 22528
+    push ix
+    push iy
+    ld (dat_restore_stack + 1), sp
+    ld a, 12
     ld hl, _attribBuffer.__DATA__
-    ld bc, 192
-    ldir
+    ld (dat_attrib_copy + 1), hl
+    ld hl, 22528 + 16
+    ld (dat_attrib_target + 1), hl
+
+dat_attrib_copy:
+
+    ld sp, 0                    ;6
+    ex af, af'                  ;4
+    pop bc                      ;10
+    pop de                      ;10
+    pop hl                      ;10
+    pop ix                      ;14
+    pop iy                      ;14
+    exx                         ;4
+    pop bc                      ;10
+    pop de                      ;10
+    pop af                      ;10
+    ld (dat_attrib_copy+1), sp  ;20
+
+dat_attrib_target:
+
+    ld sp, 0                    ;6
+
+    push af                     ;11
+    push de                     ;11
+    push bc                     ;11
+    exx                         ;4
+    push iy                     ;15
+    push ix                     ;15
+    push hl                     ;11
+    push de                     ;11
+    push bc                     ;11
+    
+    ld hl, 32                           ;10
+    add hl, sp                          ;11
+    ld (dat_attrib_target + 1), hl      ;20
+
+    ex af, af'                          ;4
+    dec a                               ;4
+    jp nz, dat_attrib_copy              ;10
+
+dat_restore_stack:
+
+    ld sp, 0
+    pop iy
+    pop ix
 
 end asm
 
@@ -1731,11 +1912,57 @@ sub dumpAttribsCenter()
 
 asm
 
-    xor a
-    ld de, 22528 + 192
+    push ix
+    push iy
+    ld (dac_restore_stack + 1), sp
+    ld a, 24
     ld hl, _attribBuffer.__DATA__ + 192
-    ld bc, 384
-    ldir
+    ld (dac_attrib_copy + 1), hl
+    ld hl, 22528 + 192 + 16
+    ld (dac_attrib_target + 1), hl
+
+dac_attrib_copy:
+
+    ld sp, 0                    ;6
+    ex af, af'                  ;4
+    pop bc                      ;10
+    pop de                      ;10
+    pop hl                      ;10
+    pop ix                      ;14
+    pop iy                      ;14
+    exx                         ;4
+    pop bc                      ;10
+    pop de                      ;10
+    pop af                      ;10
+    ld (dac_attrib_copy+1), sp  ;20
+
+dac_attrib_target:
+
+    ld sp, 0                    ;6
+
+    push af                     ;11
+    push de                     ;11
+    push bc                     ;11
+    exx                         ;4
+    push iy                     ;15
+    push ix                     ;15
+    push hl                     ;11
+    push de                     ;11
+    push bc                     ;11
+    
+    ld hl, 32                           ;10
+    add hl, sp                          ;11
+    ld (dac_attrib_target + 1), hl      ;20
+
+    ex af, af'                          ;4
+    dec a                               ;4
+    jp nz, dac_attrib_copy              ;10
+
+dac_restore_stack:
+
+    ld sp, 0
+    pop iy
+    pop ix
 
 end asm
 
@@ -1745,11 +1972,57 @@ sub dumpAttribsBottom()
 
 asm
 
-    xor a
-    ld de, 22528 + 576
+    push ix
+    push iy
+    ld (dab_restore_stack + 1), sp
+    ld a, 12
     ld hl, _attribBuffer.__DATA__ + 576
-    ld bc, 192
-    ldir
+    ld (dab_attrib_copy + 1), hl
+    ld hl, 22528 + 576 + 16
+    ld (dab_attrib_target + 1), hl
+
+dab_attrib_copy:
+
+    ld sp, 0                    ;6
+    ex af, af'                  ;4
+    pop bc                      ;10
+    pop de                      ;10
+    pop hl                      ;10
+    pop ix                      ;14
+    pop iy                      ;14
+    exx                         ;4
+    pop bc                      ;10
+    pop de                      ;10
+    pop af                      ;10
+    ld (dab_attrib_copy+1), sp  ;20
+
+dab_attrib_target:
+
+    ld sp, 0                    ;6
+
+    push af                     ;11
+    push de                     ;11
+    push bc                     ;11
+    exx                         ;4
+    push iy                     ;15
+    push ix                     ;15
+    push hl                     ;11
+    push de                     ;11
+    push bc                     ;11
+    
+    ld hl, 32                           ;10
+    add hl, sp                          ;11
+    ld (dab_attrib_target + 1), hl      ;20
+
+    ex af, af'                          ;4
+    dec a                               ;4
+    jp nz, dab_attrib_copy              ;10
+
+dab_restore_stack:
+
+    ld sp, 0
+    pop iy
+    pop ix
 
 end asm
 

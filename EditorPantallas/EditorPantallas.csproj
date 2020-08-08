@@ -111,8 +111,6 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <None Include="Resources\HERO.tap" />
-    <None Include="Resources\HERO_128.tap" />
-    <None Include="Resources\HERO_NOSCR.tap" />
     <None Include="Resources\hero_with_intro.tap" />
   </ItemGroup>
   <ItemGroup>

@@ -19,7 +19,7 @@ __START_PROGRAM:
 	call _allocate
 	ld (23675), hl
 #line 7
-		ld hl, ZXBASIC_MEM_HEAP
+		ld hl, ZXBASIC_USER_DATA_END
 #line 8
 	ld hl, 0
 	ld b, h
@@ -1153,59 +1153,43 @@ dcs_print_simple:
 		ld b, 0
 		add hl, bc
 		ld bc, 32
-		ld a, (hl)
-		ex de, hl
+		ld a, (de)
 		xor (hl)
-		ex de, hl
 		ld (hl), a
 		inc de
 		add hl, bc
-		ld a, (hl)
-		ex de, hl
+		ld a, (de)
 		xor (hl)
-		ex de, hl
 		ld (hl), a
 		inc de
 		add hl, bc
-		ld a, (hl)
-		ex de, hl
+		ld a, (de)
 		xor (hl)
-		ex de, hl
 		ld (hl), a
 		inc de
 		add hl, bc
-		ld a, (hl)
-		ex de, hl
+		ld a, (de)
 		xor (hl)
-		ex de, hl
 		ld (hl), a
 		inc de
 		add hl, bc
-		ld a, (hl)
-		ex de, hl
+		ld a, (de)
 		xor (hl)
-		ex de, hl
 		ld (hl), a
 		inc de
 		add hl, bc
-		ld a, (hl)
-		ex de, hl
+		ld a, (de)
 		xor (hl)
-		ex de, hl
 		ld (hl), a
 		inc de
 		add hl, bc
-		ld a, (hl)
-		ex de, hl
+		ld a, (de)
 		xor (hl)
-		ex de, hl
 		ld (hl), a
 		inc de
 		add hl, bc
-		ld a, (hl)
-		ex de, hl
+		ld a, (de)
 		xor (hl)
-		ex de, hl
 		ld (hl), a
 		pop hl
 		ld a, l
@@ -1265,45 +1249,38 @@ dcs_print_ext:
 		add hl, bc
 		pop bc
 		add hl, bc
-		ex de, hl
 		pop bc
 		push bc
-		push hl
 dcs_ext_loop:
-		ld a, (hl)
-		call dcs_rshift
-		push de
-		pop hl
+		ld a, (de)
+dcs_rshift:
+		srl a
+		dec c
+		jr nz, dcs_rshift
 		xor (hl)
 		ld (hl), a
-		pop hl
 		pop bc
 		push bc
-		push hl
-		inc de
+		inc hl
 		ld a, 8
 		sub c
 		ld c, a
-		ld a, (hl)
-		call dcs_lshift
-		push de
-		pop hl
+		ld a, (de)
+dcs_lshift:
+		sla a
+		dec c
+		jr nz, dcs_lshift
 		xor (hl)
 		ld (hl), a
 		ld bc, 31
 		add hl, bc
-		push hl
-		pop de
-		pop hl
+		inc de
 		pop bc
-		inc hl
 		push bc
-		push hl
 		ld a, (dcs_loopCounter)
 		dec a
 		ld (dcs_loopCounter), a
 		jp nz, dcs_ext_loop
-		pop hl
 		pop hl
 		pop hl
 		ld a, l
@@ -1334,26 +1311,15 @@ dcs_ext_loop:
 		ld (hl), e
 		inc hl
 		ld (hl), e
-		jp dcs_print_exit
-dcs_rshift:
-		srl a
-		dec c
-		jr nz, dcs_rshift
-		ret
-dcs_lshift:
-		sla a
-		dec c
-		jr nz, dcs_lshift
-		ret
 dcs_print_exit:
 		ret
 dcs_loopCounter:
 		defb 0
-#line 694
+#line 660
 _drawColorSprite__leave:
 	ret
 _printChar:
-#line 805
+#line 768
 		exx
 		pop hl
 		exx
@@ -1411,11 +1377,11 @@ _printChar:
 		add hl, bc
 		ld a, (de)
 		ld (hl), a
-#line 862
+#line 825
 _printChar__leave:
 	ret
 _drawSprite:
-#line 882
+#line 845
 		exx
 		pop hl
 		exx
@@ -1446,59 +1412,43 @@ ds_print_simple:
 		ld b, 0
 		add hl, bc
 		ld bc, 32
-		ld a, (hl)
-		ex de, hl
+		ld a, (de)
 		xor (hl)
-		ex de, hl
 		ld (hl), a
 		inc de
 		add hl, bc
-		ld a, (hl)
-		ex de, hl
+		ld a, (de)
 		xor (hl)
-		ex de, hl
 		ld (hl), a
 		inc de
 		add hl, bc
-		ld a, (hl)
-		ex de, hl
+		ld a, (de)
 		xor (hl)
-		ex de, hl
 		ld (hl), a
 		inc de
 		add hl, bc
-		ld a, (hl)
-		ex de, hl
+		ld a, (de)
 		xor (hl)
-		ex de, hl
 		ld (hl), a
 		inc de
 		add hl, bc
-		ld a, (hl)
-		ex de, hl
+		ld a, (de)
 		xor (hl)
-		ex de, hl
 		ld (hl), a
 		inc de
 		add hl, bc
-		ld a, (hl)
-		ex de, hl
+		ld a, (de)
 		xor (hl)
-		ex de, hl
 		ld (hl), a
 		inc de
 		add hl, bc
-		ld a, (hl)
-		ex de, hl
+		ld a, (de)
 		xor (hl)
-		ex de, hl
 		ld (hl), a
 		inc de
 		add hl, bc
-		ld a, (hl)
-		ex de, hl
+		ld a, (de)
 		xor (hl)
-		ex de, hl
 		ld (hl), a
 		jp ds_print_exit
 ds_print_ext:
@@ -1533,69 +1483,51 @@ ds_print_ext:
 		add hl, bc
 		pop bc
 		add hl, bc
-		ex de, hl
 		pop bc
 		push bc
-		push hl
 ds_ext_loop:
-		ld a, (hl)
-		call ds_rshift
-		push de
-		pop hl
+		ld a, (de)
+ds_rshift:
+		srl a
+		dec c
+		jr nz, ds_rshift
 		xor (hl)
 		ld (hl), a
-		pop hl
 		pop bc
 		push bc
-		push hl
-		inc de
+		inc hl
 		ld a, 8
 		sub c
 		ld c, a
-		ld a, (hl)
-		call ds_lshift
-		push de
-		pop hl
+		ld a, (de)
+ds_lshift:
+		sla a
+		dec c
+		jr nz, ds_lshift
 		xor (hl)
 		ld (hl), a
 		ld bc, 31
 		add hl, bc
-		push hl
-		pop de
-		pop hl
+		inc de
 		pop bc
-		inc hl
 		push bc
-		push hl
 		ld a, (ds_loopCounter)
 		dec a
 		ld (ds_loopCounter), a
 		jp nz, ds_ext_loop
 		pop hl
-		pop hl
-		jp ds_print_exit
-ds_rshift:
-		srl a
-		dec c
-		jr nz, ds_rshift
-		ret
-ds_lshift:
-		sla a
-		dec c
-		jr nz, ds_lshift
-		ret
 ds_print_exit:
 		ret
 ds_loopCounter:
 		defb 0
-#line 1054
+#line 983
 _drawSprite__leave:
 	ret
 _dumpScreen:
 	push ix
 	ld ix, 0
 	add ix, sp
-#line 1148
+#line 1075
 		push ix
 		push iy
 		ld (dsc_restore_stack + 1), sp
@@ -1633,7 +1565,6 @@ dsc_target:
 		push bc
 		ld hl, (dsc_counter)
 		ld de, 1
-		xor a
 		sbc hl, de
 		ld (dsc_counter), hl
 		jp nz, dsc_copy
@@ -1648,7 +1579,7 @@ dsc_restore_stack:
 		ldir
 		pop iy
 		pop ix
-#line 1200
+#line 1126
 _dumpScreen__leave:
 	ld sp, ix
 	pop ix
@@ -1657,7 +1588,7 @@ _dumpPixels:
 	push ix
 	ld ix, 0
 	add ix, sp
-#line 1222
+#line 1149
 		push ix
 		push iy
 		ld de, 384
@@ -1706,7 +1637,7 @@ dpx_restore_stack:
 		ld sp, 0
 		pop iy
 		pop ix
-#line 1270
+#line 1197
 _dumpPixels__leave:
 	ld sp, ix
 	pop ix
@@ -1715,7 +1646,7 @@ _dumpPixelsTop:
 	push ix
 	ld ix, 0
 	add ix, sp
-#line 1289
+#line 1216
 		push ix
 		push iy
 		ld a, 96
@@ -1762,7 +1693,7 @@ dpt_restore_stack:
 		ld sp, 0
 		pop iy
 		pop ix
-#line 1335
+#line 1262
 _dumpPixelsTop__leave:
 	ld sp, ix
 	pop ix
@@ -1771,7 +1702,7 @@ _dumpPixelsCenter:
 	push ix
 	ld ix, 0
 	add ix, sp
-#line 1356
+#line 1283
 		push ix
 		push iy
 		ld a, 192
@@ -1818,7 +1749,7 @@ dph_restore_stack:
 		ld sp, 0
 		pop iy
 		pop ix
-#line 1402
+#line 1329
 _dumpPixelsCenter__leave:
 	ld sp, ix
 	pop ix
@@ -1827,7 +1758,7 @@ _dumpPixelsBottom:
 	push ix
 	ld ix, 0
 	add ix, sp
-#line 1421
+#line 1348
 		push ix
 		push iy
 		ld a, 96
@@ -1874,7 +1805,7 @@ dpb_restore_stack:
 		ld sp, 0
 		pop iy
 		pop ix
-#line 1467
+#line 1394
 _dumpPixelsBottom__leave:
 	ld sp, ix
 	pop ix
@@ -1883,7 +1814,7 @@ _dumpScreenTop:
 	push ix
 	ld ix, 0
 	add ix, sp
-#line 1486
+#line 1413
 		push ix
 		push iy
 		ld a, 96
@@ -1934,7 +1865,7 @@ dst_restore_stack:
 		ldir
 		pop iy
 		pop ix
-#line 1536
+#line 1463
 _dumpScreenTop__leave:
 	ld sp, ix
 	pop ix
@@ -1943,7 +1874,7 @@ _dumpScreenCenter:
 	push ix
 	ld ix, 0
 	add ix, sp
-#line 1558
+#line 1485
 		push ix
 		push iy
 		ld a, 192
@@ -1953,6 +1884,12 @@ _dumpScreenCenter:
 		ld (dsh_copy + 1), hl
 		ld hl, _tableCP.__DATA__ + 192
 		ld (dsh_target + 1), hl
+		ld hl, 20
+		ld de, 1
+dsh_wait_loop:
+		nop
+		sbc hl, de
+		jp nz, dsh_wait_loop
 dsh_copy:
 		ld sp, 0
 		pop bc
@@ -1994,7 +1931,7 @@ dsh_restore_stack:
 		ldir
 		pop iy
 		pop ix
-#line 1608
+#line 1541
 _dumpScreenCenter__leave:
 	ld sp, ix
 	pop ix
@@ -2003,7 +1940,7 @@ _dumpScreenBottom:
 	push ix
 	ld ix, 0
 	add ix, sp
-#line 1630
+#line 1568
 		push ix
 		push iy
 		ld a, 96
@@ -2054,7 +1991,7 @@ dsb_restore_stack:
 		ldir
 		pop iy
 		pop ix
-#line 1680
+#line 1618
 _dumpScreenBottom__leave:
 	ld sp, ix
 	pop ix
@@ -2063,13 +2000,13 @@ _dumpAttribs:
 	push ix
 	ld ix, 0
 	add ix, sp
-#line 1703
+#line 1641
 		xor a
 		ld de, 22528
 		ld hl, _attribBuffer.__DATA__
 		ld bc, 768
 		ldir
-#line 1708
+#line 1646
 _dumpAttribs__leave:
 	ld sp, ix
 	pop ix
@@ -2078,13 +2015,13 @@ _dumpAttribsTop:
 	push ix
 	ld ix, 0
 	add ix, sp
-#line 1717
+#line 1655
 		xor a
 		ld de, 22528
 		ld hl, _attribBuffer.__DATA__
 		ld bc, 192
 		ldir
-#line 1722
+#line 1660
 _dumpAttribsTop__leave:
 	ld sp, ix
 	pop ix
@@ -2093,13 +2030,13 @@ _dumpAttribsCenter:
 	push ix
 	ld ix, 0
 	add ix, sp
-#line 1731
+#line 1669
 		xor a
 		ld de, 22528 + 192
 		ld hl, _attribBuffer.__DATA__ + 192
 		ld bc, 384
 		ldir
-#line 1736
+#line 1674
 _dumpAttribsCenter__leave:
 	ld sp, ix
 	pop ix
@@ -2108,55 +2045,55 @@ _dumpAttribsBottom:
 	push ix
 	ld ix, 0
 	add ix, sp
-#line 1745
+#line 1683
 		xor a
 		ld de, 22528 + 576
 		ld hl, _attribBuffer.__DATA__ + 576
 		ld bc, 192
 		ldir
-#line 1750
+#line 1688
 _dumpAttribsBottom__leave:
 	ld sp, ix
 	pop ix
 	ret
 _dumpAttrib:
-#line 1759
+#line 1697
 		ld de, 22529
 		ld hl, 22528
 		ld (hl), a
 		ld bc, 767
 		ldir
-#line 1764
+#line 1702
 _dumpAttrib__leave:
 	ret
 _dumpAttribTop:
-#line 1773
+#line 1711
 		ld de, 22529
 		ld hl, 22528
 		ld (hl), a
 		ld bc, 191
 		ldir
-#line 1778
+#line 1716
 _dumpAttribTop__leave:
 	ret
 _dumpAttribCenter:
-#line 1788
+#line 1726
 		ld de, 22529 + 192
 		ld hl, 22528 + 192
 		ld (hl), a
 		ld bc, 383
 		ldir
-#line 1793
+#line 1731
 _dumpAttribCenter__leave:
 	ret
 _dumpAttribBottom:
-#line 1802
+#line 1740
 		ld de, 22529 + 576
 		ld hl, 22528 + 576
 		ld (hl), a
 		ld bc, 191
 		ldir
-#line 1807
+#line 1745
 _dumpAttribBottom__leave:
 	ret
 __LABEL0:
@@ -2444,9 +2381,9 @@ __MEM_START:
 __MEM_LOOP:  ; Loads lengh at (HL, HL+). If Lenght >= BC, jump to __MEM_DONE
 	        ld a, h ;  HL = NULL (No memory available?)
 	        or l
-#line 111 "C:/ZXBasic/library-asm/alloc.asm"
+#line 111 "C:/zxbasic/library-asm/alloc.asm"
 	        ret z ; NULL
-#line 113 "C:/ZXBasic/library-asm/alloc.asm"
+#line 113 "C:/zxbasic/library-asm/alloc.asm"
 	        ; HL = Pointer to Free block
 	        ld e, (hl)
 	        inc hl
@@ -2520,7 +2457,7 @@ __MEM_SUBTRACT:
 
 	        ENDP
 
-#line 2154 "GSprites.zxbas"
+#line 2091 "GSprites.zxbas"
 #line 1 "asc.asm"
 
 	; Returns the ascii code for the given str
@@ -2749,7 +2686,7 @@ __ASC_END:
 
 		ret
 		ENDP
-#line 2155 "GSprites.zxbas"
+#line 2092 "GSprites.zxbas"
 #line 1 "attr.asm"
 
 	; Attribute routines
@@ -2956,7 +2893,7 @@ SET_PIXEL_ADDR_ATTR:
 	    ld de, (SCREEN_ADDR)
 	    add hl, de  ;; Final screen addr
 	    jp __SET_ATTR2
-#line 2156 "GSprites.zxbas"
+#line 2093 "GSprites.zxbas"
 #line 1 "calloc.asm"
 
 ; vim: ts=4:et:sw=4:
@@ -3004,7 +2941,7 @@ __MEM_CALLOC:
 	        ldir
 	        pop hl
 	        ret
-#line 2157 "GSprites.zxbas"
+#line 2094 "GSprites.zxbas"
 #line 1 "chr.asm"
 
 	; CHR$(x, y, x) returns the string CHR$(x) + CHR$(y) + CHR$(z)
@@ -3082,12 +3019,13 @@ __CHR_END:
 
 			ENDP
 
-#line 2158 "GSprites.zxbas"
+#line 2095 "GSprites.zxbas"
 #line 1 "copy_attr.asm"
 
 
 #line 1 "print.asm"
 
+; vim:ts=4:sw=4:et:
 ; vim:ts=4:sw=4:et:
 	; PRINT command routine
 	; Does not print attribute. Use PRINT_STR or PRINT_NUM for that
@@ -3114,7 +3052,7 @@ JUMP_HL_PLUS_DE: ; Does JP (HL + DE)
 CALL_HL:
 		jp (hl)
 
-#line 9 "print.asm"
+#line 10 "print.asm"
 #line 1 "ink.asm"
 
 	; Sets ink color in ATTR_P permanently
@@ -3160,7 +3098,7 @@ INK_TMP:
 
 		ENDP
 
-#line 10 "print.asm"
+#line 11 "print.asm"
 #line 1 "paper.asm"
 
 	; Sets paper color in ATTR_P permanently
@@ -3209,7 +3147,7 @@ PAPER_TMP:
 		jp __SET_PAPER
 		ENDP
 
-#line 11 "print.asm"
+#line 12 "print.asm"
 #line 1 "flash.asm"
 
 	; Sets flash flag in ATTR_P permanently
@@ -3255,7 +3193,7 @@ FLASH_TMP:
 		jr __SET_FLASH
 	    ENDP
 
-#line 12 "print.asm"
+#line 13 "print.asm"
 #line 1 "bright.asm"
 
 	; Sets bright flag in ATTR_P permanently
@@ -3300,7 +3238,7 @@ BRIGHT_TMP:
 		ld hl, ATTR_T
 		jr __SET_BRIGHT
 	    ENDP
-#line 13 "print.asm"
+#line 14 "print.asm"
 #line 1 "over.asm"
 
 	; Sets OVER flag in P_FLAG permanently
@@ -3348,7 +3286,7 @@ OVER_TMP:
 
 		ENDP
 
-#line 14 "print.asm"
+#line 15 "print.asm"
 #line 1 "inverse.asm"
 
 	; Sets INVERSE flag in P_FLAG permanently
@@ -3382,7 +3320,7 @@ INVERSE_TMP:
 
 		ENDP
 
-#line 15 "print.asm"
+#line 16 "print.asm"
 #line 1 "bold.asm"
 
 	; Sets BOLD flag in P_FLAG permanently
@@ -3415,7 +3353,7 @@ BOLD_TMP:
 
 		ENDP
 
-#line 16 "print.asm"
+#line 17 "print.asm"
 #line 1 "italic.asm"
 
 	; Sets ITALIC flag in P_FLAG permanently
@@ -3450,7 +3388,7 @@ ITALIC_TMP:
 
 		ENDP
 
-#line 17 "print.asm"
+#line 18 "print.asm"
 
 
 
@@ -3508,7 +3446,7 @@ __SCROLL:  ; Scroll?
 	        ld hl, __TVFLAGS
 	        res 1, (hl)
 	        ret
-#line 75 "C:/ZXBasic/library-asm/print.asm"
+#line 76 "C:/zxbasic/library-asm/print.asm"
 
 __PRINT_START:
 	        cp ' '
@@ -3519,7 +3457,7 @@ __PRINT_START:
 
 
 	        call __SCROLL
-#line 86 "C:/ZXBasic/library-asm/print.asm"
+#line 87 "C:/zxbasic/library-asm/print.asm"
 	        call __LOAD_S_POSN
 
 	; At this point we have the new coord
@@ -3642,7 +3580,7 @@ PRINT_EOL:        ; Called WHENEVER there is no ";" at end of PRINT sentence
 __PRINT_0Dh:        ; Called WHEN printing CHR$(13)
 
 	        call __SCROLL
-#line 209 "C:/ZXBasic/library-asm/print.asm"
+#line 210 "C:/zxbasic/library-asm/print.asm"
 	        call __LOAD_S_POSN
 
 __PRINT_EOL1:        ; Another entry called from PRINT when next line required
@@ -3656,9 +3594,11 @@ __PRINT_AT1_END:
 	        ld hl, (MAXY)
 	        cp l
 	        jr c, __PRINT_EOL_END    ; Carry if (MAXY) < d
+
 	        ld hl, __TVFLAGS
 	        set 1, (hl)
 	        ld a, d
+#line 230 "C:/zxbasic/library-asm/print.asm"
 
 __PRINT_EOL_END:
 	        ld d, a
@@ -3907,8 +3847,10 @@ PRINT_AT: ; Changes cursor to ROW, COL
 
 	        call __IN_SCREEN
 	        ret nc    ; Return if out of screen
+
 	        ld hl, __TVFLAGS
 	        res 1, (hl)
+#line 482 "C:/zxbasic/library-asm/print.asm"
 	        jp __SAVE_S_POSN
 
 	        LOCAL __PRINT_COM
@@ -3961,7 +3903,7 @@ __PRINT_TABLE:    ; Jump table for 0 .. 22 codes
 
 
 #line 3 "copy_attr.asm"
-#line 4 "C:/ZXBasic/library-asm/copy_attr.asm"
+#line 4 "C:/zxbasic/library-asm/copy_attr.asm"
 
 
 
@@ -4020,7 +3962,7 @@ TABLE:
 		and (hl)		; OVER 2 MODE
 		or  (hl)		; OVER 3 MODE
 
-#line 65 "C:/ZXBasic/library-asm/copy_attr.asm"
+#line 65 "C:/zxbasic/library-asm/copy_attr.asm"
 
 __REFRESH_TMP:
 		ld a, (hl)
@@ -4033,7 +3975,7 @@ __REFRESH_TMP:
 
 		ENDP
 
-#line 2159 "GSprites.zxbas"
+#line 2096 "GSprites.zxbas"
 #line 1 "eq16.asm"
 
 __EQ16:	; Test if 16bit values HL == DE
@@ -4044,7 +3986,7 @@ __EQ16:	; Test if 16bit values HL == DE
 			inc a
 			ret
 
-#line 2160 "GSprites.zxbas"
+#line 2097 "GSprites.zxbas"
 
 
 
@@ -4093,7 +4035,7 @@ __LOADSTR:		; __FASTCALL__ entry
 			ldir	; Copies string (length number included)
 			pop hl	; Recovers destiny in hl as result
 			ret
-#line 2164 "GSprites.zxbas"
+#line 2101 "GSprites.zxbas"
 
 
 #line 1 "printstr.asm"
@@ -4154,7 +4096,7 @@ __PRINT_STR:
 
 			ENDP
 
-#line 2167 "GSprites.zxbas"
+#line 2104 "GSprites.zxbas"
 #line 1 "pstorestr.asm"
 
 ; vim:ts=4:et:sw=4
@@ -4475,7 +4417,7 @@ __PSTORE_STR:
 	    add hl, bc
 	    jp __STORE_STR
 
-#line 2168 "GSprites.zxbas"
+#line 2105 "GSprites.zxbas"
 #line 1 "pstorestr2.asm"
 
 ; vim:ts=4:et:sw=4
@@ -4534,7 +4476,7 @@ __PSTORE_STR2:
 	    add hl, bc
 	    jp __STORE_STR2
 
-#line 2169 "GSprites.zxbas"
+#line 2106 "GSprites.zxbas"
 
 
 #line 1 "stackf.asm"
@@ -4584,7 +4526,7 @@ __FPSTACK_I16:	; Pushes 16 bits integer in HL into the FP ROM STACK
 		xor a
 		ld b, a
 		jp __FPSTACK_PUSH
-#line 2172 "GSprites.zxbas"
+#line 2109 "GSprites.zxbas"
 #line 1 "strcat.asm"
 
 
@@ -4731,7 +4673,7 @@ __STRCATEND:
 
 			ENDP
 
-#line 2173 "GSprites.zxbas"
+#line 2110 "GSprites.zxbas"
 #line 1 "strictbool.asm"
 
 	; This routine is called if --strict-boolean was set at the command line.
@@ -4743,7 +4685,7 @@ __NORMALIZE_BOOLEAN:
 	    ld a, 1
 	    ret
 
-#line 2174 "GSprites.zxbas"
+#line 2111 "GSprites.zxbas"
 
 #line 1 "strslice.asm"
 
@@ -4853,7 +4795,7 @@ __FREE_ON_EXIT:
 
 		ENDP
 
-#line 2176 "GSprites.zxbas"
+#line 2113 "GSprites.zxbas"
 
 ZXBASIC_USER_DATA:
 	_input_LastK EQU 23560
